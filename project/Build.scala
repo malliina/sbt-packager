@@ -10,15 +10,5 @@ object MyBuild extends Build {
     addSbtPlugin("com.typesafe" % "sbt-native-packager" % "0.4.4")
   )
 
-  val commonSettings = Defaults.defaultSettings ++ Seq(
-    exportJars := true,
-    retrieveManaged := true
-  )
-
   lazy val sbtPackager = Project("sbt-packager", file("."))
-    .settings(
-    name := "sbt-packager"
-//    libraryDependencies ++= Seq(packDep)
-  )
-//  lazy val packDep = "com.typesafe" %% "sbt-native-packager" % "0.4.4"
 }
