@@ -3,9 +3,10 @@ package com.mle.sbt
 import com.typesafe.packager.PackagerPlugin._
 import com.typesafe.packager.{linux, debian, rpm, windows}
 import sbt.Keys._
+import sbt._
 import java.io.File
 
-object NativePackaging {
+object NativePackaging{
   val defaultPackageSettings = Seq(
     // http://lintian.debian.org/tags/maintainer-address-missing.html
     linux.Keys.maintainer := "Michael Skogberg <malliina123@gmail.com>",
