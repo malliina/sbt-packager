@@ -27,7 +27,7 @@ object NativePackaging{
       // http://lintian.debian.org/tags/changelog-file-missing-in-native-package.html
       (bd, pkgName) => (packageMapping((bd / "dist" / "copyright") -> ("/usr/share/doc/" + pkgName + "/changelog.gz")) withUser "root" withPerms "0644" gzipped) asDocs()
       ),
-    linux.Keys.linuxPackageMappings <+= (baseDirectory) map (
+    linux.Keys.linuxPackageMappings in Debian <+= (baseDirectory) map (
       (bd: File) => (packageMapping((bd / "dist" / "app.txt") -> "/opt/test/app.txt") withUser "root" withPerms "0644")
       ),
     debian.Keys.debianPackageDependencies in Debian ++= Seq("wget")
