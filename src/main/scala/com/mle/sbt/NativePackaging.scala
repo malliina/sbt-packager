@@ -18,7 +18,7 @@ object NativePackaging{
     rpm.Keys.rpmRelease := "0.1",
     rpm.Keys.rpmVendor := "kingmichael",
     rpm.Keys.rpmLicense := Some("You have the right to remain silent"),
-    windows.Keys.wixFile := new File("doesnotexist"),
+    windows.Keys.wixFile := new File("doesnotexist")
 //    debian.Keys.linuxPackageMappings in Debian <+= (baseDirectory, name) map (
 //      // http://lintian.debian.org/tags/no-copyright-file.html
 //      (bd, pkgName) => (packageMapping((bd / "dist" / "copyright") -> ("/usr/share/doc/" + pkgName + "/copyright")) withUser "root" withPerms "0644")
