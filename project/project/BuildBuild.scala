@@ -6,6 +6,6 @@ object BuildBuild extends Build {
     resolvers += "Sonatype snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/",
     addSbtPlugin("com.github.mpeltonen" % "sbt-idea" % "1.2.0-SNAPSHOT")
   )
-  override def projects = Seq(root)
-  lazy val root = Project("build", file("."))
+  override lazy val projects = Seq(root)
+  lazy val root = Project("plugins", file("."))
 }
