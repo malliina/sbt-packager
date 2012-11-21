@@ -6,10 +6,9 @@ object MyBuild extends Build {
   override lazy val settings = super.settings ++ Seq(
     organization := "com.mle",
     name := "sbt-packager",
-    version := "0.5-SNAPSHOT",
+    version := "0.6-SNAPSHOT",
     sbtPlugin := true,
-    exportJars := true,
-    addSbtPlugin("com.typesafe" % "sbt-native-packager" % "0.4.4")
+    exportJars := true
   )
 
   lazy val sbtPackager = Project("sbt-packager", file("."))
