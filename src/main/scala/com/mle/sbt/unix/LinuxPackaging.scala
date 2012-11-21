@@ -92,7 +92,7 @@ object LinuxPackaging extends Plugin {
       printMappings(mappings)
     })
   )
-  val defaultNativeProject: Seq[Setting[_]] = linuxSettings ++ debianSettings ++ rpmSettings ++ WixPackaging.windowsSettings
+  val defaultNativeProject: Seq[Setting[_]] = linuxSettings ++ debianSettings ++ rpmSettings ++ WixPackaging.wixSettings
 
   def pkgMap(file: (Path, String), perms: String = "0644", gzipped: Boolean = false) =
     pkgMaps(Seq(file), perms = perms, gzipped = gzipped)

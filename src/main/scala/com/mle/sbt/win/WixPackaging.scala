@@ -10,12 +10,11 @@ import sbt._
 import xml.NodeSeq
 import com.mle.sbt.GenericKeys._
 import com.mle.sbt.FileImplicits._
-import com.mle.sbt.GenericPackaging
 
 object WixPackaging extends Plugin {
   // need to set the WIX environment variable to the wix installation dir e.g. program files\wix
   val windowsMappings = mappings in windows.Keys.packageMsi in Windows
-  val windowsSettings: Seq[Setting[_]] = GenericPackaging.genericSettings ++ Seq(
+  val wixSettings: Seq[Setting[_]] = Seq(
     windowsMappings <+= (appJar, appJarName) map ((jar, jarName) => jar.toFile -> jarName),
     windowsMappings <+= (appJar, appJarName, name, exePath, mainClass, launch4jcExe, appIcon, target in Windows) map (
       (bin, jarName, appName, exeP, m, l, i, t) => {
@@ -122,8 +121,7 @@ object WixPackaging extends Plugin {
               </Component>
             </Directory>
           </Directory>
-        </Directory>{winswFragment}
-        <Feature Id='Complete'
+        </Directory>{winswFragment}<Feature Id='Complete'
                                             Title={appName + " application"}
                                             Description={"The Windows installation of " + appName}
                                             Display='expand'
