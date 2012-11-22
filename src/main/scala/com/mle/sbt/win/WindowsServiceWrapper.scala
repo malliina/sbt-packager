@@ -9,13 +9,16 @@ object WindowsServiceWrapper{
       <name>{appName} service</name>
       <description>{appName}</description>
       <executable>%{homeVar}%\{appName}.bat</executable>
-      <logpath>C:\</logpath>
-      <logmode>roll</logmode>
       <depend>Spooler</depend>
       <startargument>start</startargument>
       <stopargument>stop</stopargument>
     </service>
   }
+
+  /**
+   *  <logpath>C:\</logpath>
+      <logmode>roll</logmode>
+   */
 
   /**
    * This is dangerous.
