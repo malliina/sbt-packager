@@ -73,38 +73,4 @@ object Launch4jWrapper {
       </jre>
     </launch4jConfig>)
   }
-
-  //
-
-  //    val xmlConf = (<launch4jConfig>
-  //      <dontWrapJar>false</dontWrapJar>
-  //      <headerType>gui</headerType>
-  //      <jar>{jarFile.toAbsolutePath.toString}</jar>
-  //      <outfile>{exe.toAbsolutePath.toString}</outfile>
-  //      <errTitle></errTitle>
-  //      <cmdLine></cmdLine>
-  //      <chdir></chdir>
-  //      <priority>normal</priority>
-  //      <downloadUrl>http://java.com/download</downloadUrl>
-  //      <supportUrl></supportUrl>
-  //      <customProcName>false</customProcName>
-  //      <stayAlive>false</stayAlive>
-  //      <manifest></manifest>
-  //      <icon></icon>
-  //      <singleInstance>
-  //        <mutexName>{appName}</mutexName>
-  //        <windowTitle></windowTitle>
-  //      </singleInstance>
-  //      <classPath>
-  //        <mainClass>{mainClass}</mainClass>
-  //        <cp>{jarFileName};lib/*</cp>
-  //      </classPath>
-  //      <jre>
-  //        <path></path>
-  //        <minVersion>1.7.0</minVersion>
-  //        <maxVersion></maxVersion>
-  //        <jdkPreference>preferJre</jdkPreference>
-  //      </jre>
-  //    </launch4jConfig>)
-
 }
