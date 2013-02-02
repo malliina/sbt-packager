@@ -1,6 +1,6 @@
 package com.mle.sbt.win
 
-import java.nio.file.Paths
+import java.nio.file.{Files, Path, Paths}
 import sbt.Keys._
 import sbt._
 import com.typesafe.packager.PackagerPlugin.Windows
@@ -8,6 +8,7 @@ import WindowsKeys._
 import com.mle.sbt.FileImplicits._
 import com.mle.sbt.GenericKeys._
 import com.mle.sbt.GenericPackaging
+import java.io.FileNotFoundException
 
 
 object WindowsPlugin extends Plugin {

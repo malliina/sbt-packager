@@ -6,6 +6,7 @@ import sbt.Keys._
 import com.mle.util.FileUtilities
 import com.mle.sbt.GenericKeys._
 import unix.UnixZipKeys
+import java.io.FileNotFoundException
 
 /**
  *
@@ -25,6 +26,7 @@ object PackagingUtil {
     files,
     UnixZipKeys.distribDir
     ) map ((base, filez, dest) => FileUtilities.copy(base, filez.toSet, dest).toSeq)
+
   def launcher(appDir: Path,
                files: Seq[Path],
                appName: String,
@@ -41,6 +43,7 @@ object PackagingUtil {
     }
     appFiles
   }
+
   /**
    * Removes section from name
    */
@@ -49,4 +52,22 @@ object PackagingUtil {
       name.slice(0, name indexOf section) + ".jar"
     else
       name
+
+  def verifyPathSetting(settings: (SettingKey[Path], Path)*) {
+    val errors = settings flatMap verifyPath
+    if (errors.nonEmpty) {
+      val messagesCombined = errors.mkString("\n")
+      throw new FileNotFoundException(messagesCombined)
+    }
+  }
+
+  private def verifyPath(setting: (SettingKey[Path], Path)): Option[String] = {
+    val (s, path) = setting
+    if (!Files.exists(path)) {
+      val desc = s.key.description.map(": " + _).getOrElse("")
+      Some("Not found: " + path.toAbsolutePath.toString + ", please configure " + s.key.label + desc)
+    } else {
+      None
+    }
+  }
 }
