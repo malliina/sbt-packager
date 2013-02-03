@@ -8,11 +8,10 @@ object MyBuild extends Build {
     scalaVersion := "2.9.2",
     organization := "com.mle",
     name := "sbt-packager",
-    version := "0.926-SNAPSHOT",
+    version := "0.932-SNAPSHOT",
     sbtPlugin := true,
     exportJars := true
   )
-
   lazy val sbtPackager = Project("sbt-packager", file("."))
     .settings(libraryDependencies ++= Seq(utilDep))
 }

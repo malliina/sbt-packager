@@ -54,10 +54,11 @@ object PackagingUtil {
       name
 
   def verifyPathSetting(settings: (SettingKey[Path], Path)*) {
+    println("Verifying paths...")
     val errors = settings flatMap verifyPath
     if (errors.nonEmpty) {
       val messagesCombined = errors.mkString("\n")
-      throw new FileNotFoundException(messagesCombined)
+      throw new FileNotFoundException("The following files were not found: \n" + messagesCombined)
     }
   }
 

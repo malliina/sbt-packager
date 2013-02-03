@@ -1,14 +1,14 @@
 package com.mle.sbt.win
 
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.Paths
 import sbt.Keys._
 import sbt._
 import com.typesafe.packager.PackagerPlugin.Windows
-import WindowsKeys._
+import com.mle.sbt.win.WindowsKeys._
 import com.mle.sbt.FileImplicits._
 import com.mle.sbt.GenericKeys._
-import com.mle.sbt.GenericPackaging
-import java.io.FileNotFoundException
+import com.mle.sbt.{PackagingUtil, GenericPackaging}
+import com.typesafe.packager.{PackagerPlugin, windows}
 
 
 object WindowsPlugin extends Plugin {
@@ -25,6 +25,14 @@ object WindowsPlugin extends Plugin {
     winSwExeName <<= (winSwName)(_ + ".exe"),
     winSwConfName <<= (winSwName)(_ + ".xml"),
     launch4jcExe := Paths get """C:\Program Files (x86)\Launch4j\launch4jc.exe""",
-    launch4jcConf <<= (target in Windows)(t => t.toPath / "launch4jconf.xml")
+    launch4jcConf <<= (target in Windows)(t => t.toPath / "launch4jconf.xml"),
+    verifyPaths <<= (launch4jcExe, appIcon, winSwExe, batPath, licenseRtf)
+      .map((lE, aI, wE, bP, lR) => PackagingUtil.verifyPathSetting(
+      launch4jcExe -> lE,
+      appIcon -> aI,
+      winSwExe -> wE,
+      batPath -> bP,
+      licenseRtf -> lR)),
+    win <<= (windows.Keys.packageMsi in PackagerPlugin.Windows)(result => result) dependsOn verifyPaths
   )
 }

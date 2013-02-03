@@ -4,31 +4,21 @@ import WindowsKeys._
 import com.mle.util.FileUtilities
 import com.typesafe.packager._
 import com.typesafe.packager.PackagerPlugin._
-import java.nio.file.{Paths, Path}
+import java.nio.file.{Files, Path}
 import sbt.Keys._
 import sbt._
 import xml.NodeSeq
 import com.mle.sbt.GenericKeys._
 import com.mle.sbt.FileImplicits._
-import com.mle.sbt.PackagingUtil
 
 object WixPackaging extends Plugin {
   // need to set the WIX environment variable to the wix installation dir e.g. program files\wix
   val windowsMappings = mappings in windows.Keys.packageMsi in Windows
   val wixSettings: Seq[Setting[_]] = Seq(
-    windowsMappings <+= (appJar, appJarName, launch4jcExe, appIcon, winSwExe, batPath, licenseRtf) map (
-      (jar, jarName, lE, aI, wE, bP, lR) => {
-        PackagingUtil.verifyPathSetting(
-          launch4jcExe -> lE,
-          appIcon -> aI,
-          winSwExe -> wE,
-          batPath -> bP,
-          licenseRtf -> lR)
-        jar.toFile -> jarName
-      }),
+    windowsMappings <+= (appJar, appJarName) map (
+      (jar, jarName) => jar.toFile -> jarName),
     windowsMappings <+= (appJar, appJarName, name, exePath, mainClass, launch4jcExe, appIcon, target in Windows) map (
       (bin, jarName, appName, exeP, m, l, i, t) => {
-        //PackagingUtil.verifyPathSetting(launch4jcExe -> l, appIcon -> i)
         val exeFileName = exeP.getFileName.toString
         val mClass = m.getOrElse(throw new Exception("No mainClass specified; cannot create .exe"))
         val exeFile = Launch4jWrapper.exeWrapper(l, bin, mClass, jarName, t.toPath / "launch4jconf.xml", exeP, i)
@@ -36,9 +26,9 @@ object WixPackaging extends Plugin {
       }),
     windowsMappings <+= (name, batPath, winSwExe, homeVar, winSwName, target in Windows, winSwConfName) map (
       (n, w, b, h, sName, t, c) => {
-        //PackagingUtil.verifyPathSetting(batPath -> w, winSwExe -> b)
         val conf = WindowsServiceWrapper.conf(n, w, b, h)
         val confFile = t.toPath / c
+        Files.createDirectories(confFile.getParent)
         FileUtilities.writerTo(confFile)(_.println(conf.toString()))
         println("Created: " + confFile.toAbsolutePath)
         confFile.toFile -> c
@@ -48,7 +38,6 @@ object WixPackaging extends Plugin {
       ),
     windows.Keys.wixConfig <<= (name, appJarName, libs, exePath, batPath, licenseRtf, appIcon, winSwExe, winSwExeName, winSwConfName, homeVar) map (
       (appName, jarName, libz, exe, bat, license, i, w, wN, wC, h) => {
-        PackagingUtil.verifyPathSetting(exePath -> exe)
         WixPackaging.makeWindowsXml(appName, jarName, libz, exe, bat, license, i, w, wN, wC, h)
       }),
     windows.Keys.lightOptions ++= Seq("-ext", "WixUIExtension", "-cultures:en-us")
