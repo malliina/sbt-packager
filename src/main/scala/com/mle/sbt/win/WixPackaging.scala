@@ -40,7 +40,7 @@ object WixPackaging extends Plugin {
       (appName, jarName, libz, exe, bat, license, i, w, wN, wC, h) => {
         WixPackaging.makeWindowsXml(appName, jarName, libz, exe, bat, license, i, w, wN, wC, h)
       }),
-    windows.Keys.lightOptions ++= Seq("-ext", "WixUIExtension", "-cultures:en-us")
+    windows.Keys.lightOptions ++= Seq("-ext", "WixUIExtension", "-ext", "WixUtilExtension", "-cultures:en-us")
   )
   /**
    * Product GUID: AA8D2CDE-6274-4415-8DD4-0075BDE77FDA

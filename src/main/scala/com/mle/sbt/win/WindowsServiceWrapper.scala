@@ -29,24 +29,45 @@ object WindowsServiceWrapper{
    * @return a wix fragment
    */
   def wixFragment(winswExeName:String) = {
-     (<CustomAction Id="ServiceInstall"
-                    FileKey={winswExeName}
-                    ExeCommand="install"
-                    Execute="deferred"
-                    Return="check"
-                    HideTarget="no"
-                    Impersonate="no"/>
-         <CustomAction Id="ServiceUninstall"
-                       FileKey={winswExeName}
-                       ExeCommand="uninstall"
-                       Execute="deferred"
-                       Return="check"
-                       HideTarget="no"
-                       Impersonate="no"/>
-       <InstallExecuteSequence>
-         <Custom Action="ServiceInstall" Before="InstallFinalize">NOT Installed</Custom>
-         <Custom Action="ServiceUninstall" Before="RemoveFiles">REMOVE="ALL"</Custom>
-       </InstallExecuteSequence>
+    //     (<CustomAction Id="ServiceInstall"
+    //                    FileKey={winswExeName}
+    //                    ExeCommand="install"
+    //                    Execute="deferred"
+    //                    Return="check"
+    //                    HideTarget="no"
+    //                    Impersonate="no"/>
+    //     <CustomAction Id="ServiceUninstall"
+    //                   FileKey={winswExeName}
+    //                   ExeCommand="uninstall"
+    //                   Execute="deferred"
+    //                   Return="check"
+    //                   HideTarget="no"
+    //                   Impersonate="no"/>
+    //       <InstallExecuteSequence>
+    //         <Custom Action="ServiceInstall" Before="InstallFinalize">NOT Installed</Custom>
+    //         <Custom Action="ServiceUninstall" Before="RemoveFiles">REMOVE="ALL"</Custom>
+    //       </InstallExecuteSequence>
+    //      )
+    (   <Property Id="QuietServiceInstall" Value="{winswExeName}"/>
+        <CustomAction Id="QuietServiceInstall"
+                      FileKey={winswExeName}
+                      ExeCommand="install"
+                      Execute="deferred"
+                      Return="check"
+                      HideTarget="no"
+                      Impersonate="no"/>
+        <Property Id="QuietServiceUninstall" Value="{winswExeName}"/>
+        <CustomAction Id="QuietServiceUninstall"
+                      FileKey={winswExeName}
+                      ExeCommand="uninstall"
+                      Execute="deferred"
+                      Return="check"
+                      HideTarget="no"
+                      Impersonate="no"/>
+      <InstallExecuteSequence>
+        <Custom Action="QuietServiceInstall" Before="InstallFinalize">NOT Installed</Custom>
+        <Custom Action="QuietServiceUninstall" Before="RemoveFiles">REMOVE="ALL"</Custom>
+      </InstallExecuteSequence>
       )
   }
 
