@@ -49,7 +49,7 @@ object WixPackaging extends Plugin {
    * Launcher GUID: 24241F02-194C-4AAD-8BD4-379B26F1C661
    */
   /**
-   *
+   * todo fix GUIDs
    * @return
    */
   def makeWindowsXml(appName: String,
@@ -96,8 +96,7 @@ object WixPackaging extends Plugin {
                 {libsXml}
               </Directory>
               <Component Id='LauncherScript' Guid='*'>
-                <File Id={batFileName.replace('.', '_')} Name={batFileName} DiskId='1' Source={bat.toAbsolutePath.toString}>
-                </File>
+                <File Id={batFileName.replace('.', '_')} Name={batFileName} DiskId='1' Source={bat.toAbsolutePath.toString}/>
               </Component>
               <Component Id='LauncherJar' Guid='*'>
                 <File Id={jarName.replace('.', '_')} Name={jarName} DiskId='1' Source={jarName}/>
@@ -109,12 +108,11 @@ object WixPackaging extends Plugin {
                 </File>
               </Component>
               <Component Id='ServiceManager' Guid='*'>
-                <File Id={winswExeName} Name={winswExeName} DiskId='1' Source={winswExe.toAbsolutePath.toString}>
-                </File>
+                <File Id={winswExeName} Name={winswExeName} DiskId='1' Source={winswExe.toAbsolutePath.toString}/>
+                <ServiceControl Id="ServiceController" Start="install" Stop="both" Remove="uninstall" Name={appName} Wait="yes" />
               </Component>
               <Component Id='ServiceManagerConf' Guid='*'>
-                <File Id={winswConfName.replace('.', '_')} Name={winswConfName} DiskId='1' Source={winswConfName}>
-                </File>
+                <File Id={winswConfName.replace('.', '_')} Name={winswConfName} DiskId='1' Source={winswConfName}/>
               </Component>
               <Component Id='AppLauncherPath' Guid='24241F02-194C-4AAD-8BD4-379B26F1C661'>
                 <CreateFolder/>
@@ -123,12 +121,14 @@ object WixPackaging extends Plugin {
               </Component>
             </Directory>
           </Directory>
-        </Directory>{winswFragment}<Feature Id='Complete'
-                                            Title={appName + " application"}
-                                            Description={"The Windows installation of " + appName}
-                                            Display='expand'
-                                            Level='1'
-                                            ConfigurableDirectory='INSTALLDIR'>
+        </Directory>
+        {winswFragment}
+        <Feature Id='Complete'
+                  Title={appName + " application"}
+                  Description={"The Windows installation of " + appName}
+                  Display='expand'
+                  Level='1'
+                  ConfigurableDirectory='INSTALLDIR'>
         <Feature Id='CoreApp'
                  Title='Core Application'
                  Description='The core application.'
@@ -178,17 +178,18 @@ object WixPackaging extends Plugin {
                                 ErrorControl="ignore"
                                 Interactive="no">
                 </ServiceInstall>
-                <ServiceControl Id="StartService" Start="install" Stop="both" Remove="uninstall" Name={appName} Wait="yes" />
+                <ServiceControl Id="ServiceController" Start="install" Stop="both" Remove="uninstall" Name={appName} Wait="yes" />
     */
   def toWixFragment(file: Path): WixFile = {
     val libPathString = file.toAbsolutePath.toString
     val fileName = file.getFileName.toString
     val fileId = fileName.replace('-', '_')
     val compId = fileId.filter(_ != '_')
-    val fragment = (<Component Id={compId} Guid='*'>
-      <File Id={fileId} Name={fileName} DiskId='1' Source={libPathString}>
-      </File>
-    </Component>)
+    val fragment =
+      (<Component Id={compId} Guid='*'>
+        <File Id={fileId} Name={fileName} DiskId='1' Source={libPathString}/>
+        <CreateFolder/>
+      </Component>)
     WixFile(compId, fragment)
   }
 

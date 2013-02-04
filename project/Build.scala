@@ -8,7 +8,7 @@ object MyBuild extends Build {
     scalaVersion := "2.9.2",
     organization := "com.mle",
     name := "sbt-packager",
-    version := "0.932-SNAPSHOT",
+    version := "0.952-SNAPSHOT",
     sbtPlugin := true,
     exportJars := true
   )
