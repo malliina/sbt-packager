@@ -32,18 +32,25 @@ object WindowsServiceWrapper{
     val baseCommand =       """"""" + "[INSTALLDIR]" + winswExeName + """"""" + " "
     val installCommand = baseCommand + "install"
     val uninstallCommand = baseCommand + "uninstall"
+//    val stopCommand = """"""" + winswExeName + """"""" + " stop"
     val stopCommand = baseCommand + "stop"
     (
         <CustomAction Id="QuietServiceInstall_Cmd" Property="QuietServiceInstall"
                     Value={installCommand} Execute="immediate"/>
         <CustomAction Id="QuietServiceInstall" BinaryKey="WixCA" DllEntry="CAQuietExec"
                       Execute="deferred" Return="check" Impersonate="no"/>
+        <Property Id="QtExecCmdLine" Value={stopCommand}/>
+        <CustomAction Id="QuietServiceStop" BinaryKey="WixCA" DllEntry="CAQuietExec"
+                      Execute="immediate" Return="check"/>
       <InstallExecuteSequence>
         <Custom Action="QuietServiceInstall_Cmd" Before="QuietServiceInstall"/>
         <Custom Action="QuietServiceInstall" After="InstallFiles">NOT Installed</Custom>
+        <Custom Action="QuietServiceStop" Before="InstallValidate">REMOVE="ALL"</Custom>
       </InstallExecuteSequence>
       )
   }
+
+//    <Custom Action="QuietServiceStop_Cmd" Before="QuietServiceStop"/>
   //      <Custom Action="QuietServiceUninstall_Cmd" Before="QuietServiceUninstall"/>
   //      <Custom Action="QuietServiceUninstall" Before="RemoveFiles">REMOVE="ALL"</Custom>
   //      <CustomAction Id="QuietServiceUninstall_Cmd" Property="QuietServiceUninstall"
@@ -53,10 +60,6 @@ object WindowsServiceWrapper{
 //    <CustomAction Id="QuietServiceUninstall_Cmd" Property="QuietServiceUninstall"
 //                  Value={uninstallCommand} Execute="immediate"/>
 //      <CustomAction Id="QuietServiceUninstall" BinaryKey="WixCA" DllEntry="CAQuietExec"
-//                    Execute="deferred" Return="check" Impersonate="no"/>
-//      <CustomAction Id="QuietServiceStop_Cmd" Property="QuietServiceStop"
-//                    Value={stopCommand} Execute="immediate"/>
-//      <CustomAction Id="QuietServiceStop" BinaryKey="WixCA" DllEntry="CAQuietExec"
 //                    Execute="deferred" Return="check" Impersonate="no"/>
 //    <Custom Action="QuietServiceStop_Cmd" Before="QuietServiceStop"/>
 //    <Custom Action="QuietServiceStop" After="InstallInitialize">REMOVE="ALL"</Custom>
