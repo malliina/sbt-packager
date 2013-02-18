@@ -33,6 +33,8 @@ object WindowsPlugin extends Plugin {
       winSwExe -> wE,
       batPath -> bP,
       licenseRtf -> lR)),
-    win <<= (windows.Keys.packageMsi in PackagerPlugin.Windows)(result => result) dependsOn verifyPaths
+    win <<= (windows.Keys.packageMsi in PackagerPlugin.Windows)(result => result) dependsOn verifyPaths,
+    displayName <<= (name)(n => n),
+    shortcut := false
   )
 }

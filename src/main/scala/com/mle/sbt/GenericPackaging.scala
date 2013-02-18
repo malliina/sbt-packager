@@ -18,7 +18,7 @@ object GenericPackaging extends Plugin {
       exportedProducts in Compile
       ) map ((cp, products) => {
       // Libs, but not my own jars
-      cp.files.filter(f => !products.files.contains(f)).map(_.toPath)
+      cp.files.filter(f => !f.isDirectory && !products.files.contains(f)).map(_.toPath)
     }),
     printLibs <<= (libs, name) map ((l: Seq[Path], pkgName) => {
       l foreach println

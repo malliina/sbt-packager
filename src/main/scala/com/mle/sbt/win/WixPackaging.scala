@@ -24,9 +24,10 @@ object WixPackaging extends Plugin {
         val exeFile = Launch4jWrapper.exeWrapper(l, bin, mClass, jarName, t.toPath / "launch4jconf.xml", exeP, i)
         exeFile.toFile -> exeFileName
       }),
-    windowsMappings <+= (name, batPath, winSwExe, homeVar, winSwName, target in Windows, winSwConfName) map (
-      (n, w, b, h, sName, t, c) => {
-        val conf = WindowsServiceWrapper.conf(n, w, b, h)
+    windowsMappings <+= (name, target in Windows, winSwConfName) map (
+      (n, t, c) => {
+        // build winsw service wrapper XML configuration file
+        val conf = WindowsServiceWrapper.conf(appName = n)
         val confFile = t.toPath / c
         Files.createDirectories(confFile.getParent)
         FileUtilities.writerTo(confFile)(_.println(conf.toString()))
@@ -36,23 +37,37 @@ object WixPackaging extends Plugin {
     windowsMappings <++= (libs, name) map ((libz, name) =>
       libz.map(libPath => (libPath.toFile -> ("lib/" + libPath.getFileName.toString)))
       ),
-    windows.Keys.wixConfig <<= (name, appJarName, libs, exePath, batPath, licenseRtf, appIcon, winSwExe, winSwExeName, winSwConfName, homeVar) map (
-      (appName, jarName, libz, exe, bat, license, i, w, wN, wC, h) => {
-        WixPackaging.makeWindowsXml(appName, jarName, libz, exe, bat, license, i, w, wN, wC, h)
+    windows.Keys.wixConfig <<= (name, displayName, appJarName, libs, exePath, batPath, licenseRtf, appIcon, winSwExe, winSwExeName, winSwConfName, productGuid, upgradeGuid, shortcut) map (
+      (appName, dispName, jarName, libz, exe, bat, license, i, w, wN, wC, pG, uG, sC) => {
+        WixPackaging.makeWindowsXml(appName, dispName, jarName, libz, exe, bat, license, i, w, wN, wC, pG, uG, sC)
       }),
     windows.Keys.lightOptions ++= Seq("-ext", "WixUIExtension", "-ext", "WixUtilExtension", "-cultures:en-us")
   )
   /**
    * Product GUID: AA8D2CDE-6274-4415-8DD4-0075BDE77FDA
-   * Package GUID: C2726D33-268F-47EA-BDA8-1B21EC6CC5EE
    * Upgrade GUID: 5EC7F255-24F9-4E1C-B19D-581626C50F02
+   * Package GUID: C2726D33-268F-47EA-BDA8-1B21EC6CC5EE
    * Launcher GUID: 24241F02-194C-4AAD-8BD4-379B26F1C661
    */
   /**
+   *
+   * <Component Id='AppLauncherPath' Guid='24241F02-194C-4AAD-8BD4-379B26F1C661'>
+    <Environment Id="PATH" Name="PATH" Value="[INSTALLDIR]" Permanent="no" Part="last" Action="set" System="yes"/>
+      </Component>
+    <Feature Id='ConfigurePath'
+                   Title={"Add " + dispName + " to Windows system PATH"}
+                   Description={"This will append " + dispName + " to your Windows system path."}
+                   Level='1'>
+            <ComponentRef Id='AppLauncherPath'/>
+          </Feature>
+
+    <Shortcut Id='desktopShortcut' Directory='DesktopFolder' Name={dispName}
+                            WorkingDirectory='INSTALLDIR' Icon={exeFileName} IconIndex="0" Advertise="yes"/>
    * todo fix GUIDs
    * @return
    */
   def makeWindowsXml(appName: String,
+                     dispName: String,
                      jarName: String,
                      libz: Seq[Path],
                      exe: Path,
@@ -62,22 +77,30 @@ object WixPackaging extends Plugin {
                      winswExe: Path,
                      winswExeName: String,
                      winswConfName: String,
-                     homeVar: String): scala.xml.Node = {
+                     prodGuid: String,
+                     upGuid: String,
+                     shortcut: Boolean): scala.xml.Node = {
     val appVersion = "1.0.0"
     val wixXml = toWixFragment(libz)
     val libsXml = wixXml.compsFragment
     val compRefXml = wixXml.compRefs
     val exeFileName = exe.getFileName.toString
     val batFileName = bat.getFileName.toString
-    val winswFragment = WindowsServiceWrapper.wixFragment(winswExeName)
+    val shortcutFragment =
+      if (shortcut) {
+          <Shortcut Id='desktopShortcut' Directory='DesktopFolder' Name={dispName}
+                    WorkingDirectory='INSTALLDIR' Icon={exeFileName} IconIndex="0" Advertise="yes"/>
+      } else {
+        NodeSeq.Empty
+      }
     (<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi' xmlns:util='http://schemas.microsoft.com/wix/UtilExtension'>
-      <Product Name={appName}
-               Id='AA8D2CDE-6274-4415-8DD4-0075BDE77FDA'
-               UpgradeCode='5EC7F255-24F9-4E1C-B19D-581626C50F02'
+      <Product Name={dispName}
+               Id={prodGuid}
+               UpgradeCode={upGuid}
                Language='1033'
                Version={appVersion}
                Manufacturer='Skogberg Labs'>
-        <Package Description={appName + " launcher script."}
+        <Package Description={dispName + " launcher script."}
                  Comments='Windows installer.'
                  Manufacturer='Skogberg Labs'
                  InstallScope='perMachine'
@@ -89,9 +112,7 @@ object WixPackaging extends Plugin {
         <Directory Id='TARGETDIR' Name='SourceDir'>
           <Directory Id="DesktopFolder" Name="Desktop"/>
           <Directory Id='ProgramFilesFolder' Name='PFiles'>
-            <Directory Id='INSTALLDIR' Name={appName}>
-              <Directory Id='classes_dir' Name='classes'>
-              </Directory>
+            <Directory Id='INSTALLDIR' Name={dispName}>
               <Directory Id="lib_dir" Name="lib">
                 {libsXml}
               </Directory>
@@ -103,59 +124,56 @@ object WixPackaging extends Plugin {
               </Component>
               <Component Id='ApplicationExecutable' Guid='*'>
                 <File Id='app_exe' Name={exeFileName} DiskId='1' Source={exe.toAbsolutePath.toString} KeyPath="yes">
-                  <Shortcut Id='desktopShortcut' Directory='DesktopFolder' Name={appName}
-                            WorkingDirectory='INSTALLDIR' Icon={exeFileName} IconIndex="0" Advertise="yes"/>
+                  {shortcutFragment}
                 </File>
-              </Component>
-              <Component Id='ServiceManager' Guid='*'>
-                <File Id={winswExeName} Name={winswExeName} DiskId='1' Source={winswExe.toAbsolutePath.toString}/>
-                <ServiceControl Id="ServiceController" Start="install" Stop="both" Remove="uninstall" Name={appName} Wait="yes" />
               </Component>
               <Component Id='ServiceManagerConf' Guid='*'>
                 <File Id={winswConfName.replace('.', '_')} Name={winswConfName} DiskId='1' Source={winswConfName}/>
               </Component>
-              <Component Id='AppLauncherPath' Guid='24241F02-194C-4AAD-8BD4-379B26F1C661'>
-                <CreateFolder/>
-                <Environment Id="PATH" Name="PATH" Value="[INSTALLDIR]" Permanent="no" Part="last" Action="set" System="yes"/>
-                <Environment Id={homeVar} Name={homeVar} Value="[INSTALLDIR]" Permanent="no" Action="set" System="yes"/>
+              <Component Id='ServiceManager' Guid='*'>
+                <File Id={winswExeName} Name={winswExeName} DiskId='1' Source={winswExe.toAbsolutePath.toString} KeyPath="yes"/>
+                <ServiceInstall Id="ServiceInstaller"
+                                Type="ownProcess"
+                                Vital="yes"
+                                Name={appName}
+                                DisplayName={dispName}
+                                Description={"The " + dispName + " service"}
+                                Start="auto"
+                                Account="LocalSystem"
+                                ErrorControl="ignore"
+                                Interactive="no"/>
+                <ServiceControl Id="ServiceController" Start="install" Stop="both" Remove="uninstall" Name={appName} Wait="yes"/>
               </Component>
             </Directory>
           </Directory>
         </Directory>
-        {winswFragment}
         <Feature Id='Complete'
-                  Title={appName + " application"}
-                  Description={"The Windows installation of " + appName}
-                  Display='expand'
-                  Level='1'
-                  ConfigurableDirectory='INSTALLDIR'>
-        <Feature Id='CoreApp'
-                 Title='Core Application'
-                 Description='The core application.'
+                 Title={dispName + " application"}
+                 Description={"The Windows installation of " + dispName}
+                 Display='expand'
                  Level='1'
-                 Absent='disallow'>
-          <ComponentRef Id='LauncherScript'/>
-          <ComponentRef Id='ApplicationExecutable'/>
-          <ComponentRef Id='LauncherJar'/>{compRefXml}
+                 ConfigurableDirectory='INSTALLDIR'>
+          <Feature Id='CoreApp'
+                   Title='Core Application'
+                   Description='The core application.'
+                   Level='1'
+                   Absent='disallow'>
+            <ComponentRef Id='LauncherScript'/>
+            <ComponentRef Id='ApplicationExecutable'/>
+            <ComponentRef Id='LauncherJar'/>{compRefXml}
+          </Feature>
+          <Feature Id='InstallAsService'
+                   Title={"Install " + dispName + " as a Windows service"}
+                   Description={"This will install " + dispName + " as a Windows service."}
+                   Level='1'
+                   Absent='disallow'>
+            <ComponentRef Id='ServiceManager'/>
+            <ComponentRef Id='ServiceManagerConf'/>
+          </Feature>
         </Feature>
-        <Feature Id='ConfigurePath'
-                 Title={"Add " + appName + " to Windows system PATH"}
-                 Description={"This will append " + appName + " to your Windows system path."}
-                 Level='1'>
-          <ComponentRef Id='AppLauncherPath'/>
-        </Feature>
-        <Feature Id='InstallAsService'
-                 Title={"Install " + appName + " as a Windows service"}
-                 Description={"This will install " + appName + " as a Windows service."}
-                 Level='1'
-                 Absent='disallow'>
-          <ComponentRef Id='ServiceManager'/>
-          <ComponentRef Id='ServiceManagerConf'/>
-        </Feature>
-      </Feature>
         <MajorUpgrade AllowDowngrades="no"
                       Schedule="afterInstallInitialize"
-                      DowngradeErrorMessage="A later version of [ProductName] is already installed.  Setup will no exit."/>
+                      DowngradeErrorMessage="A later version of [ProductName] is already installed.  Setup will now exit."/>
 
         <UIRef Id="WixUI_FeatureTree"/>
         <UIRef Id="WixUI_ErrorProgressText"/>
@@ -166,20 +184,6 @@ object WixPackaging extends Plugin {
     </Wix>)
   }
 
-  /**
-  <ServiceInstall Id="ServiceInstaller"
-                                Type="ownProcess"
-                                Vital="yes"
-                                Name={appName}
-                                DisplayName={appName+" service"}
-                                Description={"The "+appName+" service"}
-                                Start="auto"
-                                Account="LocalSystem"
-                                ErrorControl="ignore"
-                                Interactive="no">
-                </ServiceInstall>
-                <ServiceControl Id="ServiceController" Start="install" Stop="both" Remove="uninstall" Name={appName} Wait="yes" />
-    */
   def toWixFragment(file: Path): WixFile = {
     val libPathString = file.toAbsolutePath.toString
     val fileName = file.getFileName.toString

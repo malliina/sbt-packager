@@ -5,6 +5,7 @@ import sbt.{TaskKey, SettingKey}
 
 object WindowsKeys {
   val windowsPkgHome = SettingKey[Path]("win-pkg-home", "Windows packaging directory")
+  val displayName = SettingKey[String]("display-name","Display name of application")
   val exePath = SettingKey[Path]("exe-path", "Application .exe path on windows during packaging")
   val batPath = SettingKey[Path]("bat-path", "Application .bat path on windows during packaging")
   val windowsJarPath = SettingKey[Path]("win-jar-path", "Path to jar on windows during packaging")
@@ -19,4 +20,7 @@ object WindowsKeys {
   val winSwName = SettingKey[String]("winsw-name", "Windows Service Wrapper name on target")
   val verifyPaths = TaskKey[Unit]("verify-paths", "Verifies that the required files for MSI packaging exist in the project")
   val win = TaskKey[sbt.File]("win", "verify-paths followed by package-msi")
+  val productGuid = SettingKey[String]("product-guid", "Product GUID required for MSI packaging. Generate with UUID.randomUUID().")
+  val upgradeGuid = SettingKey[String]("upgrade-guid", "Upgrade GUID required for MSI packaging. Generate with UUID.randomUUID().")
+  val shortcut = SettingKey[Boolean]("shortcut","Whether or not to install a desktop shortcut to the main application executable")
 }
