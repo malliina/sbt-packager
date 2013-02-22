@@ -2,16 +2,16 @@ package com.mle.sbt.win
 
 
 object WindowsServiceWrapper{
-  def conf(appName:String)={
+  def conf(appName:String, displayName:String)=(
     <service>
       <id>{appName}</id>
-      <name>{appName}</name>
-      <description>{appName}</description>
+      <name>{displayName}</name>
+      <description>{displayName}</description>
       <executable>%BASE%\{appName}.bat</executable>
       <startargument>start</startargument>
       <stopargument>stop</stopargument>
     </service>
-  }
+  )
   /**
    *  <logpath>C:\</logpath>
       <logmode>roll</logmode>

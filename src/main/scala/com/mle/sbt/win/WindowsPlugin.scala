@@ -26,15 +26,34 @@ object WindowsPlugin extends Plugin {
     winSwConfName <<= (winSwName)(_ + ".xml"),
     launch4jcExe := Paths get """C:\Program Files (x86)\Launch4j\launch4jc.exe""",
     launch4jcConf <<= (target in Windows)(t => t.toPath / "launch4jconf.xml"),
-    verifyPaths <<= (launch4jcExe, appIcon, winSwExe, batPath, licenseRtf)
-      .map((lE, aI, wE, bP, lR) => PackagingUtil.verifyPathSetting(
-      launch4jcExe -> lE,
-      appIcon -> aI,
-      winSwExe -> wE,
-      batPath -> bP,
-      licenseRtf -> lR)),
-    win <<= (windows.Keys.packageMsi in PackagerPlugin.Windows)(result => result) dependsOn verifyPaths,
+    verifySettings <<= (launch4jcExe, appIcon, winSwExe, batPath, licenseRtf, mainClass)
+      .map((lE, aI, wE, bP, lR, mC) => {
+      if (mC.isEmpty)
+        throw new Exception("No mainClass specified; cannot create .exe")
+      PackagingUtil.verifyPathSetting(
+        launch4jcExe -> lE,
+        appIcon -> aI,
+        winSwExe -> wE,
+        batPath -> bP,
+        licenseRtf -> lR)
+    }),
+    printPaths <<= (launch4jcExe, appIcon, winSwExe, batPath, licenseRtf, streams)
+      .map((lE, aI, wE, bP, lR, logger) => {
+      val keys = Seq(launch4jcExe, appIcon, winSwExe, batPath, licenseRtf)
+      val values = Seq(lE, aI, wE, bP, lR)
+      val pairs = keys zip values
+      PackagingUtil.logPairs(pairs, logger)
+      values
+    }),
+    win <<= (windows.Keys.packageMsi in PackagerPlugin.Windows, streams) map ((result, logger) => {
+      logger.log.info("Packaged: " + result.toPath.toAbsolutePath.toString)
+      result
+    }) dependsOn verifySettings,
     displayName <<= (name)(n => n),
-    shortcut := false
+    shortcut := false,
+    printMappings in Windows <<= (mappings in windows.Keys.packageMsi in Windows, streams) map ((maps, logger) => {
+      val output = maps.map(kv => kv._1.getAbsolutePath + "\n" + kv._2).mkString("\n---\n")
+      logger.log.info(output)
+    })
   )
 }

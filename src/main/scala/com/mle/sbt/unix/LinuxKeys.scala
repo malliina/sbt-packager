@@ -4,7 +4,7 @@ import sbt.{TaskKey, SettingKey}
 import java.nio.file.Path
 
 /**
- * 
+ *
  * @author mle
  */
 object LinuxKeys {
@@ -16,6 +16,10 @@ object LinuxKeys {
   val postInstall = SettingKey[Path]("post-install", "Postinstall script")
   val preRemove = SettingKey[Path]("pre-remove", "Preremove script")
   val postRemove = SettingKey[Path]("post-remove", "Postremove script")
+  /**
+   * Misc
+   */
+  val printPaths = TaskKey[Seq[Path]]("print-unix-paths", "Prints unix packaging paths")
   /**
    * Destination keys
    */

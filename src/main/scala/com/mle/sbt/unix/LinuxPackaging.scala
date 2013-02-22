@@ -2,7 +2,7 @@ package com.mle.sbt.unix
 
 import com.typesafe.packager.PackagerPlugin._
 import com.typesafe.packager._
-import java.nio.file.{Paths, Path}
+import java.nio.file.{Files, Paths, Path}
 import linux.LinuxPackageMapping
 import sbt.Keys._
 import sbt._
@@ -12,12 +12,23 @@ import com.mle.sbt.GenericKeys._
 import scala.Some
 import com.mle.sbt.win.WixPackaging
 import com.mle.sbt.FileImplicits._
+import com.mle.sbt.PackagingUtil
 
 object LinuxPackaging extends Plugin {
+
+
   val linuxSettings: Seq[Setting[_]] = UnixPackaging.unixSettings ++ Seq(
     /**
      * Source settings
      */
+    printPaths <<= (controlDir, preInstall, postInstall, preRemove, postRemove, streams) map ((c, preI, postI, preR, postR, logger) => {
+      val keys = Seq(controlDir, preInstall, postInstall, preRemove, postRemove)
+      val values = Seq(c, preI, postI, preR, postR)
+      val pairs = keys zip values
+      PackagingUtil.logPairs(pairs, logger)
+      values
+    }),
+
     /**
      * Destination settings
      */
@@ -76,7 +87,7 @@ object LinuxPackaging extends Plugin {
     debFiles <<= (debian.Keys.linuxPackageMappings in Debian, name) map ((mappings, pkgName) => {
       printMappings(mappings)
     })
-//    debian.Keys.debianPackageDependencies in Debian ++= Seq("wget")
+    //    debian.Keys.debianPackageDependencies in Debian ++= Seq("wget")
 
   )
   val rpmSettings: Seq[Setting[_]] = linuxSettings ++ Seq(
@@ -87,7 +98,7 @@ object LinuxPackaging extends Plugin {
     rpm.Keys.rpmPreInstall <<= (preInstall)(Some(_)),
     rpm.Keys.rpmPostInstall <<= (postInstall)(Some(_)),
     rpm.Keys.rpmPreRemove <<= (preRemove)(Some(_)),
-    rpm.Keys.rpmPostRemove <<= (postRemove)(Some(_))    ,
+    rpm.Keys.rpmPostRemove <<= (postRemove)(Some(_)),
     rpmFiles <<= (rpm.Keys.linuxPackageMappings in Rpm, name) map ((mappings, pkgName) => {
       printMappings(mappings)
     })
@@ -130,6 +141,7 @@ object LinuxPackaging extends Plugin {
 
   def rebase(files: Seq[Path], maybeSrcBase: Option[Path], destBase: Path): Seq[(Path, String)] =
     maybeSrcBase.map(srcBase => rebase(files, srcBase, destBase)).getOrElse(Seq.empty[(Path, String)])
+
   def printMappings(mappings: Seq[LinuxPackageMapping]) = {
     mappings.foreach(mapping => {
       mapping.mappings.foreach(pair => {

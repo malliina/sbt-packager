@@ -1,18 +1,27 @@
 package com.mle.sbt
 
-import sbt.{TaskKey, Task, Project, SettingKey}
+import sbt._
 import java.nio.file.{StandardCopyOption, Files, Path}
 import sbt.Keys._
 import com.mle.util.FileUtilities
 import com.mle.sbt.GenericKeys._
 import unix.UnixZipKeys
 import java.io.FileNotFoundException
+import scala.Some
 
 /**
  *
  * @author mle
  */
 object PackagingUtil {
+  def logPairs(pairs: Seq[(SettingKey[Path], Types.Id[Path])], logger: TaskStreams) {
+    pairs.foreach(pair => {
+      val (key, value) = pair
+      val actualKey = key.key
+      val keyPrinted = actualKey.description.getOrElse(actualKey.label)
+      logger.log.info(keyPrinted + "\n" + value.toAbsolutePath.toString + "\nExists: " + Files.exists(value))
+    })
+  }
   def filesIn(dir: SettingKey[Option[Path]]): Project.Initialize[Task[Seq[Path]]] =
     (dir, name).map((path: Option[Path], pkgName) => {
       path.map(p =>

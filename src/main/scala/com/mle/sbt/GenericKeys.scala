@@ -15,4 +15,5 @@ object GenericKeys extends Plugin{
   val homeVar = SettingKey[String]("home-var", "Application home environment variable")
   val libs = TaskKey[Seq[Path]]("libs", "All (managed and unmanaged) libs")
   val printLibs = TaskKey[Unit]("print-libs", "Prints library .jars to stdout")
+  val printMappings = TaskKey[Unit]("print-mappings", "Prints the packaging mappings")
 }
