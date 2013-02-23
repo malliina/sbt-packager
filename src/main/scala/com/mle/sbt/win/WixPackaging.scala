@@ -93,7 +93,6 @@ object WixPackaging extends Plugin {
       val parent = kv._2.getParent
       parent != null && parent.getFileName.toString == "lib"
     })
-    println("libs: " + libFiles.size + ", total: " + files.size)
     val appVersion = "1.0.0"
     val libsWixXml = toWixFragment2(libFiles)
     val coreFilesXml = toWixFragment2(coreFiles)
@@ -240,9 +239,6 @@ object WixPackaging extends Plugin {
                    Level='1'>
             <ComponentRef Id='AppLauncherPath'/>
           </Feature>
-
-    <Shortcut Id='desktopShortcut' Directory='DesktopFolder' Name={dispName}
-                            WorkingDirectory='INSTALLDIR' Icon={exeFileName} IconIndex="0" Advertise="yes"/>
    */
 
 }
