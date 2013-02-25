@@ -63,7 +63,6 @@ object PackagingUtil {
       name
 
   def verifyPathSetting(settings: (SettingKey[Path], Path)*) {
-    println("Verifying paths...")
     val errors = settings flatMap verifyPath
     if (errors.nonEmpty) {
       val messagesCombined = errors.mkString("\n")

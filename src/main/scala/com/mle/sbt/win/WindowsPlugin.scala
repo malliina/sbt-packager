@@ -8,7 +8,7 @@ import com.mle.sbt.win.WindowsKeys._
 import com.mle.sbt.FileImplicits._
 import com.mle.sbt.GenericKeys._
 import com.mle.sbt.{PackagingUtil, GenericPackaging}
-import com.typesafe.packager.{windows, PackagerPlugin}
+import com.typesafe.packager.windows
 
 
 object WindowsPlugin extends Plugin {
@@ -50,7 +50,7 @@ object WindowsPlugin extends Plugin {
     win <<= (windows.Keys.packageMsi in Windows, msiName, streams) map ((result, fileName, logger) => {
       val msiFile = result.toPath
       val msiRenamed = msiFile.resolveSibling(fileName)
-      val packagedFile = Files.move(msiFile,msiRenamed,StandardCopyOption.REPLACE_EXISTING)
+      val packagedFile = Files.move(msiFile, msiRenamed, StandardCopyOption.REPLACE_EXISTING)
       logger.log.info("Packaged: " + packagedFile.toAbsolutePath.toString)
       packagedFile
     }) dependsOn verifySettings,
