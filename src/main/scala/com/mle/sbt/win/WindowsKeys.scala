@@ -16,7 +16,7 @@ object WindowsKeys {
    * Other
    */
   val msiName = SettingKey[String]("msi-name", "Name of MSI package built with task win")
-  val win = TaskKey[Path]("win", "Runs " + verifySettings.key.label + " followed by package-msi and returns the package renamed to " + msiName.key.label)
+  val win = TaskKey[Path]("win", "Verifies settings followed by package-msi")
   val printPaths = TaskKey[Seq[Path]]("print-win-paths", "Prints the paths to the required files for MSI packaging")
   val verifySettings = TaskKey[Unit]("verify-settings", "Verifies that the required files for MSI packaging exist in the project and that a main class has been specified")
   val windowsPkgHome = SettingKey[Path]("win-pkg-home", "Windows packaging directory")
