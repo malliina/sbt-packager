@@ -15,10 +15,12 @@ object WindowsKeys {
   /**
    * Other
    */
-  val printPaths = TaskKey[Seq[Path]]("print-win-paths","Prints the paths to the required files for MSI packaging")
+  val msiName = SettingKey[String]("msi-name", "Name of MSI package built with task win")
+  val win = TaskKey[Path]("win", "Runs " + verifySettings.key.label + " followed by package-msi and returns the package renamed to " + msiName.key.label)
+  val printPaths = TaskKey[Seq[Path]]("print-win-paths", "Prints the paths to the required files for MSI packaging")
   val verifySettings = TaskKey[Unit]("verify-settings", "Verifies that the required files for MSI packaging exist in the project and that a main class has been specified")
   val windowsPkgHome = SettingKey[Path]("win-pkg-home", "Windows packaging directory")
-  val displayName = SettingKey[String]("display-name","Display name of application")
+  val displayName = SettingKey[String]("display-name", "Display name of application")
   val exePath = SettingKey[Path]("exe-path", "Application .exe path on windows during packaging")
   val windowsJarPath = SettingKey[Path]("win-jar-path", "Path to jar on windows during packaging")
   val launch4jcConf = SettingKey[Path]("launch4j-conf", "Path to launch4j XML configuration file")
@@ -26,10 +28,9 @@ object WindowsKeys {
   val winSwExeName = SettingKey[String]("winsw-exe-name", "Windows Service Wrapper executable name on target")
   val winSwConfName = SettingKey[String]("winsw-conf-name", "Windows Service Wrapper XML config file name on target")
   val winSwName = SettingKey[String]("winsw-name", "Windows Service Wrapper name on target")
-  val win = TaskKey[sbt.File]("win", "verify-paths followed by package-msi")
   val productGuid = SettingKey[String]("product-guid", "Product GUID required for MSI packaging. Generate with UUID.randomUUID().")
   val upgradeGuid = SettingKey[String]("upgrade-guid", "Upgrade GUID required for MSI packaging. Generate with UUID.randomUUID().")
-  val shortcut = SettingKey[Boolean]("shortcut","Whether or not to install a desktop shortcut to the main application executable")
+  val shortcut = SettingKey[Boolean]("shortcut", "Whether or not to install a desktop shortcut to the main application executable")
   val serviceFeature = SettingKey[Boolean]("service-feature", "Whether or not to include the option to install the application as a service")
-
+  val manufacturer = SettingKey[String]("win-manufacturer", "Manufacturer field for MSI packaging")
 }

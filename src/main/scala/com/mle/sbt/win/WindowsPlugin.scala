@@ -1,6 +1,6 @@
 package com.mle.sbt.win
 
-import java.nio.file.Paths
+import java.nio.file.{StandardCopyOption, Files, Paths}
 import sbt.Keys._
 import sbt._
 import com.typesafe.packager.PackagerPlugin.Windows
@@ -8,17 +8,19 @@ import com.mle.sbt.win.WindowsKeys._
 import com.mle.sbt.FileImplicits._
 import com.mle.sbt.GenericKeys._
 import com.mle.sbt.{PackagingUtil, GenericPackaging}
-import com.typesafe.packager.{PackagerPlugin, windows}
+import com.typesafe.packager.{windows, PackagerPlugin}
 
 
 object WindowsPlugin extends Plugin {
   val windowsSettings: Seq[Setting[_]] = GenericPackaging.genericSettings ++ WixPackaging.wixSettings ++ Seq(
+    msiName <<= (name in Windows, version)((n, v) => n + "-" + v + ".msi"),
     windowsPkgHome <<= (pkgHome)(_ / "windows"),
     windowsJarPath <<= (target in Windows, appJarName)((t, n) => t.toPath / n),
     exePath <<= (target in Windows, name)((t, n) => t.toPath / (n + ".exe")),
     batPath <<= (windowsPkgHome, name)((w, n) => w / (n + ".bat")),
     licenseRtf <<= (windowsPkgHome)(_ / "license.rtf"),
     appIcon <<= (windowsPkgHome)(_ / "app.ico"),
+    serviceFeature := true,
     winSwExe <<= (windowsPkgHome)(_ / "winsw-1.9-bin.exe"),
     winSwConf <<= (target in Windows, winSwConfName)((t, n) => t.toPath / n),
     winSwName <<= (name)(_ + "svc"),
@@ -45,9 +47,12 @@ object WindowsPlugin extends Plugin {
       PackagingUtil.logPairs(pairs, logger)
       values
     }),
-    win <<= (windows.Keys.packageMsi in PackagerPlugin.Windows, streams) map ((result, logger) => {
-      logger.log.info("Packaged: " + result.toPath.toAbsolutePath.toString)
-      result
+    win <<= (windows.Keys.packageMsi in Windows, msiName, streams) map ((result, fileName, logger) => {
+      val msiFile = result.toPath
+      val msiRenamed = msiFile.resolveSibling(fileName)
+      val packagedFile = Files.move(msiFile,msiRenamed,StandardCopyOption.REPLACE_EXISTING)
+      logger.log.info("Packaged: " + packagedFile.toAbsolutePath.toString)
+      packagedFile
     }) dependsOn verifySettings,
     displayName <<= (name)(n => n),
     shortcut := false,
