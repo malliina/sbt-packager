@@ -32,5 +32,4 @@ object WindowsKeys {
   val upgradeGuid = SettingKey[String]("upgrade-guid", "Upgrade GUID required for MSI packaging. Generate with UUID.randomUUID().")
   val shortcut = SettingKey[Boolean]("shortcut", "Whether or not to install a desktop shortcut to the main application executable")
   val serviceFeature = SettingKey[Boolean]("service-feature", "Whether or not to include the option to install the application as a service")
-  val manufacturer = SettingKey[String]("win-manufacturer", "Manufacturer field for MSI packaging")
 }

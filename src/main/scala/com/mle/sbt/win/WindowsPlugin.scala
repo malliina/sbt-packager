@@ -3,12 +3,12 @@ package com.mle.sbt.win
 import java.nio.file.{StandardCopyOption, Files, Paths}
 import sbt.Keys._
 import sbt._
-import com.typesafe.packager.PackagerPlugin.Windows
+import com.typesafe.sbt.SbtNativePackager.Windows
 import com.mle.sbt.win.WindowsKeys._
 import com.mle.sbt.FileImplicits._
 import com.mle.sbt.GenericKeys._
 import com.mle.sbt.{PackagingUtil, GenericPackaging}
-import com.typesafe.packager.windows
+import com.typesafe.sbt.packager.windows
 
 
 object WindowsPlugin extends Plugin {

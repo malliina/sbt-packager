@@ -2,8 +2,8 @@ package com.mle.sbt.win
 
 import WindowsKeys._
 import com.mle.util.FileUtilities
-import com.typesafe.packager._
-import com.typesafe.packager.PackagerPlugin._
+import com.typesafe.sbt.packager._
+import com.typesafe.sbt.SbtNativePackager._
 import java.nio.file.{Paths, Files, Path}
 import sbt.Keys._
 import sbt._
@@ -11,6 +11,7 @@ import xml.NodeSeq
 import com.mle.sbt.GenericKeys._
 import com.mle.sbt.FileImplicits._
 import java.io.PrintWriter
+import com.mle.sbt.GenericKeys
 
 object WixPackaging extends Plugin {
   def writerTo(path: Path)(op: PrintWriter => Unit) = {
@@ -68,7 +69,7 @@ object WixPackaging extends Plugin {
       productGuid,
       upgradeGuid,
       shortcut,
-      manufacturer,
+      GenericKeys.manufacturer,
       serviceFeature) map (
       (mappings, appName,appVersion, dispName,
        exe, license, icon, serviceExe,

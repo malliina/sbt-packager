@@ -11,7 +11,7 @@ import com.mle.sbt.GenericPackaging
  *
  * @author mle
  */
-object UnixPackaging {
+object UnixPlugin {
   val unixSettings: Seq[Setting[_]] = GenericPackaging.genericSettings ++ Seq(
     unixPkgHome <<= (pkgHome)(_ / "unix"),
     configPath <<= (unixPkgHome)(b => Some((b / confDir))),

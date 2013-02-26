@@ -15,7 +15,7 @@ import com.mle.sbt.GenericKeys._
  */
 object UnixZipPackaging {
   val outDir = "distrib"
-  val unixZipSettings = UnixPackaging.unixSettings ++ Seq(
+  val unixZipSettings = UnixPlugin.unixSettings ++ Seq(
     /**
      * Destination settings
      */

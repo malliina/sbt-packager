@@ -1,7 +1,7 @@
 package com.mle.sbt.unix
 
-import com.typesafe.packager.PackagerPlugin._
-import com.typesafe.packager._
+import com.typesafe.sbt.SbtNativePackager._
+import com.typesafe.sbt.packager._
 import java.nio.file.{Files, Paths, Path}
 import linux.LinuxPackageMapping
 import sbt.Keys._
@@ -12,12 +12,12 @@ import com.mle.sbt.GenericKeys._
 import scala.Some
 import com.mle.sbt.win.WixPackaging
 import com.mle.sbt.FileImplicits._
-import com.mle.sbt.PackagingUtil
+import com.mle.sbt.{GenericKeys, PackagingUtil}
 
-object LinuxPackaging extends Plugin {
+object LinuxPlugin extends Plugin {
 
 
-  val linuxSettings: Seq[Setting[_]] = UnixPackaging.unixSettings ++ Seq(
+  val linuxSettings: Seq[Setting[_]] = UnixPlugin.unixSettings ++ Seq(
     /**
      * Source settings
      */
@@ -44,38 +44,39 @@ object LinuxPackaging extends Plugin {
     postInstall <<= (controlDir)(_ / "postinstall.sh"),
     preRemove <<= (controlDir)(_ / "preuninstall.sh"),
     postRemove <<= (controlDir)(_ / "postuninstall.sh"),
+    copyrightFile <<= (unixPkgHome)(_ / "copyright"),
+    changelogFile <<= (unixPkgHome)(_ / "changelog"),
+    initScript <<= (unixPkgHome, name in Linux)((p, n) => p / (n + ".sh")),
+    defaultsFile <<= (unixPkgHome, name in Linux)((home, n) => home / (n + ".defaults")),
     // Flat copy of libs to /lib on destination system
     libMappings <<= (libs, unixLibDest) map ((libFiles, destDir) => {
       libFiles.map(file => file -> (destDir / file.getFileName).toString)
     }),
     confMappings <<= (configFiles, configPath, unixConfDest) map rebase,
     scriptMappings <<= (scriptFiles, scriptPath, unixScriptDest) map rebase,
-    // http://lintian.debian.org/tags/maintainer-address-missing.html
-    linux.Keys.maintainer := "Michael Skogberg <malliina123@gmail.com>",
-    linux.Keys.packageSummary := "This is a summary of the package",
+    linux.Keys.packageSummary <<= (name in Linux)(n => "This is a summary of " + n),
     linux.Keys.packageDescription := "This is the description of the package.",
-    //    name := "wicket",
     linux.Keys.linuxPackageMappings in Linux <++= (
       unixHome, unixPkgHome, name, appJar, libMappings, confMappings,
-      scriptMappings, unixLogDir, appJarName
+      scriptMappings, unixLogDir, appJarName, defaultsFile, initScript
       ) map (
-      (home, pkgSrc, pkgName, jarFile, libs, confs, scripts, logDir, jarName) => Seq(
-        pkgMaps(Seq((pkgSrc / (pkgName + ".sh")) -> ("/etc/init.d/" + pkgName)) ++ scripts, perms = "0755"),
+      (home, pkgSrc, pkgName, jarFile, libs, confs, scripts, logDir, jarName, defFile, iScript) => Seq(
+        pkgMaps(Seq(iScript -> ("/etc/init.d/" + pkgName)) ++ scripts, perms = "0755"),
         pkgMaps(libs),
-        pkgMaps(confs ++ Seq((pkgSrc / (pkgName + ".defaults")) -> ("/etc/default/" + pkgName)), isConfig = true),
+        pkgMaps(confs ++ Seq(defFile -> ("/etc/default/" + pkgName)), isConfig = true),
         pkgMap((pkgSrc / "logs") -> logDir.toString, perms = "0755"),
         pkgMap(jarFile -> ((home / jarName).toString))
       ))
   )
   val debianSettings: Seq[Setting[_]] = linuxSettings ++ Seq(
     debian.Keys.linuxPackageMappings in Debian <++= linux.Keys.linuxPackageMappings in Linux,
-    debian.Keys.version := "0.1",
+    //    debian.Keys.version := "0.1",
     debian.Keys.linuxPackageMappings in Debian <++= (unixPkgHome, name,
-      preInstall, postInstall, preRemove, postRemove) map (
-      (pkgSrc, pkgName, preinst, postinst, prerm, postrm) => Seq(
+      preInstall, postInstall, preRemove, postRemove, copyrightFile, changelogFile) map (
+      (pkgSrc, pkgName, preinst, postinst, prerm, postrm, cRight, changeLog) => Seq(
         // http://lintian.debian.org/tags/no-copyright-file.html
-        pkgMap((pkgSrc / "copyright") -> ("/usr/share/doc/" + pkgName + "/copyright")),
-        pkgMap((pkgSrc / "changelog") -> ("/usr/share/doc/" + pkgName + "/changelog.gz"), gzipped = true) asDocs(),
+        pkgMap(cRight -> ("/usr/share/doc/" + pkgName + "/copyright")),
+        pkgMap(changeLog -> ("/usr/share/doc/" + pkgName + "/changelog.gz"), gzipped = true) asDocs(),
         pkgMaps(Seq(
           preinst -> "DEBIAN/preinst",
           postinst -> "DEBIAN/postinst",
@@ -84,25 +85,32 @@ object LinuxPackaging extends Plugin {
         ), perms = "0755")
       ))
     ,
-    debFiles <<= (debian.Keys.linuxPackageMappings in Debian, name) map ((mappings, pkgName) => {
-      printMappings(mappings)
-    })
+    debFiles <<= (debian.Keys.linuxPackageMappings in Debian, streams) map (printMappings)
     //    debian.Keys.debianPackageDependencies in Debian ++= Seq("wget")
 
   )
   val rpmSettings: Seq[Setting[_]] = linuxSettings ++ Seq(
     rpm.Keys.linuxPackageMappings in Rpm <++= linux.Keys.linuxPackageMappings in Linux,
-    rpm.Keys.rpmRelease := "0.1",
-    rpm.Keys.rpmVendor := "kingmichael",
-    rpm.Keys.rpmLicense := Some("You have the right to remain silent"),
-    rpm.Keys.rpmPreInstall <<= (preInstall)(Some(_)),
-    rpm.Keys.rpmPostInstall <<= (postInstall)(Some(_)),
-    rpm.Keys.rpmPreRemove <<= (preRemove)(Some(_)),
-    rpm.Keys.rpmPostRemove <<= (postRemove)(Some(_)),
-    rpmFiles <<= (rpm.Keys.linuxPackageMappings in Rpm, name) map ((mappings, pkgName) => {
-      printMappings(mappings)
-    })
+    rpm.Keys.rpmVendor <<= (GenericKeys.manufacturer)(m => m),
+    rpm.Keys.rpmLicense := Some("All rights reserved."),
+    rpmFiles <<= (rpm.Keys.linuxPackageMappings in Rpm, streams) map (printMappings),
+    //    rpm.Keys.rpmPreInstall <<= (preInstall)(Some(_)),
+    //    rpm.Keys.rpmPostInstall <<= (postInstall)(Some(_)),
+    //    rpm.Keys.rpmPreRemove <<= (preRemove)(Some(_)),
+    //    rpm.Keys.rpmPostRemove <<= (postRemove)(Some(_)),
+    rpm.Keys.rpmPre <<= (preInstall)(fileToString),
+    rpm.Keys.rpmPost <<= (postInstall)(fileToString),
+    rpm.Keys.rpmPreun <<= (preRemove)(fileToString),
+    rpm.Keys.rpmPostun <<= (postRemove)(fileToString)
   )
+
+  def fileToString(file: Path) =
+    if (Files exists file) {
+      Some(io.Source.fromFile(file.toFile).getLines().mkString("\n"))
+    } else {
+      None
+    }
+
   val defaultNativeProject: Seq[Setting[_]] = linuxSettings ++ debianSettings ++ rpmSettings ++ WixPackaging.wixSettings
 
   def pkgMap(file: (Path, String), perms: String = "0644", gzipped: Boolean = false) =
@@ -127,10 +135,10 @@ object LinuxPackaging extends Plugin {
     packageMapping()
   }
 
-  def printMapping(mapping: LinuxPackageMapping) {
+  def printMapping(mapping: LinuxPackageMapping, logger: TaskStreams) {
     mapping.mappings.foreach(ping => {
       val (file, dest) = ping
-      println("file: " + file + ", dest: " + dest)
+      logger.log.info("file: " + file + ", dest: " + dest)
     })
   }
 
@@ -142,19 +150,20 @@ object LinuxPackaging extends Plugin {
   def rebase(files: Seq[Path], maybeSrcBase: Option[Path], destBase: Path): Seq[(Path, String)] =
     maybeSrcBase.map(srcBase => rebase(files, srcBase, destBase)).getOrElse(Seq.empty[(Path, String)])
 
-  def printMappings(mappings: Seq[LinuxPackageMapping]) = {
+  def printMappings(mappings: Seq[LinuxPackageMapping], logger: TaskStreams) = {
     mappings.foreach(mapping => {
       mapping.mappings.foreach(pair => {
         val (file, dest) = pair
-        val fileType = if (file.isFile) "file"
-        else {
-          if (file.isDirectory) "dir" else "UNKNOWN"
+        val fileType = file match {
+          case f if f.isFile => "file"
+          case dir if file.isDirectory => "dir"
+          case _ => "UNKNOWN"
         }
-        println(fileType + ": " + file + ", dest: " + dest)
+        logger.log.info(fileType + ": " + file + ", dest: " + dest)
       })
     })
     val ret = mappings.flatMap(_.mappings.map(_._2))
-    ret foreach println
+    ret foreach (dest => logger.log.info(dest))
     ret
   }
 }

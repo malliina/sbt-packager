@@ -16,6 +16,11 @@ object LinuxKeys {
   val postInstall = SettingKey[Path]("post-install", "Postinstall script")
   val preRemove = SettingKey[Path]("pre-remove", "Preremove script")
   val postRemove = SettingKey[Path]("post-remove", "Postremove script")
+  val defaultsFile = SettingKey[Path]("defaults-file", "The defaults config file")
+  val copyrightFile = SettingKey[Path]("copyright-file", "The copyright file")
+  val changelogFile = SettingKey[Path]("changelog-file", "The changelog file")
+  val initScript = SettingKey[Path]("init-script", "Init script for unix")
+
   /**
    * Misc
    */
@@ -29,7 +34,6 @@ object LinuxKeys {
   val unixScriptDest = SettingKey[Path]("unix-script-home", "Script dir on unix")
   val unixLogDir = SettingKey[Path]("unix-log-home", "Log dir on unix")
   // Tasks
-  val defaultsFile = TaskKey[Path]("defaults-file", "The defaults config file")
   val libMappings = TaskKey[Seq[(Path, String)]]("lib-mappings", "Libs mapped to paths")
   val confMappings = TaskKey[Seq[(Path, String)]]("conf-mappings", "Confs mapped to paths")
   val scriptMappings = TaskKey[Seq[(Path, String)]]("script-mappings", "Scripts mapped to paths")
