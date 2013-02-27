@@ -54,8 +54,8 @@ object LinuxPlugin extends Plugin {
     }),
     confMappings <<= (configFiles, configPath, unixConfDest) map rebase,
     scriptMappings <<= (scriptFiles, scriptPath, unixScriptDest) map rebase,
-    linux.Keys.packageSummary <<= (name in Linux)(n => "This is a summary of " + n),
-    linux.Keys.packageDescription := "This is the description of the package.",
+    linux.Keys.packageSummary in Linux <<= (name in Linux)(n => "This is a summary of " + n),
+    linux.Keys.packageDescription in Linux := "This is the description of the package.",
     linux.Keys.linuxPackageMappings in Linux <++= (
       unixHome, unixPkgHome, name, appJar, libMappings, confMappings,
       scriptMappings, unixLogDir, appJarName, defaultsFile, initScript
