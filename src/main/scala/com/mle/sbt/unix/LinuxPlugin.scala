@@ -64,7 +64,7 @@ object LinuxPlugin extends Plugin {
         pkgMaps(Seq(iScript -> ("/etc/init.d/" + pkgName)) ++ scripts, perms = "0755"),
         pkgMaps(libs),
         pkgMaps(confs ++ Seq(defFile -> ("/etc/default/" + pkgName)), isConfig = true),
-        pkgMap((pkgSrc / "logs") -> logDir.toString, perms = "0755"),
+//        pkgMap((pkgSrc / "logs") -> logDir.toString, perms = "0755"),
         pkgMap(jarFile -> ((home / jarName).toString))
       ))
   )
