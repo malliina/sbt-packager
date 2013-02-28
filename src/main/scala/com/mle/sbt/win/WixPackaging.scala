@@ -56,9 +56,9 @@ object WixPackaging extends Plugin {
     windowsMappings <++= (libs, name) map ((libz, name) =>
       libz.map(libPath => (libPath.toFile -> ("lib/" + libPath.getFileName.toString)))
       ),
-    windows.Keys.wixConfig <<= (
+    windows.Keys.wixConfig in Windows <<= (
       windowsMappings,
-      name,
+      name in Windows,
       version in Windows,
       displayName,
       exePath,
@@ -76,7 +76,7 @@ object WixPackaging extends Plugin {
        exe, license, icon, serviceExe,
        serviceExeName, serviceConfName, productUid, upgradeUid,
        desktopShortcut, manufact, serviceChoice) => {
-        println("Creating wix")
+        println("Creating wix!")
         val (libFiles, coreFiles) = mappings.map(kv => (kv._1.toPath -> Paths.get(kv._2))).partition(kv => {
           val parent = kv._2.getParent
           parent != null && parent.getFileName.toString == "lib"
