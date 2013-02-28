@@ -34,6 +34,7 @@ object WixPackaging extends Plugin {
       }),
     windowsMappings <++= (name, target in Windows, winSwExe, winSwExeName, winSwConfName, displayName, streams) map (
       (n, t, w, wN, c, d, l) => {
+        l.log.info("Creating service wrapper")
         // build winsw service wrapper XML configuration file
         val conf = WindowsServiceWrapper.conf(n, d)
         val confFile = t.toPath / c
@@ -71,10 +72,11 @@ object WixPackaging extends Plugin {
       shortcut,
       GenericKeys.manufacturer,
       serviceFeature) map (
-      (mappings, appName,appVersion, dispName,
+      (mappings, appName, appVersion, dispName,
        exe, license, icon, serviceExe,
        serviceExeName, serviceConfName, productUid, upgradeUid,
        desktopShortcut, manufact, serviceChoice) => {
+        println("Creating wix")
         val (libFiles, coreFiles) = mappings.map(kv => (kv._1.toPath -> Paths.get(kv._2))).partition(kv => {
           val parent = kv._2.getParent
           parent != null && parent.getFileName.toString == "lib"
