@@ -12,6 +12,7 @@ import com.mle.sbt.GenericKeys._
 import com.mle.sbt.FileImplicits._
 import java.io.PrintWriter
 import com.mle.sbt.GenericKeys
+import java.util.UUID
 
 object WixPackaging extends Plugin {
   def writerTo(path: Path)(op: PrintWriter => Unit) = {
@@ -76,7 +77,6 @@ object WixPackaging extends Plugin {
        exe, license, icon, serviceExe,
        serviceExeName, serviceConfName, productUid, upgradeUid,
        desktopShortcut, manufact, serviceChoice) => {
-        println("Creating wix!")
         val (libFiles, coreFiles) = mappings.map(kv => (kv._1.toPath -> Paths.get(kv._2))).partition(kv => {
           val parent = kv._2.getParent
           parent != null && parent.getFileName.toString == "lib"
@@ -124,7 +124,7 @@ object WixPackaging extends Plugin {
                    Language='1033'
                    Version={appVersion}
                    Manufacturer={manufact}>
-            <Package Description={dispName + " launcher script."}
+            <Package Description={dispName + " package."}
                      Comments='Windows installer.'
                      Manufacturer={manufact}
                      InstallScope='perMachine'
@@ -139,11 +139,15 @@ object WixPackaging extends Plugin {
                 <Directory Id='INSTALLDIR' Name={dispName}>
                   <Directory Id="lib_dir" Name="lib">
                     {libsWixXml.compsFragment}
-                  </Directory>{coreFilesXml.compsFragment}<Component Id='ApplicationExecutable' Guid='*'>
-                  <File Id='app_exe' Name={exeFileName} DiskId='1' Source={exe.toAbsolutePath.toString} KeyPath="yes">
-                    {shortcutFragment}
-                  </File>
-                </Component>{serviceComponents}
+                  </Directory>
+                  {coreFilesXml.compsFragment}
+                  <Component Id='ApplicationExecutable' Guid='*'>
+                    <File Id='app_exe' Name={exeFileName} DiskId='1' Source={exe.toAbsolutePath.toString} KeyPath="yes">
+                      {shortcutFragment}
+                    </File>
+                  </Component>
+
+                  {serviceComponents}
                 </Directory>
               </Directory>
             </Directory>
@@ -158,8 +162,11 @@ object WixPackaging extends Plugin {
                        Description='The core application.'
                        Level='1'
                        Absent='disallow'>
-                <ComponentRef Id='ApplicationExecutable'/>{coreFilesXml.compRefs}{libsWixXml.compRefs}
-              </Feature>{serviceFeature}
+                <ComponentRef Id='ApplicationExecutable'/>
+                {coreFilesXml.compRefs}
+                {libsWixXml.compRefs}
+              </Feature>
+              {serviceFeature}
             </Feature>
             <MajorUpgrade AllowDowngrades="no"
                           Schedule="afterInstallInitialize"
@@ -211,12 +218,24 @@ object WixPackaging extends Plugin {
    * <Component Id='AppLauncherPath' Guid='24241F02-194C-4AAD-8BD4-379B26F1C661'>
     <Environment Id="PATH" Name="PATH" Value="[INSTALLDIR]" Permanent="no" Part="last" Action="set" System="yes"/>
       </Component>
+    <Component Id='HomePath' Guid='24241F02-194C-4AAD-8BD4-379B26F1C661'>
+      <Environment Id="PimpHome" Name="PIMPHOME" Value="[INSTALLDIR]" Permanent="no" Part="last" Action="set" System="yes"/>
+    </Component>
     <Feature Id='ConfigurePath'
                    Title={"Add " + dispName + " to Windows system PATH"}
                    Description={"This will append " + dispName + " to your Windows system path."}
                    Level='1'>
             <ComponentRef Id='AppLauncherPath'/>
           </Feature>
+
+   <Component Id='HomePathEnvironment' Guid={UUID.randomUUID().toString}>
+                    <Environment Id="HomePath" Name={appName.toUpperCase} Value="[INSTALLDIR]" Permanent="no" Part="last" Action="set" System="yes"/>
+                    <CreateFolder/>
+                  </Component>
+
+   <ComponentRef Id='HomePathEnvironment'/>
+
+
    */
 
 }
