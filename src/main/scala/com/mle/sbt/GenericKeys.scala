@@ -18,4 +18,5 @@ object GenericKeys extends Plugin{
   val printMappings = TaskKey[Unit]("print-mappings", "Prints the packaging mappings")
   // identity
   val manufacturer = SettingKey[String]("manufacturer", "Manufacturer (for MSI) and default vendor (for RPM)")
+  val confFile = SettingKey[Option[Path]]("conf-file", "Configuration file")
 }

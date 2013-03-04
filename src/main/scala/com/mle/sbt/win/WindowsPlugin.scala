@@ -1,27 +1,28 @@
 package com.mle.sbt.win
 
-import java.nio.file.{StandardCopyOption, Files, Paths}
+import java.nio.file.{Path, StandardCopyOption, Files, Paths}
 import sbt.Keys._
 import sbt._
 import com.typesafe.sbt.SbtNativePackager.Windows
 import com.mle.sbt.win.WindowsKeys._
 import com.mle.sbt.FileImplicits._
 import com.mle.sbt.GenericKeys._
-import com.mle.sbt.{PackagingUtil, GenericPackaging}
+import com.mle.sbt.{PackagingUtil, GenericPlugin}
 import com.typesafe.sbt.packager.windows
+import sbt.Path
 
 
 object WindowsPlugin extends Plugin {
-  val windowsSettings: Seq[Setting[_]] = GenericPackaging.genericSettings ++ WixPackaging.wixSettings ++ Seq(
+  val windowsSettings: Seq[Setting[_]] = GenericPlugin.genericSettings ++ WixPackaging.wixSettings ++ Seq(
     msiName <<= (name in Windows, version)((n, v) => n + "-" + v + ".msi"),
-    windowsPkgHome <<= (pkgHome)(_ / "windows"),
+    pkgHome in Windows <<= (pkgHome)(_ / "windows"),
     windowsJarPath <<= (target in Windows, appJarName)((t, n) => t.toPath / n),
     exePath <<= (target in Windows, name)((t, n) => t.toPath / (n + ".exe")),
-    batPath <<= (windowsPkgHome, name)((w, n) => w / (n + ".bat")),
-    licenseRtf <<= (windowsPkgHome)(_ / "license.rtf"),
-    appIcon <<= (windowsPkgHome)(_ / "app.ico"),
+    batPath <<= (pkgHome in Windows, name)((w, n) => w / (n + ".bat")),
+    licenseRtf <<= (pkgHome in Windows)(_ / "license.rtf"),
+    appIcon <<= (pkgHome in Windows)(_ / "app.ico"),
     serviceFeature := true,
-    winSwExe <<= (windowsPkgHome)(_ / "winsw-1.9-bin.exe"),
+    winSwExe <<= (pkgHome in Windows)(_ / "winsw-1.9-bin.exe"),
     winSwConf <<= (target in Windows, winSwConfName)((t, n) => t.toPath / n),
     winSwName <<= (name)(_ + "svc"),
     winSwExeName <<= (winSwName)(_ + ".exe"),
@@ -54,11 +55,12 @@ object WindowsPlugin extends Plugin {
       logger.log.info("Packaged: " + packagedFile.toAbsolutePath.toString)
       packagedFile
     }) dependsOn verifySettings,
-    displayName <<= (name)(n => n),
+    displayName <<= (name in Windows)(n => n),
     shortcut := false,
     printMappings in Windows <<= (mappings in windows.Keys.packageMsi in Windows, streams) map ((maps, logger) => {
       val output = maps.map(kv => kv._1.getAbsolutePath + "\n" + kv._2).mkString("\n---\n")
       logger.log.info(output)
-    })
+    }),
+    msiMappings := Seq.empty[(Path, Path)]
   )
 }

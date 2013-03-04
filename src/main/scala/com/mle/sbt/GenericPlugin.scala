@@ -6,7 +6,7 @@ import sbt.Keys._
 import FileImplicits._
 import java.nio.file.Path
 
-object GenericPackaging extends Plugin {
+object GenericPlugin extends Plugin {
   val genericSettings: Seq[Setting[_]] = Seq(
     pkgHome <<= (basePath)(_ / "src" / "pkg"),
     basePath <<= (baseDirectory)(_.toPath),
@@ -22,6 +22,10 @@ object GenericPackaging extends Plugin {
     }),
     printLibs <<= (libs, name) map ((l: Seq[Path], pkgName) => {
       l foreach println
-    })
+    }),
+    confFile := None
+  )
+  val confSettings: Seq[Setting[_]] = Seq(
+    confFile <<= (pkgHome, name)((w, n) => Some(w / (n + ".conf")))
   )
 }

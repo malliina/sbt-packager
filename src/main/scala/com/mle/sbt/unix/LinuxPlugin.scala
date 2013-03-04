@@ -15,8 +15,6 @@ import com.mle.sbt.FileImplicits._
 import com.mle.sbt.{GenericKeys, PackagingUtil}
 
 object LinuxPlugin extends Plugin {
-
-
   val linuxSettings: Seq[Setting[_]] = UnixPlugin.unixSettings ++ Seq(
     /**
      * Source settings
@@ -33,21 +31,21 @@ object LinuxPlugin extends Plugin {
      * Destination settings
      */
     // Linux directory layout
-    unixHome <<= (name)(pkgName => Paths get "/opt/" + pkgName),
+    unixHome <<= (name in Linux)(pkgName => Paths get "/opt/" + pkgName),
     unixLibDest <<= (unixHome)(_ / libDir),
     unixConfDest <<= (unixHome)(_ / confDir),
     unixScriptDest <<= (unixHome)(_ / scriptDir),
     unixLogDir <<= (unixHome)(_ / "logs"),
     // rpm/deb postinst control files
-    controlDir <<= (unixPkgHome)(_ / "control"),
+    controlDir <<= (pkgHome in Linux)(_ / "control"),
     preInstall <<= (controlDir)(_ / "preinstall.sh"),
     postInstall <<= (controlDir)(_ / "postinstall.sh"),
     preRemove <<= (controlDir)(_ / "preuninstall.sh"),
     postRemove <<= (controlDir)(_ / "postuninstall.sh"),
-    copyrightFile <<= (unixPkgHome)(_ / "copyright"),
-    changelogFile <<= (unixPkgHome)(_ / "changelog"),
-    initScript <<= (unixPkgHome, name in Linux)((p, n) => p / (n + ".sh")),
-    defaultsFile <<= (unixPkgHome, name in Linux)((home, n) => home / (n + ".defaults")),
+    copyrightFile <<= (pkgHome in Linux)(_ / "copyright"),
+    changelogFile <<= (pkgHome in Linux)(_ / "changelog"),
+    initScript <<= (pkgHome in Linux, name in Linux)((p, n) => p / (n + ".sh")),
+    defaultsFile <<= (pkgHome in Linux, name in Linux)((home, n) => home / (n + ".defaults")),
     // Flat copy of libs to /lib on destination system
     libMappings <<= (libs, unixLibDest) map ((libFiles, destDir) => {
       libFiles.map(file => file -> (destDir / file.getFileName).toString)
@@ -57,21 +55,22 @@ object LinuxPlugin extends Plugin {
     linux.Keys.packageSummary in Linux <<= (name in Linux)(n => "This is a summary of " + n),
     linux.Keys.packageDescription in Linux := "This is the description of the package.",
     linux.Keys.linuxPackageMappings in Linux <++= (
-      unixHome, unixPkgHome, name, appJar, libMappings, confMappings,
-      scriptMappings, unixLogDir, appJarName, defaultsFile, initScript
+      unixHome, pkgHome in Linux, name, appJar, libMappings, confMappings,
+      scriptMappings, unixLogDir, appJarName, defaultsFile, initScript, confFile in Linux
       ) map (
-      (home, pkgSrc, pkgName, jarFile, libs, confs, scripts, logDir, jarName, defFile, iScript) => Seq(
+      (home, pkgSrc, pkgName, jarFile, libs, confs, scripts, logDir, jarName, defFile, iScript, conf) => Seq(
         pkgMaps(Seq(iScript -> ("/etc/init.d/" + pkgName)) ++ scripts, perms = "0755"),
         pkgMaps(libs),
+        pkgMaps(conf.map(cFile => Seq(cFile -> ((home / cFile.getFileName).toString))).getOrElse(Seq.empty[(Path, String)])),
         pkgMaps(confs ++ Seq(defFile -> ("/etc/default/" + pkgName)), isConfig = true),
-//        pkgMap((pkgSrc / "logs") -> logDir.toString, perms = "0755"),
+        //        pkgMap((pkgSrc / "logs") -> logDir.toString, perms = "0755"),
         pkgMap(jarFile -> ((home / jarName).toString))
       ))
   )
   val debianSettings: Seq[Setting[_]] = linuxSettings ++ Seq(
     debian.Keys.linuxPackageMappings in Debian <++= linux.Keys.linuxPackageMappings in Linux,
     //    debian.Keys.version := "0.1",
-    debian.Keys.linuxPackageMappings in Debian <++= (unixPkgHome, name,
+    debian.Keys.linuxPackageMappings in Debian <++= (pkgHome in Linux, name,
       preInstall, postInstall, preRemove, postRemove, copyrightFile, changelogFile) map (
       (pkgSrc, pkgName, preinst, postinst, prerm, postrm, cRight, changeLog) => Seq(
         // http://lintian.debian.org/tags/no-copyright-file.html
@@ -94,10 +93,6 @@ object LinuxPlugin extends Plugin {
     rpm.Keys.rpmVendor <<= (GenericKeys.manufacturer)(m => m),
     rpm.Keys.rpmLicense := Some("All rights reserved."),
     rpmFiles <<= (rpm.Keys.linuxPackageMappings in Rpm, streams) map (printMappings),
-    //    rpm.Keys.rpmPreInstall <<= (preInstall)(Some(_)),
-    //    rpm.Keys.rpmPostInstall <<= (postInstall)(Some(_)),
-    //    rpm.Keys.rpmPreRemove <<= (preRemove)(Some(_)),
-    //    rpm.Keys.rpmPostRemove <<= (postRemove)(Some(_)),
     rpm.Keys.rpmPre <<= (preInstall)(fileToString),
     rpm.Keys.rpmPost <<= (postInstall)(fileToString),
     rpm.Keys.rpmPreun <<= (preRemove)(fileToString),

@@ -19,7 +19,6 @@ object WindowsKeys {
   val win = TaskKey[Path]("win", "Verifies settings followed by package-msi")
   val printPaths = TaskKey[Seq[Path]]("print-win-paths", "Prints the paths to the required files for MSI packaging")
   val verifySettings = TaskKey[Unit]("verify-settings", "Verifies that the required files for MSI packaging exist in the project and that a main class has been specified")
-  val windowsPkgHome = SettingKey[Path]("win-pkg-home", "Windows packaging directory")
   val displayName = SettingKey[String]("display-name", "Display name of application")
   val exePath = SettingKey[Path]("exe-path", "Application .exe path on windows during packaging")
   val windowsJarPath = SettingKey[Path]("win-jar-path", "Path to jar on windows during packaging")
@@ -32,4 +31,5 @@ object WindowsKeys {
   val upgradeGuid = SettingKey[String]("upgrade-guid", "Upgrade GUID required for MSI packaging. Generate with UUID.randomUUID().")
   val shortcut = SettingKey[Boolean]("shortcut", "Whether or not to install a desktop shortcut to the main application executable")
   val serviceFeature = SettingKey[Boolean]("service-feature", "Whether or not to include the option to install the application as a service")
+  val msiMappings = TaskKey[Seq[(Path, Path)]]("msi-mappings", "File mappings for MSI packaging")
 }

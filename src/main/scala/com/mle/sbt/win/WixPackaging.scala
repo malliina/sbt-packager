@@ -12,7 +12,6 @@ import com.mle.sbt.GenericKeys._
 import com.mle.sbt.FileImplicits._
 import java.io.PrintWriter
 import com.mle.sbt.GenericKeys
-import java.util.UUID
 
 object WixPackaging extends Plugin {
   def writerTo(path: Path)(op: PrintWriter => Unit) = {
@@ -20,18 +19,17 @@ object WixPackaging extends Plugin {
     FileUtilities.writerTo(path)(op)
   }
 
-  // need to set the WIX environment variable to the wix installation dir e.g. program files\wix
+  // need to set the "WIX" environment variable to the wix installation dir e.g. program files\wix. Use Wix 3.7 or newer.
   val windowsMappings = mappings in windows.Keys.packageMsi in Windows
   val wixSettings: Seq[Setting[_]] = Seq(
     windowsMappings <+= (appJar, appJarName) map (
       (jar, jarName) => jar.toFile -> jarName),
-    windowsMappings <++= (appJar, appJarName, name, exePath, mainClass, launch4jcExe, appIcon, target in Windows) map (
+    msiMappings in Windows <++= (appJar, appJarName, name, exePath, mainClass, launch4jcExe, appIcon, target in Windows) map (
       (bin, jarName, appName, exeP, m, l, i, t) => {
-        val exeFileName = exeP.getFileName.toString
         val mClass = m.getOrElse(throw new Exception("No mainClass specified; cannot create .exe"))
         val exeFile = Launch4jWrapper.exeWrapper(l, bin, mClass, jarName, t.toPath / "launch4jconf.xml", exeP, i)
-        exeFile.toFile -> exeFileName
-        Seq.empty[(java.io.File, String)]
+        exeFile -> exeP
+        Seq.empty[(Path, Path)]
       }),
     windowsMappings <++= (name, target in Windows, winSwExe, winSwExeName, winSwConfName, displayName, streams) map (
       (n, t, w, wN, c, d, l) => {
@@ -44,19 +42,25 @@ object WixPackaging extends Plugin {
         //        Seq(confFile.toFile -> c,w.toFile -> wN)
         Seq.empty[(java.io.File, String)]
       }),
-    windowsMappings <++= (batPath, name, target in Windows) map ((b, n, t) => {
+  msiMappings in Windows <++= (batPath, confFile in Windows, name, target in Windows) map ((b, c, n, t) => {
       val startService = t.toPath / (n + "-start.bat")
       val stopService = t.toPath / (n + "-stop.bat")
       writerTo(startService)(_.println(n + ".bat start"))
       writerTo(stopService)(_.println(n + ".bat stop"))
-      Seq(
-        b.toFile -> b.getFileName.toString,
-        startService.toFile -> startService.getFileName.toString,
-        stopService.toFile -> stopService.getFileName.toString)
+      val confMap = c.map(p => Seq(p -> p)).getOrElse(Seq.empty[(Path,Path)])
+      confMap ++ Seq(
+        b -> b,
+        startService -> startService,
+        stopService -> stopService
+      )
     }),
     windowsMappings <++= (libs, name) map ((libz, name) =>
       libz.map(libPath => (libPath.toFile -> ("lib/" + libPath.getFileName.toString)))
       ),
+    windowsMappings <++= (msiMappings in Windows) map ((msiMaps: Seq[(Path, Path)]) => msiMaps.map(mapping => {
+      val (src, dest) = mapping
+      src.toFile -> dest.getFileName.toString
+    })),
     windows.Keys.wixConfig in Windows <<= (
       windowsMappings,
       name in Windows,
@@ -139,15 +143,11 @@ object WixPackaging extends Plugin {
                 <Directory Id='INSTALLDIR' Name={dispName}>
                   <Directory Id="lib_dir" Name="lib">
                     {libsWixXml.compsFragment}
-                  </Directory>
-                  {coreFilesXml.compsFragment}
-                  <Component Id='ApplicationExecutable' Guid='*'>
-                    <File Id='app_exe' Name={exeFileName} DiskId='1' Source={exe.toAbsolutePath.toString} KeyPath="yes">
-                      {shortcutFragment}
-                    </File>
-                  </Component>
-
-                  {serviceComponents}
+                  </Directory>{coreFilesXml.compsFragment}<Component Id='ApplicationExecutable' Guid='*'>
+                  <File Id='app_exe' Name={exeFileName} DiskId='1' Source={exe.toAbsolutePath.toString} KeyPath="yes">
+                    {shortcutFragment}
+                  </File>
+                </Component>{serviceComponents}
                 </Directory>
               </Directory>
             </Directory>
@@ -162,11 +162,8 @@ object WixPackaging extends Plugin {
                        Description='The core application.'
                        Level='1'
                        Absent='disallow'>
-                <ComponentRef Id='ApplicationExecutable'/>
-                {coreFilesXml.compRefs}
-                {libsWixXml.compRefs}
-              </Feature>
-              {serviceFeature}
+                <ComponentRef Id='ApplicationExecutable'/>{coreFilesXml.compRefs}{libsWixXml.compRefs}
+              </Feature>{serviceFeature}
             </Feature>
             <MajorUpgrade AllowDowngrades="no"
                           Schedule="afterInstallInitialize"
@@ -234,7 +231,6 @@ object WixPackaging extends Plugin {
                   </Component>
 
    <ComponentRef Id='HomePathEnvironment'/>
-
 
    */
 
