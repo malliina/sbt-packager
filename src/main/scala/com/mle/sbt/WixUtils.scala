@@ -12,7 +12,7 @@ object WixUtils extends Log {
   /**
    * Generates appropriate WIX fragments for the specified mappings.
    * @param mappings file mappings (source, destination)
-   * @return WIX XML framents to use in WIX packaging
+   * @return WIX XML fragments to use in WIX packaging
    */
   def wix(mappings: Seq[(Path, Path)]) = {
      val trees = treeify(mappings)
@@ -62,8 +62,8 @@ object WixUtils extends Log {
    *
    * If level+1 is greater than the total name count, returns None.
    *
-   * @param path
-   * @param level
+   * @param path the original path
+   * @param level the number of names to return from the path, starting at the root
    * @return the path consisting of the names from path.getRoot to path.getName(level)
    */
   def ancestorOf(path: Path, level: Int) = {

@@ -35,7 +35,7 @@ object LinuxPlugin extends Plugin {
     unixLibDest <<= (unixHome)(_ / libDir),
     unixConfDest <<= (unixHome)(_ / confDir),
     unixScriptDest <<= (unixHome)(_ / scriptDir),
-    unixLogDir <<= (unixHome)(_ / "logs"),
+    unixLogDir <<= (unixHome)(_ / logDir),
     // rpm/deb postinst control files
     controlDir <<= (pkgHome in Linux)(_ / "control"),
     preInstall <<= (controlDir)(_ / "preinstall.sh"),
@@ -55,15 +55,16 @@ object LinuxPlugin extends Plugin {
     linux.Keys.packageSummary in Linux <<= (name in Linux)(n => "This is a summary of " + n),
     linux.Keys.packageDescription in Linux := "This is the description of the package.",
     linux.Keys.linuxPackageMappings in Linux <++= (
-      unixHome, pkgHome in Linux, name, appJar, libMappings, confMappings,
-      scriptMappings, unixLogDir, appJarName, defaultsFile, initScript, confFile in Linux
+      unixHome, pkgHome in Linux, name in Linux, appJar, libMappings, confMappings,
+      scriptMappings, unixLogDir, appJarName, defaultsFile, initScript, confFile in Linux, unixLibDest
       ) map (
-      (home, pkgSrc, pkgName, jarFile, libs, confs, scripts, logDir, jarName, defFile, iScript, conf) => Seq(
+      (home, pkgSrc, pkgName, jarFile, libs, confs, scripts, uLogdir, jarName, defFile, iScript, conf, libD) => Seq(
         pkgMaps(Seq(iScript -> ("/etc/init.d/" + pkgName)) ++ scripts, perms = "0755"),
+        pkgMap((pkgSrc / libDir) -> libD.toString, perms = "0755"),
         pkgMaps(libs),
-        pkgMaps(conf.map(cFile => Seq(cFile -> ((home / cFile.getFileName).toString))).getOrElse(Seq.empty[(Path, String)])),
+        pkgMaps(conf.map(cFile => Seq(cFile -> ((home / cFile.getFileName).toString))).getOrElse(Seq.empty[(Path, String)]),perms="0600", isConfig = true),
         pkgMaps(confs ++ Seq(defFile -> ("/etc/default/" + pkgName)), isConfig = true),
-        //        pkgMap((pkgSrc / "logs") -> logDir.toString, perms = "0755"),
+        pkgMap((pkgSrc / logDir) -> uLogdir.toString, perms = "0755"),
         pkgMap(jarFile -> ((home / jarName).toString))
       ))
   )
@@ -136,8 +137,6 @@ object LinuxPlugin extends Plugin {
       logger.log.info("file: " + file + ", dest: " + dest)
     })
   }
-
-
 
   def rebase(file: Path, srcBase: Path, destBase: Path) = destBase resolve (srcBase relativize file)
 

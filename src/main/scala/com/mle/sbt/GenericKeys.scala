@@ -3,11 +3,12 @@ package com.mle.sbt
 import java.nio.file.Path
 import sbt._
 
-object GenericKeys extends Plugin{
+object GenericKeys extends Plugin {
   // These string literals double as directory names on both source and destination
   val confDir = "config"
   val libDir = "lib"
   val scriptDir = "scripts"
+  val logDir = "logs"
   val configPath = SettingKey[Path]("config-path", "Config file directory")
   val configFiles = TaskKey[Seq[Path]]("config-files", "Config files to package with the app")
   val basePath = SettingKey[Path]("base-path", "Same as base-directory")

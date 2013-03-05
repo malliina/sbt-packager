@@ -15,7 +15,6 @@ import com.typesafe.sbt.SbtNativePackager.Linux
 object UnixPlugin {
   val unixSettings: Seq[Setting[_]] = GenericPlugin.genericSettings ++ Seq(
     pkgHome in Linux <<= (pkgHome)(_ / "unix"),
-//    configPath <<= (pkgHome in Linux)(b => Some((b / confDir))),
     scriptPath <<= (pkgHome in Linux)(b => Some((b / scriptDir))),
     scriptFiles <<= filesIn(scriptPath)
   )
