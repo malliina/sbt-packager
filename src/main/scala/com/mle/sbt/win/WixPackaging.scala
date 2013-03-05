@@ -11,7 +11,7 @@ import xml.NodeSeq
 import com.mle.sbt.GenericKeys._
 import com.mle.sbt.FileImplicits._
 import java.io.PrintWriter
-import com.mle.sbt.GenericKeys
+import com.mle.sbt.{WixUtils, PackagingUtil, GenericKeys}
 
 object WixPackaging extends Plugin {
   def writerTo(path: Path)(op: PrintWriter => Unit) = {
@@ -22,8 +22,26 @@ object WixPackaging extends Plugin {
   // need to set the "WIX" environment variable to the wix installation dir e.g. program files\wix. Use Wix 3.7 or newer.
   val windowsMappings = mappings in windows.Keys.packageMsi in Windows
   val wixSettings: Seq[Setting[_]] = Seq(
-    windowsMappings <+= (appJar, appJarName) map (
-      (jar, jarName) => jar.toFile -> jarName),
+    msiMappings in Windows <++= (batPath, confFile in Windows, name, target in Windows) map ((b, c, n, t) => {
+      val startService = t.toPath / (n + "-start.bat")
+      val stopService = t.toPath / (n + "-stop.bat")
+      writerTo(startService)(_.println(n + ".bat start"))
+      writerTo(stopService)(_.println(n + ".bat stop"))
+      val confMap = c.map(p => Seq(p -> p.getFileName)).getOrElse(Seq.empty[(Path, Path)])
+      confMap ++ Seq(
+        b -> b.getFileName,
+        startService -> startService.getFileName,
+        stopService -> stopService.getFileName
+      )
+    }),
+    msiMappings in Windows <++= (libs, name) map ((libz, name) =>
+      libz.map(libPath => (libPath -> (Paths.get("lib") / libPath.getFileName)))
+      ),
+    msiMappings in Windows <++= (configFiles in Windows, configPath in Windows) map ((confs, baseDir) => {
+      PackagingUtil.relativize(confs.filter(_.isFile), Option(baseDir.getParent).getOrElse(baseDir))
+    }),
+    msiMappings in Windows <+= (appJar, appJarName) map (
+      (jar, jarName) => jar -> Paths.get(jarName)),
     msiMappings in Windows <++= (appJar, appJarName, name, exePath, mainClass, launch4jcExe, appIcon, target in Windows) map (
       (bin, jarName, appName, exeP, m, l, i, t) => {
         val mClass = m.getOrElse(throw new Exception("No mainClass specified; cannot create .exe"))
@@ -31,7 +49,7 @@ object WixPackaging extends Plugin {
         exeFile -> exeP
         Seq.empty[(Path, Path)]
       }),
-    windowsMappings <++= (name, target in Windows, winSwExe, winSwExeName, winSwConfName, displayName, streams) map (
+    msiMappings in Windows <++= (name, target in Windows, winSwExe, winSwExeName, winSwConfName, displayName, streams) map (
       (n, t, w, wN, c, d, l) => {
         l.log.info("Creating service wrapper")
         // build winsw service wrapper XML configuration file
@@ -40,29 +58,15 @@ object WixPackaging extends Plugin {
         writerTo(confFile)(_.println(conf.toString()))
         l.log.info("Created: " + confFile.toAbsolutePath)
         //        Seq(confFile.toFile -> c,w.toFile -> wN)
-        Seq.empty[(java.io.File, String)]
+        Seq.empty[(Path, Path)]
       }),
-  msiMappings in Windows <++= (batPath, confFile in Windows, name, target in Windows) map ((b, c, n, t) => {
-      val startService = t.toPath / (n + "-start.bat")
-      val stopService = t.toPath / (n + "-stop.bat")
-      writerTo(startService)(_.println(n + ".bat start"))
-      writerTo(stopService)(_.println(n + ".bat stop"))
-      val confMap = c.map(p => Seq(p -> p)).getOrElse(Seq.empty[(Path,Path)])
-      confMap ++ Seq(
-        b -> b,
-        startService -> startService,
-        stopService -> stopService
-      )
-    }),
-    windowsMappings <++= (libs, name) map ((libz, name) =>
-      libz.map(libPath => (libPath.toFile -> ("lib/" + libPath.getFileName.toString)))
-      ),
+
     windowsMappings <++= (msiMappings in Windows) map ((msiMaps: Seq[(Path, Path)]) => msiMaps.map(mapping => {
       val (src, dest) = mapping
-      src.toFile -> dest.getFileName.toString
+      src.toFile -> dest.toString
     })),
     windows.Keys.wixConfig in Windows <<= (
-      windowsMappings,
+      msiMappings in Windows,
       name in Windows,
       version in Windows,
       displayName,
@@ -81,12 +85,7 @@ object WixPackaging extends Plugin {
        exe, license, icon, serviceExe,
        serviceExeName, serviceConfName, productUid, upgradeUid,
        desktopShortcut, manufact, serviceChoice) => {
-        val (libFiles, coreFiles) = mappings.map(kv => (kv._1.toPath -> Paths.get(kv._2))).partition(kv => {
-          val parent = kv._2.getParent
-          parent != null && parent.getFileName.toString == "lib"
-        })
-        val libsWixXml = toWixFragment(libFiles)
-        val coreFilesXml = toWixFragment(coreFiles)
+         val msiFiles = WixUtils.wix(mappings)
         val exeFileName = exe.getFileName.toString
         val shortcutFragment = ifSelected(desktopShortcut) {
             <Shortcut Id='desktopShortcut' Directory='DesktopFolder' Name={dispName}
@@ -141,13 +140,13 @@ object WixPackaging extends Plugin {
               <Directory Id="DesktopFolder" Name="Desktop"/>
               <Directory Id='ProgramFilesFolder' Name='PFiles'>
                 <Directory Id='INSTALLDIR' Name={dispName}>
-                  <Directory Id="lib_dir" Name="lib">
-                    {libsWixXml.compsFragment}
-                  </Directory>{coreFilesXml.compsFragment}<Component Id='ApplicationExecutable' Guid='*'>
+                  {msiFiles.compElems}
+                  <Component Id='ApplicationExecutable' Guid='*'>
                   <File Id='app_exe' Name={exeFileName} DiskId='1' Source={exe.toAbsolutePath.toString} KeyPath="yes">
                     {shortcutFragment}
                   </File>
-                </Component>{serviceComponents}
+                </Component>
+                  {serviceComponents}
                 </Directory>
               </Directory>
             </Directory>
@@ -162,8 +161,10 @@ object WixPackaging extends Plugin {
                        Description='The core application.'
                        Level='1'
                        Absent='disallow'>
-                <ComponentRef Id='ApplicationExecutable'/>{coreFilesXml.compRefs}{libsWixXml.compRefs}
-              </Feature>{serviceFeature}
+                <ComponentRef Id='ApplicationExecutable'/>
+                {msiFiles.compRefs}
+              </Feature>
+              {serviceFeature}
             </Feature>
             <MajorUpgrade AllowDowngrades="no"
                           Schedule="afterInstallInitialize"

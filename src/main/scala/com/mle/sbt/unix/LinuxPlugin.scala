@@ -137,6 +137,8 @@ object LinuxPlugin extends Plugin {
     })
   }
 
+
+
   def rebase(file: Path, srcBase: Path, destBase: Path) = destBase resolve (srcBase relativize file)
 
   def rebase(files: Seq[Path], srcBase: Path, destBase: Path): Seq[(Path, String)] =

@@ -1,10 +1,14 @@
 package com.mle.sbt
 
-import GenericKeys._
+import com.mle.sbt.GenericKeys._
 import sbt._
 import sbt.Keys._
 import FileImplicits._
 import java.nio.file.Path
+import com.mle.util.FileUtilities
+import scala.Some
+import com.mle.sbt.PackagingUtil._
+import scala.Some
 
 object GenericPlugin extends Plugin {
   val genericSettings: Seq[Setting[_]] = Seq(
@@ -23,7 +27,9 @@ object GenericPlugin extends Plugin {
     printLibs <<= (libs, name) map ((l: Seq[Path], pkgName) => {
       l foreach println
     }),
-    confFile := None
+    confFile := None,
+    configPath <<= (basePath)(_ / confDir),
+    configFiles <<= listFiles(configPath)
   )
   val confSettings: Seq[Setting[_]] = Seq(
     confFile <<= (pkgHome, name)((w, n) => Some(w / (n + ".conf")))

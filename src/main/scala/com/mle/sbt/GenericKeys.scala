@@ -5,9 +5,11 @@ import sbt._
 
 object GenericKeys extends Plugin{
   // These string literals double as directory names on both source and destination
-  val confDir = "conf"
+  val confDir = "config"
   val libDir = "lib"
   val scriptDir = "scripts"
+  val configPath = SettingKey[Path]("config-path", "Config file directory")
+  val configFiles = TaskKey[Seq[Path]]("config-files", "Config files to package with the app")
   val basePath = SettingKey[Path]("base-path", "Same as base-directory")
   val pkgHome = SettingKey[Path]("pkg-home", "Packaging home directory")
   val appJar = TaskKey[Path]("app-jar", "The application jar")
