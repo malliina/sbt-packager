@@ -32,4 +32,9 @@ object WindowsKeys {
   val shortcut = SettingKey[Boolean]("shortcut", "Whether or not to install a desktop shortcut to the main application executable")
   val serviceFeature = SettingKey[Boolean]("service-feature", "Whether or not to include the option to install the application as a service")
   val msiMappings = TaskKey[Seq[(Path, Path)]]("msi-mappings", "File mappings for MSI packaging")
+  val uuid = TaskKey[String]("uuid", "Generates a new GUID using UUID.randomUUID().")
+  val minUpgradeVersion = SettingKey[String]("min-upgrade", "The minimum version from which to upgrade.")
+  val serviceConf = SettingKey[Option[ServiceConf]]("winsw-container", "Winsw confs")
 }
+
+case class ServiceConf(serviceExe:Path,exeName: String, confName: String)

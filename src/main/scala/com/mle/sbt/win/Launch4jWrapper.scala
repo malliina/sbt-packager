@@ -18,7 +18,13 @@ object Launch4jWrapper {
    * @param exe the destination exe to create
    * @return the created exe
    */
-  def exeWrapper(launch4jcExe: Path, jarFile: Path, mainClass: String, appJarName: String, outputConf: Path, exe: Path, icon: Path) = {
+  def exeWrapper(launch4jcExe: Path,
+                 jarFile: Path,
+                 mainClass: String,
+                 appJarName: String,
+                 outputConf: Path,
+                 exe: Path,
+                 icon: Path) = {
     val config = launcherConfig(jarFile, mainClass, appJarName, exe, icon)
     buildLauncher(launch4jcExe, config, outputConf, exe)
   }

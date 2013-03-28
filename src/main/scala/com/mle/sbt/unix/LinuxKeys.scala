@@ -30,13 +30,10 @@ object LinuxKeys {
    */
   val unixHome = SettingKey[Path]("unix-home", "Home dir on unix")
   val unixLibDest = SettingKey[Path]("unix-lib-home", "Lib dir on unix")
-  val unixConfDest = SettingKey[Path]("unix-conf-home", "Conf dir on unix")
   val unixScriptDest = SettingKey[Path]("unix-script-home", "Script dir on unix")
   val unixLogDir = SettingKey[Path]("unix-log-home", "Log dir on unix")
   // Tasks
   val libMappings = TaskKey[Seq[(Path, String)]]("lib-mappings", "Libs mapped to paths")
   val confMappings = TaskKey[Seq[(Path, String)]]("conf-mappings", "Confs mapped to paths")
   val scriptMappings = TaskKey[Seq[(Path, String)]]("script-mappings", "Scripts mapped to paths")
-  val debFiles = TaskKey[Seq[String]]("deb-files", "Files in DEB package")
-  val rpmFiles = TaskKey[Seq[String]]("rpm-files", "Files in RPM package")
 }

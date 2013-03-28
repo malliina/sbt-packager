@@ -9,7 +9,9 @@ object GenericKeys extends Plugin {
   val libDir = "lib"
   val scriptDir = "scripts"
   val logDir = "logs"
-  val configPath = SettingKey[Path]("config-path", "Config file directory")
+  val configSrcDir = SettingKey[Path]("config-src-dir", "Config file source dir")
+  val configDestDir = SettingKey[Path]("config-dest-dir", "Config file destination dir")
+  val libDestDir = SettingKey[Path]("lib-dest-dir", "Destination dir for libraries, typically app_home/lib")
   val configFiles = TaskKey[Seq[Path]]("config-files", "Config files to package with the app")
   val basePath = SettingKey[Path]("base-path", "Same as base-directory")
   val pkgHome = SettingKey[Path]("pkg-home", "Packaging home directory")
@@ -22,4 +24,9 @@ object GenericKeys extends Plugin {
   // identity
   val manufacturer = SettingKey[String]("manufacturer", "Manufacturer (for MSI) and default vendor (for RPM)")
   val confFile = SettingKey[Option[Path]]("conf-file", "Configuration file")
+  val pathMappings = TaskKey[Seq[(Path, Path)]]("path-mappings", "File mappings")
+  val targetPath = SettingKey[Path]("target-path", "Target as a Path")
+  val versionFile = SettingKey[Path]("version-file", "Version file (written upon packaging)")
+  val deployFiles = TaskKey[Seq[Path]]("deploy-files", "Files installed")
+  val printFiles = TaskKey[Unit]("files","Prints the installed files")
 }

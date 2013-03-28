@@ -1,32 +1,32 @@
 package com.mle.sbt.win
 
 import WindowsKeys._
-import com.mle.util.FileUtilities
 import com.typesafe.sbt.packager._
 import com.typesafe.sbt.SbtNativePackager._
-import java.nio.file.{Paths, Files, Path}
+import java.nio.file.{Paths, Path}
 import sbt.Keys._
 import sbt._
 import xml.NodeSeq
 import com.mle.sbt.GenericKeys._
 import com.mle.sbt.FileImplicits._
-import java.io.PrintWriter
 import com.mle.sbt.{WixUtils, PackagingUtil, GenericKeys}
 
 object WixPackaging extends Plugin {
-  def writerTo(path: Path)(op: PrintWriter => Unit) = {
-    Files.createDirectories(path.getParent)
-    FileUtilities.writerTo(path)(op)
-  }
+
 
   // need to set the "WIX" environment variable to the wix installation dir e.g. program files\wix. Use Wix 3.7 or newer.
-  val windowsMappings = mappings in windows.Keys.packageMsi in Windows
-  val wixSettings: Seq[Setting[_]] = Seq(
-    msiMappings in Windows <++= (batPath, confFile in Windows, name, target in Windows) map ((b, c, n, t) => {
+  val windowsMappings = mappings in windows.Keys.packageMsi
+  val wixSettings: Seq[Setting[_]] = inConfig(Windows)(Seq(
+    windowsMappings <++= (msiMappings) map ((msiMaps: Seq[(Path, Path)]) => msiMaps.map(mapping => {
+      val (src, dest) = mapping
+      src.toFile -> dest.toString
+    })),
+//    msiMappings <++= pathMappings,
+    msiMappings <++= (batPath, confFile, name, target) map ((b, c, n, t) => {
       val startService = t.toPath / (n + "-start.bat")
       val stopService = t.toPath / (n + "-stop.bat")
-      writerTo(startService)(_.println(n + ".bat start"))
-      writerTo(stopService)(_.println(n + ".bat stop"))
+      PackagingUtil.writerTo(startService)(_.println(n + ".bat start"))
+      PackagingUtil.writerTo(stopService)(_.println(n + ".bat stop"))
       val confMap = c.map(p => Seq(p -> p.getFileName)).getOrElse(Seq.empty[(Path, Path)])
       confMap ++ Seq(
         b -> b.getFileName,
@@ -34,92 +34,92 @@ object WixPackaging extends Plugin {
         stopService -> stopService.getFileName
       )
     }),
-    msiMappings in Windows <++= (libs, name) map ((libz, name) =>
-      libz.map(libPath => (libPath -> (Paths.get("lib") / libPath.getFileName)))
-      ),
-    msiMappings in Windows <++= (configFiles in Windows, configPath in Windows) map ((confs, baseDir) => {
-      PackagingUtil.relativize(confs.filter(_.isFile), Option(baseDir.getParent).getOrElse(baseDir))
+    msiMappings <++= (libs, name, libDestDir) map ((libz, name, libDest) => {
+      libz.map(libPath => (libPath -> (libDest / libPath.getFileName)))
     }),
-    msiMappings in Windows <+= (appJar, appJarName) map (
+    msiMappings <++= (configFiles, configSrcDir, configDestDir) map ((confs, baseDir, confDest) => {
+      val confFiles = confs.filter(_.isFile)
+      val absAndRelative = confFiles.map(abs => abs -> baseDir.relativize(abs))
+      absAndRelative map (ar => {
+        val (abs,rel) = ar
+        abs -> confDest.resolve(rel)
+      })
+//      PackagingUtil.relativize(confs.filter(_.isFile), Option(baseDir.getParent).getOrElse(baseDir))
+    }),
+    msiMappings <+= (appJar, appJarName) map (
       (jar, jarName) => jar -> Paths.get(jarName)),
-    msiMappings in Windows <++= (appJar, appJarName, name, exePath, mainClass, launch4jcExe, appIcon, target in Windows) map (
+    msiMappings <++= (appJar, appJarName, name, exePath, mainClass, launch4jcExe, appIcon, targetPath) map (
       (bin, jarName, appName, exeP, m, l, i, t) => {
         val mClass = m.getOrElse(throw new Exception("No mainClass specified; cannot create .exe"))
-        val exeFile = Launch4jWrapper.exeWrapper(l, bin, mClass, jarName, t.toPath / "launch4jconf.xml", exeP, i)
+        val exeFile = Launch4jWrapper.exeWrapper(l, bin, mClass, jarName, t / "launch4jconf.xml", exeP, i)
         exeFile -> exeP
         Seq.empty[(Path, Path)]
       }),
-    msiMappings in Windows <++= (name, target in Windows, winSwExe, winSwExeName, winSwConfName, displayName, streams) map (
+    msiMappings <++= (name, targetPath, winSwExe, winSwExeName, winSwConfName, displayName, streams) map (
       (n, t, w, wN, c, d, l) => {
         l.log.info("Creating service wrapper")
         // build winsw service wrapper XML configuration file
         val conf = WindowsServiceWrapper.conf(n, d)
-        val confFile = t.toPath / c
-        writerTo(confFile)(_.println(conf.toString()))
+        val confFile = t / c
+        PackagingUtil.writerTo(confFile)(_.println(conf.toString()))
         l.log.info("Created: " + confFile.toAbsolutePath)
         //        Seq(confFile.toFile -> c,w.toFile -> wN)
         Seq.empty[(Path, Path)]
       }),
-
-    windowsMappings <++= (msiMappings in Windows) map ((msiMaps: Seq[(Path, Path)]) => msiMaps.map(mapping => {
-      val (src, dest) = mapping
-      src.toFile -> dest.toString
-    })),
-    windows.Keys.wixConfig in Windows <<= (
-      msiMappings in Windows,
-      name in Windows,
-      version in Windows,
+    windows.Keys.wixConfig <<= (
+      msiMappings,
+      name,
+      version,
       displayName,
       exePath,
       licenseRtf,
       appIcon,
-      winSwExe,
-      winSwExeName,
-      winSwConfName,
       productGuid,
       upgradeGuid,
       shortcut,
       GenericKeys.manufacturer,
-      serviceFeature) map (
+      serviceConf,
+      minUpgradeVersion) map (
       (mappings, appName, appVersion, dispName,
-       exe, license, icon, serviceExe,
-       serviceExeName, serviceConfName, productUid, upgradeUid,
-       desktopShortcut, manufact, serviceChoice) => {
-         val msiFiles = WixUtils.wix(mappings)
+       exe, license, icon, productUid, upgradeUid,
+       desktopShortcut, manufact, service, minUpVer) => {
+        val msiFiles = WixUtils.wix(mappings)
         val exeFileName = exe.getFileName.toString
         val shortcutFragment = ifSelected(desktopShortcut) {
             <Shortcut Id='desktopShortcut' Directory='DesktopFolder' Name={dispName}
                       WorkingDirectory='INSTALLDIR' Icon={exeFileName} IconIndex="0" Advertise="yes"/>
         }
-        val serviceComponents = ifSelected(serviceChoice) {
-          <Component Id='ServiceManagerConf' Guid='*'>
-            <File Id={serviceConfName.replace('.', '_')} Name={serviceConfName} DiskId='1' Source={serviceConfName}/>
-          </Component>
-            <Component Id='ServiceManager' Guid='*'>
-              <File Id={serviceExeName} Name={serviceExeName} DiskId='1' Source={serviceExe.toAbsolutePath.toString} KeyPath="yes"/>
-              <ServiceInstall Id="ServiceInstaller"
-                              Type="ownProcess"
-                              Vital="yes"
-                              Name={appName}
-                              DisplayName={dispName}
-                              Description={"The " + dispName + " service"}
-                              Start="auto"
-                              Account="LocalSystem"
-                              ErrorControl="ignore"
-                              Interactive="no"/>
-              <ServiceControl Id="ServiceController" Start="install" Stop="both" Remove="uninstall" Name={appName} Wait="yes"/>
+        val serviceComponents =
+          service.map(s => {
+            <Component Id='ServiceManagerConf' Guid='*'>
+              <File Id={s.confName.replace('.', '_')} Name={s.confName} DiskId='1' Source={s.confName}/>
             </Component>
-        }
-        val serviceFeature = ifSelected(serviceChoice) {
-          <Feature Id='InstallAsService'
-                   Title={"Install " + dispName + " as a Windows service"}
-                   Description={"This will install " + dispName + " as a Windows service."}
-                   Level='1'
-                   Absent='disallow'>
-            <ComponentRef Id='ServiceManager'/>
-            <ComponentRef Id='ServiceManagerConf'/>
-          </Feature>
-        }
+              <Component Id='ServiceManager' Guid='*'>
+                <File Id={s.exeName} Name={s.exeName} DiskId='1' Source={s.serviceExe.toAbsolutePath.toString} KeyPath="yes"/>
+                <ServiceInstall Id="ServiceInstaller"
+                                Type="ownProcess"
+                                Vital="yes"
+                                Name={dispName}
+                                DisplayName={dispName}
+                                Description={"The " + dispName + " service"}
+                                Start="auto"
+                                Account="LocalSystem"
+                                ErrorControl="ignore"
+                                Interactive="no"/>
+                <ServiceControl Id="ServiceController" Start="install" Stop="both" Remove="uninstall" Name={appName} Wait="yes"/>
+              </Component>
+          }).getOrElse(NodeSeq.Empty)
+        val serviceFeature =
+          service.map(s => {
+            <Feature Id='InstallAsService'
+                     Title={"Install " + dispName + " as a Windows service"}
+                     Description={"This will install " + dispName + " as a Windows service."}
+                     Level='1'
+                     Absent='disallow'>
+              <ComponentRef Id='ServiceManager'/>
+              <ComponentRef Id='ServiceManagerConf'/>
+            </Feature>
+          }).getOrElse(NodeSeq.Empty)
         (<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi' xmlns:util='http://schemas.microsoft.com/wix/UtilExtension'>
           <Product Name={dispName}
                    Id={productUid}
@@ -133,6 +133,12 @@ object WixPackaging extends Plugin {
                      InstallScope='perMachine'
                      InstallerVersion='200'
                      Compressed='yes'/>
+            <Upgrade Id={upgradeUid}>
+              <UpgradeVersion OnlyDetect='no' Property='PREVIOUSFOUND'
+                              Minimum={minUpVer} IncludeMinimum='yes'
+                              Maximum={appVersion} IncludeMaximum='no'/>
+
+            </Upgrade>
             <Media Id='1' Cabinet={appName + ".cab"} EmbedCab='yes'/>
             <Icon Id={exeFileName} SourceFile={icon.toAbsolutePath.toString}/>
             <Property Id="ARPPRODUCTICON" Value={exeFileName}/>
@@ -140,13 +146,11 @@ object WixPackaging extends Plugin {
               <Directory Id="DesktopFolder" Name="Desktop"/>
               <Directory Id='ProgramFilesFolder' Name='PFiles'>
                 <Directory Id='INSTALLDIR' Name={dispName}>
-                  {msiFiles.compElems}
-                  <Component Id='ApplicationExecutable' Guid='*'>
+                  {msiFiles.compElems}<Component Id='ApplicationExecutable' Guid='*'>
                   <File Id='app_exe' Name={exeFileName} DiskId='1' Source={exe.toAbsolutePath.toString} KeyPath="yes">
                     {shortcutFragment}
                   </File>
-                </Component>
-                  {serviceComponents}
+                </Component>{serviceComponents}
                 </Directory>
               </Directory>
             </Directory>
@@ -161,14 +165,12 @@ object WixPackaging extends Plugin {
                        Description='The core application.'
                        Level='1'
                        Absent='disallow'>
-                <ComponentRef Id='ApplicationExecutable'/>
-                {msiFiles.compRefs}
-              </Feature>
-              {serviceFeature}
+                <ComponentRef Id='ApplicationExecutable'/>{msiFiles.compRefs}
+              </Feature>{serviceFeature}
             </Feature>
             <MajorUpgrade AllowDowngrades="no"
                           Schedule="afterInstallInitialize"
-                          DowngradeErrorMessage="A later version of [ProductName] is already installed.  Setup will now exit."/>
+                          DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit."/>
             <UIRef Id="WixUI_FeatureTree"/>
             <UIRef Id="WixUI_ErrorProgressText"/>
             <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR"/>
@@ -177,7 +179,7 @@ object WixPackaging extends Plugin {
         </Wix>)
       }),
     windows.Keys.lightOptions ++= Seq("-ext", "WixUIExtension", "-ext", "WixUtilExtension", "-cultures:en-us")
-  )
+  ))
 
   def ifSelected(predicate: Boolean)(onTrue: => NodeSeq) = if (predicate) onTrue else NodeSeq.Empty
 

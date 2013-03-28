@@ -6,7 +6,7 @@ import sbt.Keys._
 import com.mle.util.FileUtilities
 import com.mle.sbt.GenericKeys._
 import unix.UnixZipKeys
-import java.io.FileNotFoundException
+import java.io.{PrintWriter, FileNotFoundException}
 import scala.Some
 
 /**
@@ -14,9 +14,10 @@ import scala.Some
  * @author mle
  */
 object PackagingUtil {
-
-
-
+  def writerTo(path: Path)(op: PrintWriter => Unit) {
+    Files.createDirectories(path.getParent)
+    FileUtilities.writerTo(path)(op)
+  }
   def logPairs(pairs: Seq[(SettingKey[Path], Types.Id[Path])], logger: TaskStreams) {
     pairs.foreach(pair => {
       val (key, value) = pair

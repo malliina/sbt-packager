@@ -12,7 +12,7 @@ object MyBuild extends Build {
     scalaVersion := "2.9.2",
     organization := "com.github.malliina",
     name := "sbt-packager",
-    version := "0.961-SNAPSHOT",
+    version := "0.962-SNAPSHOT",
     sbtPlugin := true,
     exportJars := false,
     resolvers += "Sonatype snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/",

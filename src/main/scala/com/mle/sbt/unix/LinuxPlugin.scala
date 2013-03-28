@@ -10,11 +10,13 @@ import LinuxKeys._
 import UnixKeys._
 import com.mle.sbt.GenericKeys._
 import scala.Some
-import com.mle.sbt.win.WixPackaging
 import com.mle.sbt.FileImplicits._
-import com.mle.sbt.{GenericKeys, PackagingUtil}
+import com.mle.sbt.{GenericPlugin, GenericKeys, PackagingUtil}
 
 object LinuxPlugin extends Plugin {
+  val distroSettings = GenericPlugin.confSpecificSettings ++ Seq(
+    deployFiles <<= linux.Keys.linuxPackageMappings map destPaths
+  )
   val linuxSettings: Seq[Setting[_]] = UnixPlugin.unixSettings ++ Seq(
     /**
      * Source settings
@@ -33,7 +35,6 @@ object LinuxPlugin extends Plugin {
     // Linux directory layout
     unixHome <<= (name in Linux)(pkgName => Paths get "/opt/" + pkgName),
     unixLibDest <<= (unixHome)(_ / libDir),
-    unixConfDest <<= (unixHome)(_ / confDir),
     unixScriptDest <<= (unixHome)(_ / scriptDir),
     unixLogDir <<= (unixHome)(_ / logDir),
     // rpm/deb postinst control files
@@ -50,28 +51,35 @@ object LinuxPlugin extends Plugin {
     libMappings <<= (libs, unixLibDest) map ((libFiles, destDir) => {
       libFiles.map(file => file -> (destDir / file.getFileName).toString)
     }),
-    confMappings <<= (configFiles, configPath, unixConfDest) map rebase,
     scriptMappings <<= (scriptFiles, scriptPath, unixScriptDest) map rebase,
-    linux.Keys.packageSummary in Linux <<= (name in Linux)(n => "This is a summary of " + n),
     linux.Keys.packageDescription in Linux := "This is the description of the package.",
     linux.Keys.linuxPackageMappings in Linux <++= (
-      unixHome, pkgHome in Linux, name in Linux, appJar, libMappings, confMappings,
+      unixHome, pkgHome in Linux, name in Linux, appJar, libMappings, confMappings in Linux,
       scriptMappings, unixLogDir, appJarName, defaultsFile, initScript, confFile in Linux, unixLibDest
       ) map (
       (home, pkgSrc, pkgName, jarFile, libs, confs, scripts, uLogdir, jarName, defFile, iScript, conf, libD) => Seq(
         pkgMaps(Seq(iScript -> ("/etc/init.d/" + pkgName)) ++ scripts, perms = "0755"),
         pkgMap((pkgSrc / libDir) -> libD.toString, perms = "0755"),
         pkgMaps(libs),
-        pkgMaps(conf.map(cFile => Seq(cFile -> ((home / cFile.getFileName).toString))).getOrElse(Seq.empty[(Path, String)]),perms="0600", isConfig = true),
+        pkgMaps(conf.map(cFile => Seq(cFile -> ((home / cFile.getFileName).toString))).getOrElse(Seq.empty[(Path, String)]), perms = "0600", isConfig = true),
         pkgMaps(confs ++ Seq(defFile -> ("/etc/default/" + pkgName)), isConfig = true),
         pkgMap((pkgSrc / logDir) -> uLogdir.toString, perms = "0755"),
         pkgMap(jarFile -> ((home / jarName).toString))
       ))
-  )
+  ) ++ inConfig(Linux)(distroSettings ++ Seq(
+    configDestDir <<= (unixHome)(_ / confDir),
+    libDestDir <<= (unixHome)(_ / libDir),
+    confMappings <<= (configFiles, configSrcDir, configDestDir) map rebase,
+    linux.Keys.packageSummary <<= (name)(n => "This is a summary of " + n),
+    linux.Keys.linuxPackageMappings <+= (pathMappings) map pathMaps
+  ))
+
   val debianSettings: Seq[Setting[_]] = linuxSettings ++ Seq(
-    debian.Keys.linuxPackageMappings in Debian <++= linux.Keys.linuxPackageMappings in Linux,
+    linux.Keys.linuxPackageMappings in Debian <++= linux.Keys.linuxPackageMappings in Linux,
+    configDestDir in Debian <<= configDestDir in Linux,
+    libDestDir in Debian <<= configDestDir in Linux,
     //    debian.Keys.version := "0.1",
-    debian.Keys.linuxPackageMappings in Debian <++= (pkgHome in Linux, name,
+    linux.Keys.linuxPackageMappings in Debian <++= (pkgHome in Linux, name,
       preInstall, postInstall, preRemove, postRemove, copyrightFile, changelogFile) map (
       (pkgSrc, pkgName, preinst, postinst, prerm, postrm, cRight, changeLog) => Seq(
         // http://lintian.debian.org/tags/no-copyright-file.html
@@ -84,21 +92,19 @@ object LinuxPlugin extends Plugin {
           postrm -> "DEBIAN/postrm"
         ), perms = "0755")
       ))
-    ,
-    debFiles <<= (debian.Keys.linuxPackageMappings in Debian, streams) map (printMappings)
-    //    debian.Keys.debianPackageDependencies in Debian ++= Seq("wget")
+  ) ++ inConfig(Debian)(distroSettings)
 
-  )
   val rpmSettings: Seq[Setting[_]] = linuxSettings ++ Seq(
-    rpm.Keys.linuxPackageMappings in Rpm <++= linux.Keys.linuxPackageMappings in Linux,
+    linux.Keys.linuxPackageMappings in Rpm <++= linux.Keys.linuxPackageMappings in Linux,
+    configDestDir in Rpm <<= configDestDir in Linux,
+    libDestDir in Rpm <<= configDestDir in Linux,
     rpm.Keys.rpmVendor <<= (GenericKeys.manufacturer)(m => m),
     rpm.Keys.rpmLicense := Some("All rights reserved."),
-    rpmFiles <<= (rpm.Keys.linuxPackageMappings in Rpm, streams) map (printMappings),
     rpm.Keys.rpmPre <<= (preInstall)(fileToString),
     rpm.Keys.rpmPost <<= (postInstall)(fileToString),
     rpm.Keys.rpmPreun <<= (preRemove)(fileToString),
     rpm.Keys.rpmPostun <<= (postRemove)(fileToString)
-  )
+  ) ++ inConfig(Rpm)(distroSettings)
 
   def fileToString(file: Path) =
     if (Files exists file) {
@@ -107,10 +113,10 @@ object LinuxPlugin extends Plugin {
       None
     }
 
-  val defaultNativeProject: Seq[Setting[_]] = linuxSettings ++ debianSettings ++ rpmSettings ++ WixPackaging.wixSettings
-
   def pkgMap(file: (Path, String), perms: String = "0644", gzipped: Boolean = false) =
     pkgMaps(Seq(file), perms = perms, gzipped = gzipped)
+
+  def pathMaps(maps: Seq[(Path, Path)]) = pkgMaps(maps.map(m => m._1 -> m._2.toString))
 
   def pkgMaps(files: Seq[(Path, String)],
               user: String = "root",
@@ -158,8 +164,13 @@ object LinuxPlugin extends Plugin {
         logger.log.info(fileType + ": " + file + ", dest: " + dest)
       })
     })
-    val ret = mappings.flatMap(_.mappings.map(_._2))
+    val ret = destinations(mappings)
     ret foreach (dest => logger.log.info(dest))
     ret
   }
+
+  def destinations(mappings: Seq[LinuxPackageMapping]) =
+    mappings.flatMap(_.mappings.map(_._2))
+
+  def destPaths(mappings: Seq[LinuxPackageMapping]) = destinations(mappings).map(Paths.get(_))
 }
