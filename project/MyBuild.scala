@@ -3,10 +3,11 @@ import sbt._
 
 object MyBuild extends Build {
   val utilDep = "com.github.malliina" %% "util" % "0.64-SNAPSHOT"
+  val scalaTest = "org.scalatest" %% "scalatest" % "1.9.1" % "test"
 
   lazy val sbtPackager = Project("sbt-packager", file("."))
-    .settings(libraryDependencies ++= Seq(utilDep))
-    .settings(addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "0.5.3"))
+    .settings(libraryDependencies ++= Seq(utilDep, scalaTest))
+    .settings(addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "0.5.4"))
 
   override lazy val settings = super.settings ++ Seq(
     scalaVersion := "2.9.2",

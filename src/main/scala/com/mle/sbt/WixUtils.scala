@@ -11,6 +11,7 @@ import com.mle.util.Log
 object WixUtils extends Log {
   /**
    * Generates appropriate WIX fragments for the specified mappings.
+   *
    * @param mappings file mappings (source, destination)
    * @return WIX XML fragments to use in WIX packaging
    */
@@ -58,28 +59,33 @@ object WixUtils extends Log {
   /**
    * Returns the path that contains the <code>level</code> first names of the supplied path.
    *
-   * If level is 0, the returned path is the root.
+   * If level is 0, returns the first name.
    *
    * If level+1 is greater than the total name count, returns None.
    *
    * @param path the original path
-   * @param level the number of names to return from the path, starting at the root
+   * @param level the number of names to return from the path, starting at the first name
    * @return the path consisting of the names from path.getRoot to path.getName(level)
    */
   def ancestorOf(path: Path, level: Int) = {
-    val ancestors = path.getNameCount
-    val stepsUp = ancestors - (level + 1)
-    if (stepsUp > 0) {
-      var eventualParent = path
-      (0 until stepsUp) map (i => {
-        eventualParent = eventualParent.getParent
-      })
-      Some(eventualParent)
+    val endExclusive = level + 1
+    if (path.getNameCount > endExclusive) {
+      Some(path subpath(0, endExclusive))
     } else {
       None
     }
   }
 
+  /**
+   * Generates a tree of a sequence of items with a path.
+   * Non-leaf nodes are directories and leaves are files.
+   *
+   * @param items sequence of files and directories
+   * @param pathFunc resolves a path from a given item
+   * @param level depth?
+   * @tparam T
+   * @return a tree based on the directory structure of the supplied items
+   */
   def treeify[T](items: Seq[T], pathFunc: T => Path, level: Int = 0): Seq[Tree] = {
     val fileMap = items.groupBy(item => {
       val path = pathFunc(item)

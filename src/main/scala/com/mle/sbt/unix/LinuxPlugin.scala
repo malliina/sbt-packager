@@ -52,8 +52,31 @@ object LinuxPlugin extends Plugin {
       libFiles.map(file => file -> (destDir / file.getFileName).toString)
     }),
     scriptMappings <<= (scriptFiles, scriptPath, unixScriptDest) map rebase,
-    linux.Keys.packageDescription in Linux := "This is the description of the package.",
-    linux.Keys.linuxPackageMappings in Linux <++= (
+    linux.Keys.packageDescription in Linux := "This is the description of the package."
+    //    linux.Keys.linuxPackageMappings in Linux <++= (
+    //      unixHome, pkgHome in Linux, name in Linux, appJar, libMappings, confMappings in Linux,
+    //      scriptMappings, unixLogDir, appJarName, defaultsFile, initScript, confFile in Linux, unixLibDest
+    //      ) map (
+    //      (home, pkgSrc, pkgName, jarFile, libs, confs, scripts, uLogdir, jarName, defFile, iScript, conf, libD) => Seq(
+    //        pkgMaps(Seq(iScript -> ("/etc/init.d/" + pkgName)) ++ scripts, perms = "0755"),
+    //        pkgMap((pkgSrc / libDir) -> libD.toString, perms = "0755"),
+    ////        pkgMaps(libs),
+    //        pkgMaps(conf.map(cFile => Seq(cFile -> ((home / cFile.getFileName).toString))).getOrElse(Seq.empty[(Path, String)]), perms = "0600", isConfig = true),
+    //        pkgMaps(confs ++ Seq(defFile -> ("/etc/default/" + pkgName)), isConfig = true),
+    //        pkgMap((pkgSrc / logDir) -> uLogdir.toString, perms = "0755"),
+    //        pkgMap(jarFile -> ((home / jarName).toString))
+    //      ))
+    //    linux.Keys.linuxPackageMappings <++= (unixHome) map (uH => Seq(
+    //      pkgMap(Paths.get("blaa") -> "blaa")
+    //    ))
+  ) ++ inConfig(Linux)(distroSettings ++ Seq(
+    configDestDir <<= (unixHome)(_ / confDir),
+    libDestDir <<= (unixHome)(_ / libDir),
+    confMappings <<= (configFiles, configSrcDir, configDestDir) map rebase,
+    linux.Keys.packageSummary <<= (name)(n => "This is a summary of " + n)
+  ))
+  val linuxMappings: Seq[Setting[_]] = Seq(
+    linux.Keys.linuxPackageMappings <++= (
       unixHome, pkgHome in Linux, name in Linux, appJar, libMappings, confMappings in Linux,
       scriptMappings, unixLogDir, appJarName, defaultsFile, initScript, confFile in Linux, unixLibDest
       ) map (
@@ -65,21 +88,17 @@ object LinuxPlugin extends Plugin {
         pkgMaps(confs ++ Seq(defFile -> ("/etc/default/" + pkgName)), isConfig = true),
         pkgMap((pkgSrc / logDir) -> uLogdir.toString, perms = "0755"),
         pkgMap(jarFile -> ((home / jarName).toString))
-      ))
-  ) ++ inConfig(Linux)(distroSettings ++ Seq(
-    configDestDir <<= (unixHome)(_ / confDir),
-    libDestDir <<= (unixHome)(_ / libDir),
-    confMappings <<= (configFiles, configSrcDir, configDestDir) map rebase,
-    linux.Keys.packageSummary <<= (name)(n => "This is a summary of " + n),
+      )),
     linux.Keys.linuxPackageMappings <+= (pathMappings) map pathMaps
-  ))
+  )
 
-  val debianSettings: Seq[Setting[_]] = linuxSettings ++ Seq(
-    linux.Keys.linuxPackageMappings in Debian <++= linux.Keys.linuxPackageMappings in Linux,
+  val debianSettings: Seq[Setting[_]] = linuxSettings ++ inConfig(Debian)(distroSettings ++ linuxMappings) ++ Seq(
+    //    debian.Keys.linuxPackageMappings <++= linux.Keys.linuxPackageMappings in Linux,
     configDestDir in Debian <<= configDestDir in Linux,
     libDestDir in Debian <<= configDestDir in Linux,
     //    debian.Keys.version := "0.1",
-    linux.Keys.linuxPackageMappings in Debian <++= (pkgHome in Linux, name,
+
+    debian.Keys.linuxPackageMappings in Debian <++= (pkgHome in Linux, name,
       preInstall, postInstall, preRemove, postRemove, copyrightFile, changelogFile) map (
       (pkgSrc, pkgName, preinst, postinst, prerm, postrm, cRight, changeLog) => Seq(
         // http://lintian.debian.org/tags/no-copyright-file.html
@@ -92,10 +111,10 @@ object LinuxPlugin extends Plugin {
           postrm -> "DEBIAN/postrm"
         ), perms = "0755")
       ))
-  ) ++ inConfig(Debian)(distroSettings)
+  )
 
-  val rpmSettings: Seq[Setting[_]] = linuxSettings ++ Seq(
-    linux.Keys.linuxPackageMappings in Rpm <++= linux.Keys.linuxPackageMappings in Linux,
+  val rpmSettings: Seq[Setting[_]] = linuxSettings ++ inConfig(Rpm)(distroSettings ++ linuxMappings) ++ Seq(
+    //    rpm.Keys.linuxPackageMappings in Rpm <++= linux.Keys.linuxPackageMappings in Linux,
     configDestDir in Rpm <<= configDestDir in Linux,
     libDestDir in Rpm <<= configDestDir in Linux,
     rpm.Keys.rpmVendor <<= (GenericKeys.manufacturer)(m => m),
@@ -104,7 +123,7 @@ object LinuxPlugin extends Plugin {
     rpm.Keys.rpmPost <<= (postInstall)(fileToString),
     rpm.Keys.rpmPreun <<= (preRemove)(fileToString),
     rpm.Keys.rpmPostun <<= (postRemove)(fileToString)
-  ) ++ inConfig(Rpm)(distroSettings)
+  )
 
   def fileToString(file: Path) =
     if (Files exists file) {
