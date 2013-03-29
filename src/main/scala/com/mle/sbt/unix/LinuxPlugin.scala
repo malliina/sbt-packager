@@ -15,7 +15,8 @@ import com.mle.sbt.{GenericPlugin, GenericKeys, PackagingUtil}
 
 object LinuxPlugin extends Plugin {
   val distroSettings = GenericPlugin.confSpecificSettings ++ Seq(
-    deployFiles <<= linux.Keys.linuxPackageMappings map destPaths
+    deployFiles <<= linux.Keys.linuxPackageMappings map destPaths,
+    mappingsPrint <<= (linux.Keys.linuxPackageMappings, streams) map printMappings
   )
   val linuxSettings: Seq[Setting[_]] = UnixPlugin.unixSettings ++ Seq(
     /**
@@ -53,22 +54,6 @@ object LinuxPlugin extends Plugin {
     }),
     scriptMappings <<= (scriptFiles, scriptPath, unixScriptDest) map rebase,
     linux.Keys.packageDescription in Linux := "This is the description of the package."
-    //    linux.Keys.linuxPackageMappings in Linux <++= (
-    //      unixHome, pkgHome in Linux, name in Linux, appJar, libMappings, confMappings in Linux,
-    //      scriptMappings, unixLogDir, appJarName, defaultsFile, initScript, confFile in Linux, unixLibDest
-    //      ) map (
-    //      (home, pkgSrc, pkgName, jarFile, libs, confs, scripts, uLogdir, jarName, defFile, iScript, conf, libD) => Seq(
-    //        pkgMaps(Seq(iScript -> ("/etc/init.d/" + pkgName)) ++ scripts, perms = "0755"),
-    //        pkgMap((pkgSrc / libDir) -> libD.toString, perms = "0755"),
-    ////        pkgMaps(libs),
-    //        pkgMaps(conf.map(cFile => Seq(cFile -> ((home / cFile.getFileName).toString))).getOrElse(Seq.empty[(Path, String)]), perms = "0600", isConfig = true),
-    //        pkgMaps(confs ++ Seq(defFile -> ("/etc/default/" + pkgName)), isConfig = true),
-    //        pkgMap((pkgSrc / logDir) -> uLogdir.toString, perms = "0755"),
-    //        pkgMap(jarFile -> ((home / jarName).toString))
-    //      ))
-    //    linux.Keys.linuxPackageMappings <++= (unixHome) map (uH => Seq(
-    //      pkgMap(Paths.get("blaa") -> "blaa")
-    //    ))
   ) ++ inConfig(Linux)(distroSettings ++ Seq(
     configDestDir <<= (unixHome)(_ / confDir),
     libDestDir <<= (unixHome)(_ / libDir),
@@ -77,19 +62,20 @@ object LinuxPlugin extends Plugin {
   ))
   val linuxMappings: Seq[Setting[_]] = Seq(
     linux.Keys.linuxPackageMappings <++= (
-      unixHome, pkgHome in Linux, name in Linux, appJar, libMappings, confMappings in Linux,
-      scriptMappings, unixLogDir, appJarName, defaultsFile, initScript, confFile in Linux, unixLibDest
+      unixHome, pkgHome in Linux, name in Linux, appJar,
+      scriptMappings, unixLogDir, appJarName, defaultsFile, initScript, unixLibDest
       ) map (
-      (home, pkgSrc, pkgName, jarFile, libs, confs, scripts, uLogdir, jarName, defFile, iScript, conf, libD) => Seq(
-        pkgMaps(Seq(iScript -> ("/etc/init.d/" + pkgName)) ++ scripts, perms = "0755"),
-        pkgMap((pkgSrc / libDir) -> libD.toString, perms = "0755"),
-        pkgMaps(libs),
-        pkgMaps(conf.map(cFile => Seq(cFile -> ((home / cFile.getFileName).toString))).getOrElse(Seq.empty[(Path, String)]), perms = "0600", isConfig = true),
-        pkgMaps(confs ++ Seq(defFile -> ("/etc/default/" + pkgName)), isConfig = true),
-        pkgMap((pkgSrc / logDir) -> uLogdir.toString, perms = "0755"),
-        pkgMap(jarFile -> ((home / jarName).toString))
-      )),
-    linux.Keys.linuxPackageMappings <+= (pathMappings) map pathMaps
+      (home, pkgSrc, pkgName, jarFile, scripts, uLogdir, jarName, defFile, iScript, libD) => Seq(
+        fileMap(jarFile -> ((home / jarName).toString)),
+        baseMaps(Seq((pkgSrc / libDir) -> libD.toString, (pkgSrc / logDir) -> uLogdir.toString), perms = "0755")
+      ) ++ pkgMaps(Seq(iScript -> ("/etc/init.d/" + pkgName)) ++ scripts, perms = "0755")),
+    linux.Keys.linuxPackageMappings <++= (unixHome, confMappings in Linux, name in Linux, defaultsFile,
+      confFile in Linux) map ((h, confs, n, d, c) =>
+      pkgMaps(c.map(cFile => Seq(cFile -> ((h / cFile.getFileName).toString)))
+        .getOrElse(Seq.empty[(Path, String)]), perms = "0600", isConfig = true) ++
+        pkgMaps(confs ++ Seq(d -> ("/etc/default/" + n)), isConfig = true)),
+    linux.Keys.linuxPackageMappings <+= libMappings map (libs => fileMaps(libs)),
+    linux.Keys.linuxPackageMappings <++= pathMappings map pathMaps
   )
 
   val debianSettings: Seq[Setting[_]] = linuxSettings ++ inConfig(Debian)(distroSettings ++ linuxMappings) ++ Seq(
@@ -102,9 +88,9 @@ object LinuxPlugin extends Plugin {
       preInstall, postInstall, preRemove, postRemove, copyrightFile, changelogFile) map (
       (pkgSrc, pkgName, preinst, postinst, prerm, postrm, cRight, changeLog) => Seq(
         // http://lintian.debian.org/tags/no-copyright-file.html
-        pkgMap(cRight -> ("/usr/share/doc/" + pkgName + "/copyright")),
-        pkgMap(changeLog -> ("/usr/share/doc/" + pkgName + "/changelog.gz"), gzipped = true) asDocs(),
-        pkgMaps(Seq(
+        fileMap(cRight -> ("/usr/share/doc/" + pkgName + "/copyright")),
+        fileMap(changeLog -> ("/usr/share/doc/" + pkgName + "/changelog.gz"), gzipped = true) asDocs(),
+        fileMaps(Seq(
           preinst -> "DEBIAN/preinst",
           postinst -> "DEBIAN/postinst",
           prerm -> "DEBIAN/prerm",
@@ -137,30 +123,35 @@ object LinuxPlugin extends Plugin {
 
   def pathMaps(maps: Seq[(Path, Path)]) = pkgMaps(maps.map(m => m._1 -> m._2.toString))
 
-  def pkgMaps(files: Seq[(Path, String)],
+  def fileMap(mapping: (Path, String), perms: String = "0644", gzipped: Boolean = false) =
+    fileMaps(Seq(mapping), perms = perms, gzipped = gzipped)
+
+  def fileMaps(paths: Seq[(Path, String)], user: String = "root",
+               group: String = "root", perms: String = "0644",
+               isConfig: Boolean = false, gzipped: Boolean = false) = {
+    var fileMaps = baseMaps(paths, perms, user, group)
+    if (isConfig)
+      fileMaps = fileMaps withConfig()
+    if (gzipped)
+      fileMaps = fileMaps.gzipped
+    fileMaps
+  }
+
+  def baseMaps(paths: Seq[(Path, String)], perms: String,
+               user: String = "root", group: String = "root") =
+    LinuxPackageMapping(paths.map(pair => pair._1.toFile -> pair._2)) withPerms perms withUser user withGroup group
+
+  def pkgMaps(paths: Seq[(Path, String)],
               user: String = "root",
               group: String = "root",
               perms: String = "0644",
+              dirPerms: String = "0755",
               isConfig: Boolean = false,
               gzipped: Boolean = false) = {
-    var mapping = LinuxPackageMapping(files.map(pair => pair._1.toFile -> pair._2)) withUser user withGroup group withPerms perms
-    if (isConfig)
-      mapping = mapping withConfig()
-    if (gzipped)
-      mapping = mapping.gzipped
-    mapping
-  }
-
-  def pkgMapping(files: (Path, String)*) = {
-    packageMapping(files.map(pair => pair._1.toFile -> pair._2): _*)
-    packageMapping()
-  }
-
-  def printMapping(mapping: LinuxPackageMapping, logger: TaskStreams) {
-    mapping.mappings.foreach(ping => {
-      val (file, dest) = ping
-      logger.log.info("file: " + file + ", dest: " + dest)
-    })
+    val (dirs, files) = paths partition (p => Files.isDirectory(p._1))
+    val fileMappings = fileMaps(files, user, group, perms, isConfig, gzipped)
+    val dirMaps = baseMaps(dirs, dirPerms)
+    Seq(dirMaps, fileMappings)
   }
 
   def rebase(file: Path, srcBase: Path, destBase: Path) = destBase resolve (srcBase relativize file)
@@ -173,6 +164,7 @@ object LinuxPlugin extends Plugin {
 
   def printMappings(mappings: Seq[LinuxPackageMapping], logger: TaskStreams) = {
     mappings.foreach(mapping => {
+      val perms = mapping.fileData.permissions
       mapping.mappings.foreach(pair => {
         val (file, dest) = pair
         val fileType = file match {
@@ -180,12 +172,9 @@ object LinuxPlugin extends Plugin {
           case dir if file.isDirectory => "dir"
           case _ => "UNKNOWN"
         }
-        logger.log.info(fileType + ": " + file + ", dest: " + dest)
+        logger.log.info(fileType + "(" + perms + "): " + file + ", dest: " + dest)
       })
     })
-    val ret = destinations(mappings)
-    ret foreach (dest => logger.log.info(dest))
-    ret
   }
 
   def destinations(mappings: Seq[LinuxPackageMapping]) =

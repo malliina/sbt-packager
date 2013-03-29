@@ -69,7 +69,7 @@ object WindowsPlugin extends Plugin {
       }) dependsOn verifySettings,
       shortcut := false,
       displayName <<= (name)(n => n),
-      printMappings <<= (mappings in windows.Keys.packageMsi in Windows, streams) map ((maps, logger) => {
+      mappingsPrint <<= (mappings in windows.Keys.packageMsi in Windows, streams) map ((maps, logger) => {
         val output = maps.map(kv => kv._1.getAbsolutePath + "\n" + kv._2).mkString("\n---\n")
         logger.log.info(output)
       }),
