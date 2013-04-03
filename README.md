@@ -1,8 +1,12 @@
-SBT packaging code.
+# SBT packager #
 
-To do:
+This is an SBT plugin for software packaging. It depends on [sbt-native-packager](https://raw.github.com/sbt/sbt-native-packager).
 
-- A sane container class for native settings for rpm, deb and windows, abstracting away the obscureness in configuring all this
-- Bug: Need to call windows:package-msi twice, the first time it won't find conf files because they won't exist yet
+## Installation ##
+
+    addSbtPlugin("com.github.malliina" % "sbt-packager" % "0.9.9")
+
+## To do ##
+
 - Set a better path for windows service wrapper logs
 

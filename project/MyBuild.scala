@@ -10,7 +10,7 @@ object MyBuild extends Build {
   val scalaTest = "org.scalatest" %% "scalatest" % "1.9.1" % "test"
 
   val releaseVersion = "0.9.7"
-  val snapshotVersion = "0.9.9-SNAPSHOT"
+  val snapshotVersion = "0.9.9"
 
   override lazy val settings = super.settings ++ Seq(
     scalaVersion := "2.9.2",
@@ -20,7 +20,6 @@ object MyBuild extends Build {
     sbtPlugin := true,
     exportJars := false,
     resolvers += "Sonatype snaps" at "http://oss.sonatype.org/content/repositories/snapshots/",
-    resolvers += "Sonatype releases" at "https://oss.sonatype.org/content/repositories/releases/",
     publishTo <<= (version)(v => {
       val repo =
         if (v endsWith "SNAPSHOT") {
