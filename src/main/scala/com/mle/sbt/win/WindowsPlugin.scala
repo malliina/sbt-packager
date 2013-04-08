@@ -10,6 +10,7 @@ import com.mle.sbt.GenericKeys._
 import com.mle.sbt.{PackagingUtil, GenericPlugin}
 import com.typesafe.sbt.packager.windows
 import java.util.UUID
+import com.mle.sbt.azure.AzureKeys
 
 
 object WindowsPlugin extends Plugin {
@@ -77,6 +78,7 @@ object WindowsPlugin extends Plugin {
         msiMappings := Seq.empty[(Path, Path)],
         pkgHome in Windows <<= (pkgHome)(_ / "windows")
       ) ++ inConfig(Windows)(GenericPlugin.confSpecificSettings ++ Seq(
+      AzureKeys.azurePackage <<= win map (msi => Some(msi)),
       msiMappings <++= pathMappings,
       deployFiles <<= msiMappings map (msis => msis.map(_._2)),
       configDestDir := Paths get "config",
@@ -100,8 +102,8 @@ object WindowsPlugin extends Plugin {
         if (mC.isEmpty)
           throw new Exception("No mainClass specified; cannot create .exe")
         PackagingUtil.verifyPathSetting(
-          launch4jcExe -> lE,
-          appIcon -> aI,
+//          launch4jcExe -> lE,
+//          appIcon -> aI,
           winSwExe -> wE,
           batPath -> bP,
           licenseRtf -> lR)

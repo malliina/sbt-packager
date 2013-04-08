@@ -12,6 +12,7 @@ import com.mle.sbt.GenericKeys._
 import scala.Some
 import com.mle.sbt.FileImplicits._
 import com.mle.sbt.{GenericPlugin, GenericKeys, PackagingUtil}
+import com.mle.sbt.azure.AzureKeys
 
 object LinuxPlugin extends Plugin {
   val distroSettings = GenericPlugin.confSpecificSettings ++ Seq(
@@ -80,6 +81,7 @@ object LinuxPlugin extends Plugin {
 
   val debianSettings: Seq[Setting[_]] = linuxSettings ++ inConfig(Debian)(distroSettings ++ linuxMappings) ++ Seq(
     //    debian.Keys.linuxPackageMappings <++= linux.Keys.linuxPackageMappings in Linux,
+    AzureKeys.azurePackage in Debian <<= packageBin in Debian map (f => Some(f.toPath)),
     configDestDir in Debian <<= configDestDir in Linux,
     libDestDir in Debian <<= configDestDir in Linux,
     //    debian.Keys.version := "0.1",
@@ -102,6 +104,7 @@ object LinuxPlugin extends Plugin {
 
   val rpmSettings: Seq[Setting[_]] = linuxSettings ++ inConfig(Rpm)(distroSettings ++ linuxMappings) ++ Seq(
     //    rpm.Keys.linuxPackageMappings in Rpm <++= linux.Keys.linuxPackageMappings in Linux,
+    AzureKeys.azurePackage in Rpm <<= packageBin in Rpm map (f => Some(f.toPath)),
     configDestDir in Rpm <<= configDestDir in Linux,
     libDestDir in Rpm <<= configDestDir in Linux,
     rpm.Keys.rpmVendor <<= (GenericKeys.manufacturer)(m => m),
