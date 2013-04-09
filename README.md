@@ -1,6 +1,6 @@
 # SBT Packager #
 
-This is an SBT plugin for software packaging. It depends on [sbt-native-packager](https://raw.github.com/sbt/sbt-native-packager).
+This is an SBT plugin for software packaging. It depends on [sbt-native-packager](https://github.com/sbt/sbt-native-packager).
 
 ## Installation ##
 
