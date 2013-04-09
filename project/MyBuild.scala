@@ -7,17 +7,17 @@ object MyBuild extends Build {
     .settings(addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "0.5.4"))
   val malliinaGroup = "com.github.malliina"
   val utilDep = malliinaGroup %% "util" % "0.7.0"
-  val azure = malliinaGroup %% "util-azure" % "0.7.2-SNAPSHOT"
+  val azure = malliinaGroup %% "util-azure" % "0.7.1"
   val scalaTest = "org.scalatest" %% "scalatest" % "1.9.1" % "test"
 
-  val releaseVersion = "0.9.7"
-  val snapshotVersion = "0.9.9-SNAPSHOT"
+  val releaseVersion = "1.0.0"
+  val snapshotVersion = "1.0.1-SNAPSHOT"
 
   override lazy val settings = super.settings ++ Seq(
     scalaVersion := "2.9.2",
     organization := "com.github.malliina",
     name := "sbt-packager",
-    version := snapshotVersion,
+    version := releaseVersion,
     sbtPlugin := true,
     exportJars := false,
     resolvers += "Sonatype snaps" at "http://oss.sonatype.org/content/repositories/snapshots/",

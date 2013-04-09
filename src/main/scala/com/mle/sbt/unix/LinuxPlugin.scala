@@ -23,6 +23,7 @@ object LinuxPlugin extends Plugin {
         controlDir,
         preInstall,
         postInstall,
+        preRemove,
         postRemove,
         defaultsFile,
         copyrightFile,
