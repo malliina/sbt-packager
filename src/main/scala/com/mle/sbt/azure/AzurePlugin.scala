@@ -2,10 +2,11 @@ package com.mle.sbt.azure
 
 import sbt._
 import AzureKeys._
-import java.nio.file.{Path, Paths}
+import java.nio.file.Path
 import com.mle.util.Implicits._
 import com.mle.util.Util
 import com.mle.azure.StorageClient
+import com.mle.sbt.GenericPlugin
 
 /**
  *
@@ -14,7 +15,7 @@ import com.mle.azure.StorageClient
 trait AzurePlugin extends Plugin {
   val azureSettings: Seq[Setting[_]] = Seq(
     azurePackage := None,
-    azureConf := (Paths get sys.props("user.home")) / "keys" / "azure-storage.sec",
+    azureConf := sbt.Path.userHome.toPath / "keys" / "azure-storage.sec",
     azureContainer <<= (azureConf, azureContainerName) map ((conf, cont) => {
       val (account, key) = readCredentials(conf)
       val client = new StorageClient(account, key)
@@ -28,6 +29,10 @@ trait AzurePlugin extends Plugin {
     val accountKey = credMap("account_key")
     (accountName, accountKey)
   }
+
+  def describe = GenericPlugin.describe(
+    azureUpload, azurePackage, azureConf, azureContainerName
+  )
 }
 
 object AzurePlugin extends AzurePlugin

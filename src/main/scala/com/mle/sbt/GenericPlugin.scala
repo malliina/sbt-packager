@@ -9,6 +9,9 @@ import com.mle.sbt.FileImplicits._
 import com.mle.sbt.azure.AzureKeys._
 import scala.Some
 import java.lang.Exception
+import com.typesafe.sbt.SbtNativePackager
+import com.mle.util.FileUtilities
+import com.mle.sbt.azure.AzurePlugin
 
 
 object GenericPlugin extends Plugin {
@@ -33,7 +36,20 @@ object GenericPlugin extends Plugin {
     configFiles <<= listFiles(configSrcDir),
     targetPath <<= (target)(_.toPath),
     versionFile <<= (targetPath)(_ / "version.txt"),
-    logger <<= (streams) map ((s: Keys.TaskStreams) => s.log)
+    logger <<= (streams) map ((s: Keys.TaskStreams) => s.log),
+    help <<= (logger) map (log => {
+      import SbtNativePackager._
+      def suggestTask(conf: Configuration) = conf.name + ":helpme"
+      val winHelp = suggestTask(Windows)
+      val debHelp = suggestTask(Debian)
+      val rpmHelp = suggestTask(Rpm)
+      val taskList = Seq(winHelp, debHelp, rpmHelp).mkString(FileUtilities.lineSep, FileUtilities.lineSep, FileUtilities.lineSep)
+      val helpMsg = describe(pkgHome, appJar, libs, confFile, versionFile)
+      val confMsg = "Three OS configurations are available: " + Windows.name + ", " + Debian.name + ", and " + Rpm.name
+      val suggest = "Try the following: " + taskList
+      val msg = Seq(helpMsg, confMsg, suggest).mkString(FileUtilities.lineSep+FileUtilities.lineSep)
+      log.info(msg)
+    })
   )
   val confSpecificSettings: Seq[Setting[_]] = Seq(
     pathMappings <<= (version, versionFile, configDestDir) map ((v, vFile, confDest) => {
@@ -45,7 +61,7 @@ object GenericPlugin extends Plugin {
       destFiles foreach (dest => logger.log.info(dest.toString))
     }),
     targetPath <<= target(_.toPath),
-    uploadRelease <<= (azureContainer, azurePackage, logger) map ((container, file, log) => {
+    azureUpload <<= (azureContainer, azurePackage, logger) map ((container, file, log) => {
       val uri = file.map(container.upload)
         .getOrElse(throw new Exception(azurePackage.key.label + " not defined."))
       log.info("Uploaded package to " + uri)
@@ -55,4 +71,17 @@ object GenericPlugin extends Plugin {
   val confSettings: Seq[Setting[_]] = Seq(
     confFile <<= (pkgHome, name)((w, n) => Some(w / (n + ".conf")))
   )
+
+  def describe(tasks: ScopedTaskable[_]*) = tasks.map(_.key).map(t => {
+    val tabCount = t.label.size match {
+      case i if i > 16 => 1
+      case i if i > 8 => 2
+      case _ => 3
+    }
+    val sep = (1 to tabCount).map(_ => "\t").mkString
+    t.label + sep + t.description.getOrElse("No description")
+  }).mkString(FileUtilities.lineSep)
+
+  def describeWithAzure(tasks: ScopedTaskable[_]*) =
+    describe(tasks: _*) + FileUtilities.lineSep + AzurePlugin.describe
 }

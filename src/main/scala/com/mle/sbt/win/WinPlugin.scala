@@ -4,19 +4,20 @@ import java.nio.file.{Path, StandardCopyOption, Files, Paths}
 import sbt.Keys._
 import sbt._
 import com.typesafe.sbt.SbtNativePackager.Windows
-import com.mle.sbt.win.WindowsKeys._
+import com.mle.sbt.win.WinKeys._
 import com.mle.sbt.FileImplicits._
 import com.mle.sbt.GenericKeys._
 import com.mle.sbt.{PackagingUtil, GenericPlugin}
 import com.typesafe.sbt.packager.windows
 import java.util.UUID
-import com.mle.sbt.azure.AzureKeys
+import com.mle.sbt.azure.AzureKeys._
 
 
-object WindowsPlugin extends Plugin {
+object WinPlugin extends Plugin {
   val windowsMappings = mappings in windows.Keys.packageMsi
 
   val fileMappings: Seq[Setting[_]] = inConfig(Windows)(Seq(
+
     windowsMappings <++= (msiMappings) map ((msiMaps: Seq[(Path, Path)]) => msiMaps.map(mapping => {
       val (src, dest) = mapping
       src.toFile -> dest.toString
@@ -78,7 +79,32 @@ object WindowsPlugin extends Plugin {
         msiMappings := Seq.empty[(Path, Path)],
         pkgHome in Windows <<= (pkgHome)(_ / "windows")
       ) ++ inConfig(Windows)(GenericPlugin.confSpecificSettings ++ Seq(
-      AzureKeys.azurePackage <<= win map (msi => Some(msi)),
+      help <<= (logger) map (log => {
+        val taskList = GenericPlugin.describeWithAzure(
+          windows.Keys.packageMsi,
+          win,
+          batPath,
+          licenseRtf,
+          productGuid,
+          upgradeGuid,
+          uuid,
+          msiName,
+          displayName,
+          appIcon,
+          exePath,
+          shortcut,
+          winSwExe,
+          winSwConf,
+          winSwExeName,
+          winSwConfName,
+          winSwName,
+          serviceConf,
+          serviceFeature,
+          msiMappings,
+          minUpgradeVersion)
+        log info taskList
+      }),
+      azurePackage <<= win map (msi => Some(msi)),
       msiMappings <++= pathMappings,
       deployFiles <<= msiMappings map (msis => msis.map(_._2)),
       configDestDir := Paths get "config",
@@ -102,8 +128,8 @@ object WindowsPlugin extends Plugin {
         if (mC.isEmpty)
           throw new Exception("No mainClass specified; cannot create .exe")
         PackagingUtil.verifyPathSetting(
-//          launch4jcExe -> lE,
-//          appIcon -> aI,
+          //          launch4jcExe -> lE,
+          //          appIcon -> aI,
           winSwExe -> wE,
           batPath -> bP,
           licenseRtf -> lR)

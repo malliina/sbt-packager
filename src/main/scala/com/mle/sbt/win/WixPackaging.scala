@@ -1,6 +1,6 @@
 package com.mle.sbt.win
 
-import WindowsKeys._
+import WinKeys._
 import com.typesafe.sbt.packager._
 import com.typesafe.sbt.SbtNativePackager._
 import java.nio.file.Path

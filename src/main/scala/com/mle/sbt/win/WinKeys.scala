@@ -3,7 +3,7 @@ package com.mle.sbt.win
 import java.nio.file.Path
 import sbt.{TaskKey, SettingKey}
 
-object WindowsKeys {
+object WinKeys {
   /**
    * Source paths
    */

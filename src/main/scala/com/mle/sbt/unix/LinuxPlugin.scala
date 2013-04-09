@@ -17,7 +17,27 @@ import com.mle.sbt.azure.AzureKeys
 object LinuxPlugin extends Plugin {
   val distroSettings = GenericPlugin.confSpecificSettings ++ Seq(
     deployFiles <<= linux.Keys.linuxPackageMappings map destPaths,
-    mappingsPrint <<= (linux.Keys.linuxPackageMappings, streams) map printMappings
+    mappingsPrint <<= (linux.Keys.linuxPackageMappings, streams) map printMappings,
+    help <<= (logger) map (log => {
+      val msg = GenericPlugin.describeWithAzure(
+        controlDir,
+        preInstall,
+        postInstall,
+        postRemove,
+        defaultsFile,
+        copyrightFile,
+        changelogFile,
+        initScript,
+        unixHome,
+        unixLibDest,
+        unixScriptDest,
+        unixLogDir,
+        libMappings,
+        confMappings,
+        scriptMappings
+      )
+      log info msg
+    })
   )
   val linuxSettings: Seq[Setting[_]] = UnixPlugin.unixSettings ++ Seq(
     /**
@@ -80,6 +100,7 @@ object LinuxPlugin extends Plugin {
   )
 
   val debianSettings: Seq[Setting[_]] = linuxSettings ++ inConfig(Debian)(distroSettings ++ linuxMappings) ++ Seq(
+
     //    debian.Keys.linuxPackageMappings <++= linux.Keys.linuxPackageMappings in Linux,
     AzureKeys.azurePackage in Debian <<= packageBin in Debian map (f => Some(f.toPath)),
     configDestDir in Debian <<= configDestDir in Linux,

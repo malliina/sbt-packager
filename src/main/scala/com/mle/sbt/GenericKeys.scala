@@ -30,4 +30,5 @@ object GenericKeys extends Plugin {
   val deployFiles = TaskKey[Seq[Path]]("deploy-files", "Files installed")
   val printFiles = TaskKey[Unit]("files", "Prints the installed files")
   val logger = TaskKey[Logger]("logger", "Logger helper")
+  val help = TaskKey[Unit]("helpme", "Shows help")
 }
