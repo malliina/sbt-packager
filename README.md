@@ -8,6 +8,17 @@ This is an SBT plugin for software packaging. It depends on [sbt-native-packager
 
 ## Usage ##
 
+Add the following settings to your project:
+
+```
+SbtNativePackager.packagerSettings ++
+    WinPlugin.windowsSettings ++
+    LinuxPlugin.rpmSettings ++
+    LinuxPlugin.debianSettings ++
+    GenericPlugin.confSettings ++
+    AzurePlugin.azureSettings
+```
+
 To get a list of tasks and settings pertaining to this plugin, run the following SBT tasks:
 - helpme
 - windows:helpme
