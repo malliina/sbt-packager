@@ -83,6 +83,7 @@ To get a list of tasks and settings pertaining to this plugin, run the following
 [info] control-dir              Directory for control files for native packaging
 [info] pre-install              Preinstall script
 [info] post-install             Postinstall script
+[info] pre-remove               Preremove script
 [info] post-remove              Postremove script
 [info] defaults-file            The defaults config file
 [info] copyright-file           The copyright file
@@ -110,6 +111,7 @@ To get a list of tasks and settings pertaining to this plugin, run the following
 [info] control-dir              Directory for control files for native packaging
 [info] pre-install              Preinstall script
 [info] post-install             Postinstall script
+[info] pre-remove               Preremove script
 [info] post-remove              Postremove script
 [info] defaults-file            The defaults config file
 [info] copyright-file           The copyright file
