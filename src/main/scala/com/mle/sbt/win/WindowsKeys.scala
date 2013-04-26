@@ -37,4 +37,3 @@ object WindowsKeys {
   val serviceConf = SettingKey[Option[ServiceConf]]("winsw-container", "Winsw confs")
 }
 
-case class ServiceConf(serviceExe:Path,exeName: String, confName: String)

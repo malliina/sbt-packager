@@ -16,22 +16,20 @@ object WixPackaging extends Plugin {
   // need to set the "WIX" environment variable to the wix installation dir e.g. program files\wix. Use Wix 3.7 or newer.
   val wixSettings: Seq[Setting[_]] = inConfig(Windows)(Seq(
     windows.Keys.wixConfig <<= (
-      msiMappings, name, version, displayName,
-      exePath, licenseRtf, appIcon, productGuid,
-      upgradeGuid, shortcut, GenericKeys.manufacturer, serviceConf,
+      msiMappings, name, version,
+      displayName, licenseRtf, productGuid,
+      upgradeGuid, GenericKeys.manufacturer, serviceConf,
       minUpgradeVersion) map (
-      (mappings, appName, appVersion, dispName,
-       exe, license, icon, productUid,
-       upgradeUid, desktopShortcut, manufact, service,
+      (mappings, appName, appVersion,
+       dispName, license, productUid,
+       upgradeUid, manufact, service,
        minUpVer) => {
         val msiFiles = WixUtils.wix(mappings)
-        val exeFileName = exe.getFileName.toString
-        val shortcutFragment = ifSelected(desktopShortcut) {
-            <Shortcut Id='desktopShortcut' Directory='DesktopFolder' Name={dispName}
-                      WorkingDirectory='INSTALLDIR' Icon={exeFileName} IconIndex="0" Advertise="yes"/>
-        }
         val serviceFragments = service.map(s => ServiceFragments.fromConf(s, dispName))
           .getOrElse(ServiceFragments.Empty)
+        // TODO
+        val exeComp = NodeSeq.Empty
+        val exeCompRef = NodeSeq.Empty
 
         (<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi' xmlns:util='http://schemas.microsoft.com/wix/UtilExtension'>
           <Product Name={dispName}
@@ -50,21 +48,14 @@ object WixPackaging extends Plugin {
               <UpgradeVersion OnlyDetect='no' Property='PREVIOUSFOUND'
                               Minimum={minUpVer} IncludeMinimum='yes'
                               Maximum={appVersion} IncludeMaximum='no'/>
-
             </Upgrade>
             <Media Id='1' Cabinet={appName + ".cab"} EmbedCab='yes'/>
-            <Icon Id={exeFileName} SourceFile={icon.toAbsolutePath.toString}/>
-            <Property Id="ARPPRODUCTICON" Value={exeFileName}/>
             <Directory Id='TARGETDIR' Name='SourceDir'>
               <Directory Id="DesktopFolder" Name="Desktop"/>
               <Directory Id='ProgramFilesFolder' Name='PFiles'>
                 <Directory Id='INSTALLDIR' Name={dispName}>
                   {msiFiles.compElems}
-                  <Component Id='ApplicationExecutable' Guid='*'>
-                  <File Id='app_exe' Name={exeFileName} DiskId='1' Source={exe.toAbsolutePath.toString} KeyPath="yes">
-                    {shortcutFragment}
-                  </File>
-                </Component>
+                  {exeComp}
                   {serviceFragments.components}
                 </Directory>
               </Directory>
@@ -80,7 +71,8 @@ object WixPackaging extends Plugin {
                        Description='The core application.'
                        Level='1'
                        Absent='disallow'>
-                <ComponentRef Id='ApplicationExecutable'/>{msiFiles.compRefs}
+                {exeCompRef}
+                {msiFiles.compRefs}
               </Feature>
               {serviceFragments.feature}
             </Feature>
@@ -150,7 +142,21 @@ object WixPackaging extends Plugin {
                   </Component>
 
    <ComponentRef Id='HomePathEnvironment'/>
+                   <ComponentRef Id='ApplicationExecutable'/>
 
+
+                                                      <Component Id='ApplicationExecutable' Guid='*'>
+                  <File Id='app_exe' Name={exeFileName} DiskId='1' Source={exe.toAbsolutePath.toString} KeyPath="yes">
+                    {shortcutFragment}
+                  </File>
+                </Component>
+   val shortcutFragment = ifSelected(desktopShortcut) {
+            <Shortcut Id='desktopShortcut' Directory='DesktopFolder' Name={dispName}
+                      WorkingDirectory='INSTALLDIR' Icon={exeFileName} IconIndex="0" Advertise="yes"/>
+        }
+
+    <Icon Id={exeFileName} SourceFile={icon.toAbsolutePath.toString}/>
+            <Property Id="ARPPRODUCTICON" Value={exeFileName}/>
    */
 
 }

@@ -40,7 +40,8 @@ object GenericPlugin extends Plugin {
     }),
     printFiles <<= (deployFiles, streams) map ((destFiles, logger) => {
       destFiles foreach (dest => logger.log.info(dest.toString))
-    })
+    }),
+    targetPath <<= target(_.toPath)
   )
   val confSettings: Seq[Setting[_]] = Seq(
     confFile <<= (pkgHome, name)((w, n) => Some(w / (n + ".conf")))

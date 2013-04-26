@@ -83,7 +83,8 @@ object LinuxPlugin extends Plugin {
     configDestDir in Debian <<= configDestDir in Linux,
     libDestDir in Debian <<= configDestDir in Linux,
     //    debian.Keys.version := "0.1",
-
+    // rpm:maintainer defaults to linux:maintainer, but debian:maintainer is empty (?), this fixes that
+    debian.Keys.maintainer in Debian <<= linux.Keys.maintainer,
     debian.Keys.linuxPackageMappings in Debian <++= (pkgHome in Linux, name,
       preInstall, postInstall, preRemove, postRemove, copyrightFile, changelogFile) map (
       (pkgSrc, pkgName, preinst, postinst, prerm, postrm, cRight, changeLog) => Seq(
