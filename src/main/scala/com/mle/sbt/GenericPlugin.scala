@@ -47,7 +47,7 @@ object GenericPlugin extends Plugin {
       val helpMsg = describe(pkgHome, appJar, libs, confFile, versionFile)
       val confMsg = "Three OS configurations are available: " + Windows.name + ", " + Debian.name + ", and " + Rpm.name
       val suggest = "Try the following: " + taskList
-      val msg = Seq(helpMsg, confMsg, suggest).mkString(FileUtilities.lineSep+FileUtilities.lineSep)
+      val msg = Seq(helpMsg, confMsg, suggest).mkString(FileUtilities.lineSep + FileUtilities.lineSep)
       log.info(msg)
     })
   )
@@ -61,10 +61,12 @@ object GenericPlugin extends Plugin {
       destFiles foreach (dest => logger.log.info(dest.toString))
     }),
     targetPath <<= target(_.toPath),
-    azureUpload <<= (azureContainer, azurePackage, logger) map ((container, file, log) => {
-      val uri = file.map(container.upload)
-        .getOrElse(throw new Exception(azurePackage.key.label + " not defined."))
-      log.info("Uploaded package to " + uri)
+    azureUpload <<= (azureContainer, azurePackage, logger) map ((container, pkg, log) => {
+      val path = pkg.getOrElse(throw new Exception(azurePackage.key.label + " not defined."))
+      val srcPath = path.toAbsolutePath.toString
+      log info "Uploading to Azure: " + srcPath
+      val uri = container.upload(path)
+      log.info("Uploaded " + srcPath + " to " + uri)
       uri
     })
   )

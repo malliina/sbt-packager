@@ -101,7 +101,6 @@ object LinuxPlugin extends Plugin {
   )
 
   val debianSettings: Seq[Setting[_]] = linuxSettings ++ inConfig(Debian)(distroSettings ++ linuxMappings) ++ Seq(
-
     //    debian.Keys.linuxPackageMappings <++= linux.Keys.linuxPackageMappings in Linux,
     AzureKeys.azurePackage in Debian <<= packageBin in Debian map (f => Some(f.toPath)),
     configDestDir in Debian <<= configDestDir in Linux,
