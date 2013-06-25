@@ -10,26 +10,44 @@ import xml.NodeSeq
 import com.mle.sbt.{WixUtils, GenericKeys}
 
 /**
- * The "WIX" environment variable to the wix installation dir e.g. program files\wix. Use Wix 3.7 or newer.
+ * Need to set the "WIX" environment variable to the wix installation dir e.g. program files\wix. Use Wix 3.7 or newer.
  */
 object WixPackaging extends Plugin {
-  // need to set the "WIX" environment variable to the wix installation dir e.g. program files\wix. Use Wix 3.7 or newer.
   val wixSettings: Seq[Setting[_]] = inConfig(Windows)(Seq(
     windows.Keys.wixConfig <<= (
       msiMappings, name, version,
       displayName, licenseRtf, productGuid,
       upgradeGuid, GenericKeys.manufacturer, serviceConf,
-      minUpgradeVersion) map (
+      minUpgradeVersion, minJavaVersion) map (
       (mappings, appName, appVersion,
        dispName, license, productUid,
        upgradeUid, manufact, service,
-       minUpVer) => {
+       minUpVer, minJavaVer) => {
         val msiFiles = WixUtils.wix(mappings)
         val serviceFragments = service.map(s => ServiceFragments.fromConf(s, dispName))
           .getOrElse(ServiceFragments.Empty)
         // TODO
         val exeComp = NodeSeq.Empty
         val exeCompRef = NodeSeq.Empty
+//        <![CDATA[]]>
+        val minJavaFragment = minJavaVer.map(v => {
+          val spec = "Installed OR (JAVA_CURRENT_VERSION32 >= \"1."+v+"\" OR JAVA_CURRENT_VERSION64 >= \"1."+v+"\")"
+          (<Property Id="JAVA_CURRENT_VERSION32">
+            <RegistrySearch Id="JRE_CURRENT_VERSION_REGSEARCH32"
+                            Root="HKLM" Key="SOFTWARE\JavaSoft\Java Runtime Environment"
+                            Name="CurrentVersion"
+                            Type="raw"
+                            Win64="no" />
+          </Property>
+          <Property Id="JAVA_CURRENT_VERSION64">
+            <RegistrySearch Id="JRE_CURRENT_VERSION_REGSEARCH64"
+                            Root="HKLM" Key="SOFTWARE\JavaSoft\Java Runtime Environment"
+                            Name="CurrentVersion"
+                            Type="raw"
+                            Win64="yes" />
+          </Property>
+          <Condition Message={"Java "+v+" is not installed or outdated. Please visit www.java.com to install Oracle Java "+v+" or later, then try again."}>{scala.xml.Unparsed("<![CDATA[%s]]>".format(spec))}</Condition>)
+        }).getOrElse(NodeSeq.Empty)
 
         (<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi' xmlns:util='http://schemas.microsoft.com/wix/UtilExtension'>
           <Product Name={dispName}
@@ -49,6 +67,7 @@ object WixPackaging extends Plugin {
                               Minimum={minUpVer} IncludeMinimum='yes'
                               Maximum={appVersion} IncludeMaximum='no'/>
             </Upgrade>
+            {minJavaFragment}
             <Media Id='1' Cabinet={appName + ".cab"} EmbedCab='yes'/>
             <Directory Id='TARGETDIR' Name='SourceDir'>
               <Directory Id="DesktopFolder" Name="Desktop"/>

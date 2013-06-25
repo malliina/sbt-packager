@@ -27,6 +27,7 @@ object WinKeys {
   val winSwExeName = SettingKey[String]("winsw-exe-name", "Windows Service Wrapper executable name on target")
   val winSwConfName = SettingKey[String]("winsw-conf-name", "Windows Service Wrapper XML config file name on target")
   val winSwName = SettingKey[String]("winsw-name", "Windows Service Wrapper name on target")
+  val serviceConf = SettingKey[Option[ServiceConf]]("winsw-container", "Winsw confs")
   val productGuid = SettingKey[String]("product-guid", "Product GUID required for MSI packaging. Generate with UUID.randomUUID().")
   val upgradeGuid = SettingKey[String]("upgrade-guid", "Upgrade GUID required for MSI packaging. Generate with UUID.randomUUID().")
   val shortcut = SettingKey[Boolean]("shortcut", "Whether or not to install a desktop shortcut to the main application executable")
@@ -34,6 +35,6 @@ object WinKeys {
   val msiMappings = TaskKey[Seq[(Path, Path)]]("msi-mappings", "File mappings for MSI packaging")
   val uuid = TaskKey[String]("uuid", "Generates a new GUID using UUID.randomUUID().")
   val minUpgradeVersion = SettingKey[String]("min-upgrade", "The minimum version from which to upgrade.")
-  val serviceConf = SettingKey[Option[ServiceConf]]("winsw-container", "Winsw confs")
+  val minJavaVersion = SettingKey[Option[Int]]("win-min-java", "The minimum required preinstalled Java version, if any. Examples: 6, 7, 8.")
 }
 

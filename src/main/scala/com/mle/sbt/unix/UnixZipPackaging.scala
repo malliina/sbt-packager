@@ -31,24 +31,25 @@ object UnixZipPackaging {
       libs ++ jars ++ confs ++ scripts
     }),
     // TODO: bat is not for unix, Michael
-    bat <<= (distribDir, name, packageApp, copyScripts) map ((appDir, appName, appFiles, scripts) => {
-      launcher(appDir, scripts, appName, ".bat", appFiles)
+    bat <<= (distribDir, name, packageApp, copyScripts, streams) map ((appDir, appName, appFiles, scripts, logger) => {
+      launcher(appDir, scripts, appName, ".bat", appFiles,logger)
     }),
-    sh <<= (distribDir, name, packageApp, copyScripts) map ((appDir, appName, appFiles, scripts) => {
-      launcher(appDir, scripts, appName, ".sh", appFiles)
+    sh <<= (distribDir, name, packageApp, copyScripts, streams) map ((appDir, appName, appFiles, scripts, logger) => {
+      launcher(appDir, scripts, appName, ".sh", appFiles,logger)
     }),
     zip <<= (
       baseDirectory,
       packageApp,
       distribDir,
-      name
-      ) map ((base, files, distribDir, appName) => {
+      name,
+      streams
+      ) map ((base, files, distribDir, appName, logger) => {
       Files.createDirectories(distribDir)
       val zipFile = base / outDir / (appName + ".zip")
       val rebaser = sbt.Path.rebase(distribDir.toFile, "")
       val filez = files.map(_.toFile)
       IO.zip(filez.map(f => (f, rebaser(f).get)), zipFile)
-      println("Packaged: " + zipFile)
+      logger.log("Packaged: " + zipFile)
       zipFile
     }),
 

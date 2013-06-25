@@ -66,7 +66,7 @@ object GenericPlugin extends Plugin {
       val srcPath = path.toAbsolutePath.toString
       log info "Uploading to Azure: " + srcPath
       val uri = container.upload(path)
-      log.info("Uploaded " + srcPath + " to " + uri)
+      log info "Uploaded " + srcPath + " to " + uri
       uri
     })
   )

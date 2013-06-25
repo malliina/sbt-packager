@@ -77,7 +77,8 @@ object WinPlugin extends Plugin {
         uuid := UUID.randomUUID().toString,
         // wtf?
         msiMappings := Seq.empty[(Path, Path)],
-        pkgHome in Windows <<= (pkgHome)(_ / "windows")
+        pkgHome in Windows <<= (pkgHome)(_ / "windows"),
+        minJavaVersion := Some(7)
       ) ++ inConfig(Windows)(GenericPlugin.confSpecificSettings ++ Seq(
       help <<= (logger) map (log => {
         val taskList = GenericPlugin.describeWithAzure(

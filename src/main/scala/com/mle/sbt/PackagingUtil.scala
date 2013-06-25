@@ -18,6 +18,7 @@ object PackagingUtil {
     Files.createDirectories(path.getParent)
     FileUtilities.writerTo(path)(op)
   }
+
   def logPairs(pairs: Seq[(SettingKey[Path], Types.Id[Path])], logger: TaskStreams) {
     pairs.foreach(pair => {
       val (key, value) = pair
@@ -26,16 +27,19 @@ object PackagingUtil {
       logger.log.info(keyPrinted + "\n" + value.toAbsolutePath.toString + "\nExists: " + Files.exists(value))
     })
   }
+
   def relativize(files: Seq[Path], baseDir: Path) = files.map(file => {
     file -> (baseDir relativize file)
   })
+
   def filesIn(dir: SettingKey[Option[Path]]): Project.Initialize[Task[Seq[Path]]] =
-  (dir).map((path: Option[Path]) => {
-    path.map(p =>
-      if (Files isDirectory p) FileUtilities.listPaths(p)
-      else Seq.empty[Path]
-    ).getOrElse(Seq.empty[Path])
-  })
+    (dir).map((path: Option[Path]) => {
+      path.map(p =>
+        if (Files isDirectory p) FileUtilities.listPaths(p)
+        else Seq.empty[Path]
+      ).getOrElse(Seq.empty[Path])
+    })
+
   def listFiles(dir: SettingKey[Path]): Project.Initialize[Task[Seq[Path]]] =
     (dir).map((path: Path) => {
       if (Files isDirectory path) FileUtilities.listPaths(path)
@@ -52,15 +56,16 @@ object PackagingUtil {
                files: Seq[Path],
                appName: String,
                extension: String,
-               appFiles: Seq[Path]) = {
+               appFiles: Seq[Path],
+               logger: TaskStreams) = {
     val launcherFilename = appName.toLowerCase + extension
     val launcherDestination = appDir resolve launcherFilename
     val maybeLauncherFile = files.find(_.getFileName.toString == launcherFilename)
     if (maybeLauncherFile.isDefined) {
       Files.copy(maybeLauncherFile.get, launcherDestination, StandardCopyOption.REPLACE_EXISTING)
-      println("Launcher: " + launcherDestination)
+      logger.log.info("Launcher: " + launcherDestination)
     } else {
-      println("Did not find: " + launcherFilename)
+      logger.log.info("Did not find: " + launcherFilename)
     }
     appFiles
   }
