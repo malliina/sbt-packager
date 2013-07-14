@@ -96,8 +96,8 @@ object LinuxPlugin extends Plugin {
       pkgMaps(c.map(cFile => Seq(cFile -> ((h / cFile.getFileName).toString)))
         .getOrElse(Seq.empty[(Path, String)]), perms = "0600", isConfig = true) ++
         pkgMaps(confs ++ Seq(d -> ("/etc/default/" + n)), perms = "0640", isConfig = true)),
-    linux.Keys.linuxPackageMappings <+= libMappings map (libs => fileMaps(libs)),
-    linux.Keys.linuxPackageMappings <++= pathMappings map pathMaps
+    linux.Keys.linuxPackageMappings <+= libMappings map (libs => fileMaps(libs))
+//    linux.Keys.linuxPackageMappings <++= pathMappings map pathMaps
   )
 
   val debianSettings: Seq[Setting[_]] = linuxSettings ++ inConfig(Debian)(distroSettings ++ linuxMappings) ++ Seq(

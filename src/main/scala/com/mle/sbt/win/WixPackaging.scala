@@ -18,14 +18,15 @@ object WixPackaging extends Plugin {
       msiMappings, name, version,
       displayName, licenseRtf, productGuid,
       upgradeGuid, GenericKeys.manufacturer, serviceConf,
-      minUpgradeVersion, minJavaVersion) map (
+      minUpgradeVersion, minJavaVersion, postInstallUrl) map (
       (mappings, appName, appVersion,
        dispName, license, productUid,
        upgradeUid, manufact, service,
-       minUpVer, minJavaVer) => {
+       minUpVer, minJavaVer, postUrl) => {
         val msiFiles = WixUtils.wix(mappings)
         val serviceFragments = service.map(s => ServiceFragments.fromConf(s, dispName))
           .getOrElse(ServiceFragments.Empty)
+        val postUrlFragment = postUrl.map(OpenBrowserWix.forUrl).getOrElse(NodeSeq.Empty)
         // TODO
         val exeComp = NodeSeq.Empty
         val exeCompRef = NodeSeq.Empty
@@ -67,8 +68,12 @@ object WixPackaging extends Plugin {
                               Minimum={minUpVer} IncludeMinimum='yes'
                               Maximum={appVersion} IncludeMaximum='no'/>
             </Upgrade>
+
             {minJavaFragment}
+            {postUrlFragment}
+
             <Media Id='1' Cabinet={appName + ".cab"} EmbedCab='yes'/>
+
             <Directory Id='TARGETDIR' Name='SourceDir'>
               <Directory Id="DesktopFolder" Name="Desktop"/>
               <Directory Id='ProgramFilesFolder' Name='PFiles'>
@@ -105,10 +110,11 @@ object WixPackaging extends Plugin {
           </Product>
         </Wix>)
       }),
-    windows.Keys.lightOptions ++= Seq("-ext", "WixUIExtension", "-ext", "WixUtilExtension", "-cultures:en-us")
+    windows.Keys.lightOptions ++= Seq("-ext", "WixUIExtension", "-ext", "WixUtilExtension", "-cultures:en-us")           // "-ext", "WixUtilExtension",
   ))
 
-  def ifSelected(predicate: Boolean)(onTrue: => NodeSeq) = if (predicate) onTrue else NodeSeq.Empty
+  def ifSelected(predicate: Boolean)(onTrue: => NodeSeq) =
+    if (predicate) onTrue else NodeSeq.Empty
 
   def toWixFragment(mapping: (Path, Path)): WixFile = {
     val (src, dest) = mapping

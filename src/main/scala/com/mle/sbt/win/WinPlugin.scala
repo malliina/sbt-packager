@@ -78,7 +78,8 @@ object WinPlugin extends Plugin {
         // wtf?
         msiMappings := Seq.empty[(Path, Path)],
         pkgHome in Windows <<= (pkgHome)(_ / "windows"),
-        minJavaVersion := Some(7)
+        minJavaVersion := None,
+        postInstallUrl := None
       ) ++ inConfig(Windows)(GenericPlugin.confSpecificSettings ++ Seq(
       help <<= (logger) map (log => {
         val taskList = GenericPlugin.describeWithAzure(
@@ -106,7 +107,7 @@ object WinPlugin extends Plugin {
         log info taskList
       }),
       azurePackage <<= win map (msi => Some(msi)),
-      msiMappings <++= pathMappings,
+//      msiMappings <++= pathMappings,
       deployFiles <<= msiMappings map (msis => msis.map(_._2)),
       configDestDir := Paths get "config",
       libDestDir := Paths get "lib",

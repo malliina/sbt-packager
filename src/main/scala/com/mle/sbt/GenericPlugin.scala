@@ -35,7 +35,7 @@ object GenericPlugin extends Plugin {
     configSrcDir <<= (basePath)(_ / confDir),
     configFiles <<= listFiles(configSrcDir),
     targetPath <<= (target)(_.toPath),
-    versionFile <<= (targetPath)(_ / "version.txt"),
+//    versionFile <<= (targetPath)(_ / "version.txt"),
     logger <<= (streams) map ((s: Keys.TaskStreams) => s.log),
     help <<= (logger) map (log => {
       import SbtNativePackager._
@@ -44,7 +44,7 @@ object GenericPlugin extends Plugin {
       val debHelp = suggestTask(Debian)
       val rpmHelp = suggestTask(Rpm)
       val taskList = Seq(winHelp, debHelp, rpmHelp).mkString(FileUtilities.lineSep, FileUtilities.lineSep, FileUtilities.lineSep)
-      val helpMsg = describe(pkgHome, appJar, libs, confFile, versionFile)
+      val helpMsg = describe(pkgHome, appJar, libs, confFile)
       val confMsg = "Three OS configurations are available: " + Windows.name + ", " + Debian.name + ", and " + Rpm.name
       val suggest = "Try the following: " + taskList
       val msg = Seq(helpMsg, confMsg, suggest).mkString(FileUtilities.lineSep + FileUtilities.lineSep)
@@ -52,11 +52,11 @@ object GenericPlugin extends Plugin {
     })
   )
   val confSpecificSettings: Seq[Setting[_]] = Seq(
-    pathMappings <<= (version, versionFile, configDestDir) map ((v, vFile, confDest) => {
-      // reads version setting, writes it to file, includes it in app distribution
-      PackagingUtil.writerTo(vFile)(_.println(v))
-      Seq(vFile -> confDest / vFile.getFileName)
-    }),
+//    pathMappings <<= (version, versionFile, configDestDir) map ((v, vFile, confDest) => {
+//      // reads version setting, writes it to file, includes it in app distribution
+//      PackagingUtil.writerTo(vFile)(_.println(v))
+//      Seq(vFile -> confDest / vFile.getFileName)
+//    }),
     printFiles <<= (deployFiles, streams) map ((destFiles, logger) => {
       destFiles foreach (dest => logger.log.info(dest.toString))
     }),

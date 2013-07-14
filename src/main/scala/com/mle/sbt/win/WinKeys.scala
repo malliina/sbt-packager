@@ -36,5 +36,6 @@ object WinKeys {
   val uuid = TaskKey[String]("uuid", "Generates a new GUID using UUID.randomUUID().")
   val minUpgradeVersion = SettingKey[String]("min-upgrade", "The minimum version from which to upgrade.")
   val minJavaVersion = SettingKey[Option[Int]]("win-min-java", "The minimum required preinstalled Java version, if any. Examples: 6, 7, 8.")
+  val postInstallUrl = SettingKey[Option[String]]("win-browser-url", "URL to open after installation.")
 }
 
