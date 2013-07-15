@@ -10,14 +10,14 @@ object MyBuild extends Build {
   val azure = malliinaGroup %% "util-azure" % "0.7.1"
   val scalaTest = "org.scalatest" %% "scalatest" % "1.9.1" % "test"
 
-  val releaseVersion = "1.0.0"
-  val snapshotVersion = "1.0.1-SNAPSHOT"
+  val releaseVersion = "1.0.1"
+  val snapshotVersion = "1.0.2-SNAPSHOT"
 
   override lazy val settings = super.settings ++ Seq(
     scalaVersion := "2.9.2",
     organization := "com.github.malliina",
     name := "sbt-packager",
-    version := snapshotVersion,
+    version := releaseVersion,
     sbtPlugin := true,
     exportJars := false,
     resolvers += "Sonatype snaps" at "http://oss.sonatype.org/content/repositories/snapshots/",
