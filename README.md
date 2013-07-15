@@ -4,7 +4,7 @@ This is an SBT plugin for software packaging. It depends on [sbt-native-packager
 
 ## Installation ##
 
-    addSbtPlugin("com.github.malliina" % "sbt-packager" % "1.0.0")
+    addSbtPlugin("com.github.malliina" % "sbt-packager" % "1.0.1")
 
 ## Usage ##
 
