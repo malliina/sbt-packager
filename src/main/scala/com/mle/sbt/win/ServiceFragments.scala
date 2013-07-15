@@ -16,7 +16,11 @@ object ServiceFragments {
         <File Id={conf.confName.replace('.', '_')} Name={conf.confName} DiskId='1' Source={conf.confName}/>
       </Component>
         <Component Id='ServiceManager' Guid='*'>
-          <File Id={conf.exeName} Name={conf.exeName} DiskId='1' Source={conf.serviceExe.toAbsolutePath.toString} KeyPath="yes"/>
+          <File Id={conf.exeName}
+                Name={conf.exeName}
+                DiskId='1'
+                Source={conf.serviceExe.toAbsolutePath.toString}
+                KeyPath="yes"/>
           <ServiceInstall Id="ServiceInstaller"
                           Type="ownProcess"
                           Vital="yes"
@@ -27,7 +31,12 @@ object ServiceFragments {
                           Account="LocalSystem"
                           ErrorControl="ignore"
                           Interactive="no"/>
-          <ServiceControl Id="ServiceController" Start="install" Stop="both" Remove="uninstall" Name={displayName} Wait="yes"/>
+          <ServiceControl Id="ServiceController"
+                          Start="install"
+                          Stop="both"
+                          Remove="uninstall"
+                          Name={displayName}
+                          Wait="yes"/>
         </Component>)
     val featureFragment: NodeSeq =
       (<Feature Id='InstallAsService'

@@ -12,7 +12,6 @@ import com.typesafe.sbt.packager.windows
 import java.util.UUID
 import com.mle.sbt.azure.AzureKeys._
 
-
 object WinPlugin extends Plugin {
   val windowsMappings = mappings in windows.Keys.packageMsi
 
@@ -118,7 +117,7 @@ object WinPlugin extends Plugin {
       licenseRtf <<= (pkgHome)(_ / "license.rtf"),
       appIcon <<= (pkgHome)(_ / "app.ico"),
       serviceFeature := true,
-      winSwExe <<= (pkgHome)(_ / "winsw-1.9-bin.exe"),
+      winSwExe <<= (pkgHome)(_ / "winsw-1.13-bin.exe"),
       winSwConf <<= (targetPath, winSwConfName)((t, n) => t / n),
       winSwName <<= (name)(_ + "svc"),
       winSwExeName <<= (winSwName)(_ + ".exe"),

@@ -18,14 +18,21 @@ object WixPackaging extends Plugin {
       msiMappings, name, version,
       displayName, licenseRtf, productGuid,
       upgradeGuid, GenericKeys.manufacturer, serviceConf,
-      minUpgradeVersion, minJavaVersion, postInstallUrl) map (
+      minUpgradeVersion, minJavaVersion, postInstallUrl, batPath) map (
       (mappings, appName, appVersion,
        dispName, license, productUid,
        upgradeUid, manufact, service,
-       minUpVer, minJavaVer, postUrl) => {
+       minUpVer, minJavaVer, postUrl, bat) => {
         val msiFiles = WixUtils.wix(mappings)
         val serviceFragments = service.map(s => ServiceFragments.fromConf(s, dispName))
           .getOrElse(ServiceFragments.Empty)
+        // to prevent a reboot request before uninstallation, stop the service manually. ServiceControl doesn't cut it.
+        val stopAppFragment = service.map(_ => {
+          (<CustomAction ExeCommand="stop" FileKey={bat.getFileName.toString} Id="StopService" Impersonate="yes" Return="ignore" />
+            <InstallExecuteSequence>
+              <Custom Action="StopService" Before="InstallValidate"><![CDATA[(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")]]></Custom>
+            </InstallExecuteSequence>)
+        }).getOrElse(NodeSeq.Empty)
         val postUrlFragment = postUrl.map(OpenBrowserWix.forUrl).getOrElse(NodeSeq.Empty)
         // TODO
         val exeComp = NodeSeq.Empty
@@ -65,14 +72,17 @@ object WixPackaging extends Plugin {
                      Compressed='yes'/>
             <Upgrade Id={upgradeUid}>
               <UpgradeVersion OnlyDetect='no' Property='PREVIOUSFOUND'
-                              Minimum={minUpVer} IncludeMinimum='yes'
-                              Maximum={appVersion} IncludeMaximum='no'/>
+                              Minimum={minUpVer}
+                              IncludeMinimum='yes'
+                              Maximum={appVersion}
+                              IncludeMaximum='no'/>
             </Upgrade>
 
             {minJavaFragment}
             {postUrlFragment}
+            {stopAppFragment}
 
-            <Media Id='1' Cabinet={appName + ".cab"} EmbedCab='yes'/>
+          <Media Id='1' Cabinet={appName + ".cab"} EmbedCab='yes'/>
 
             <Directory Id='TARGETDIR' Name='SourceDir'>
               <Directory Id="DesktopFolder" Name="Desktop"/>

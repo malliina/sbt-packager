@@ -18,7 +18,7 @@ object OpenBrowserWix {
                       Return="ignore" />
 
       <InstallExecuteSequence>
-        <!-- Launch webpage during full uninstall, but not upgrade -->
+        <!-- Launch webpage during full install, but not upgrade -->
         <Custom Action="SetOpenURL" After="InstallFinalize"><![CDATA[NOT Installed]]></Custom>
         <Custom Action="OpenURL" After="SetOpenURL"><![CDATA[NOT Installed]]></Custom>
       </InstallExecuteSequence>
