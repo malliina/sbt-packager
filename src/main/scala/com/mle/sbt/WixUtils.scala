@@ -9,6 +9,31 @@ import com.mle.util.Log
  * @author Michael
  */
 object WixUtils extends Log {
+  def wixify(srcPath: String, destFileName: String): WixCompInfo = {
+    val fileId = destFileName.replace('-', '_')
+    val compId = "comp_" + fileId
+    val comp = (<Component Id={compId} Guid='*'>
+      <File Id={fileId} Name={destFileName} DiskId='1' Source={srcPath}/>
+      <CreateFolder/>
+    </Component>)
+    val ref = (<ComponentRef Id={compId}/>)
+    WixCompInfo(ref, comp)
+  }
+
+  def wixify(srcPath: String): WixCompInfo =
+    wixify(srcPath, srcPath)
+
+  def wixify(file: Path, destFileName: String): WixCompInfo = {
+    val srcPath = file.toAbsolutePath.toString
+    wixify(srcPath, destFileName)
+  }
+
+  def wixify(file: Path, dest: Path): WixCompInfo =
+    wixify(file, dest.getFileName.toString)
+
+  def wixify(file: Path): WixCompInfo =
+    wixify(file, file.getFileName.toString)
+
   /**
    * Generates appropriate WIX fragments for the specified mappings.
    *
@@ -16,16 +41,16 @@ object WixUtils extends Log {
    * @return WIX XML fragments to use in WIX packaging
    */
   def wix(mappings: Seq[(Path, Path)]) = {
-     val trees = treeify(mappings)
-     add(trees.map(wixify))
+    val trees = treeify(mappings)
+    add(trees.map(wixifyTree))
   }
 
-  def wixify[T](tree: Tree): WixCompInfo = tree match {
+  def wixifyTree[T](tree: Tree): WixCompInfo = tree match {
     case DirNode(d, children) =>
-      val childWixInfo = children.map(wixify)
+      val childWixInfo = children.map(wixifyTree)
       // sum of xml
-      val childCompRefs = childWixInfo.map(_.compRefs).foldLeft(NodeSeq.Empty)(_ ++ _)
-      val childComponents = childWixInfo.map(_.compElems).foldLeft(NodeSeq.Empty)(_ ++ _)
+      val childCompRefs = childWixInfo.map(_.ref).foldLeft(NodeSeq.Empty)(_ ++ _)
+      val childComponents = childWixInfo.map(_.comp).foldLeft(NodeSeq.Empty)(_ ++ _)
       val dirId = d.toString.replace(File.separator, "_") + "_dir"
       val comp =
         (<Directory Id={dirId} Name={d.getFileName.toString}>
@@ -34,15 +59,7 @@ object WixUtils extends Log {
       WixCompInfo(childCompRefs, comp)
     case PathLeaf(mapping: (Path, Path)) =>
       val (source, dest) = mapping
-      val fileName = dest.getFileName.toString
-      val fileId = fileName.replace('-', '_')
-      val compId = fileId + "_comp"
-      val comp = (<Component Id={compId} Guid="*">
-        <File Id={fileId} Name={fileName} DiskId="1" Source={source.toAbsolutePath.toString}/>
-        <CreateFolder/>
-      </Component>)
-      val compIdXml = (<ComponentRef Id={compId}/>)
-      WixCompInfo(compIdXml, comp)
+      wixify(source, dest)
     case anythingElse =>
       log warn "Unknown tree component: " + anythingElse
       WixCompInfo(NodeSeq.Empty, NodeSeq.Empty)
@@ -51,8 +68,8 @@ object WixUtils extends Log {
   def addXml(xml: Seq[NodeSeq]) = xml.foldLeft(NodeSeq.Empty)(_ ++ _)
 
   def add(wixFiles: Seq[WixCompInfo]): WixCompInfo = {
-    val comps = addXml(wixFiles.map(_.compElems))
-    val compRefs = addXml(wixFiles.map(_.compRefs))
+    val comps = addXml(wixFiles.map(_.comp))
+    val compRefs = addXml(wixFiles.map(_.ref))
     WixCompInfo(compRefs, comps)
   }
 
@@ -110,4 +127,4 @@ case class PathLeaf[T](value: T) extends Tree
 
 case class DirNode(name: Path, children: Seq[Tree]) extends Tree
 
-case class WixCompInfo(compRefs: NodeSeq, compElems: NodeSeq)
+case class WixCompInfo(ref: NodeSeq, comp: NodeSeq)

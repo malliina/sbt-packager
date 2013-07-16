@@ -7,7 +7,7 @@ import java.nio.file.Path
 import sbt.Keys._
 import sbt._
 import xml.NodeSeq
-import com.mle.sbt.{WixUtils, GenericKeys}
+import com.mle.sbt.{WixCompInfo, WixUtils, GenericKeys}
 
 /**
  * Need to set the "WIX" environment variable to the wix installation dir e.g. program files\wix. Use Wix 3.7 or newer.
@@ -28,6 +28,7 @@ object WixPackaging extends Plugin {
           .getOrElse(ServiceFragments.Empty)
         // to prevent a reboot request before uninstallation, stop the service manually. ServiceControl doesn't cut it.
         val stopAppFragment = service.map(_ => {
+          // it is illegal to schedule a deferred custom action before InstallValidate so this must be immediate (=> prompt shown)
           (<CustomAction ExeCommand="stop" FileKey={bat.getFileName.toString} Id="StopService" Impersonate="yes" Return="ignore" />
             <InstallExecuteSequence>
               <Custom Action="StopService" Before="InstallValidate"><![CDATA[(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")]]></Custom>
@@ -54,7 +55,7 @@ object WixPackaging extends Plugin {
                             Type="raw"
                             Win64="yes" />
           </Property>
-          <Condition Message={"Java "+v+" is not installed or outdated. Please visit www.java.com to install Oracle Java "+v+" or later, then try again."}>{scala.xml.Unparsed("<![CDATA[%s]]>".format(spec))}</Condition>)
+          <Condition Message={"Java "+v+" is required but not found. Please visit www.java.com to install Oracle Java "+v+" or later, then try again."}>{scala.xml.Unparsed("<![CDATA[%s]]>".format(spec))}</Condition>)
         }).getOrElse(NodeSeq.Empty)
 
         (<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi' xmlns:util='http://schemas.microsoft.com/wix/UtilExtension'>
@@ -80,7 +81,6 @@ object WixPackaging extends Plugin {
 
             {minJavaFragment}
             {postUrlFragment}
-            {stopAppFragment}
 
           <Media Id='1' Cabinet={appName + ".cab"} EmbedCab='yes'/>
 
@@ -88,7 +88,7 @@ object WixPackaging extends Plugin {
               <Directory Id="DesktopFolder" Name="Desktop"/>
               <Directory Id='ProgramFilesFolder' Name='PFiles'>
                 <Directory Id='INSTALLDIR' Name={dispName}>
-                  {msiFiles.compElems}
+                  {msiFiles.comp}
                   {exeComp}
                   {serviceFragments.components}
                 </Directory>
@@ -106,7 +106,7 @@ object WixPackaging extends Plugin {
                        Level='1'
                        Absent='disallow'>
                 {exeCompRef}
-                {msiFiles.compRefs}
+                {msiFiles.ref}
               </Feature>
               {serviceFragments.feature}
             </Feature>
@@ -117,44 +117,12 @@ object WixPackaging extends Plugin {
             <UIRef Id="WixUI_ErrorProgressText"/>
             <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR"/>
             <WixVariable Id="WixUILicenseRtf" Value={license.toAbsolutePath.toString}/>
+            {stopAppFragment}
           </Product>
         </Wix>)
       }),
     windows.Keys.lightOptions ++= Seq("-ext", "WixUIExtension", "-ext", "WixUtilExtension", "-cultures:en-us")           // "-ext", "WixUtilExtension",
   ))
-
-  def ifSelected(predicate: Boolean)(onTrue: => NodeSeq) =
-    if (predicate) onTrue else NodeSeq.Empty
-
-  def toWixFragment(mapping: (Path, Path)): WixFile = {
-    val (src, dest) = mapping
-    val sourcePathAsString = src.toAbsolutePath.toString
-    val fileName = dest.getFileName.toString
-    val fileId = fileName.replace('-', '_')
-    val compId = "comp_" + fileId
-    val fragment =
-      (<Component Id={compId} Guid='*'>
-        <File Id={fileId} Name={fileName} DiskId='1' Source={sourcePathAsString}/>
-        <CreateFolder/>
-      </Component>)
-    WixFile(compId, fragment)
-  }
-
-  def toCompRef(refId: String) = {
-      <ComponentRef Id={refId}/>
-  }
-
-  def toWixFragment(files: Seq[(Path, Path)]): WixFiles = {
-    val wixFiles = files.map(toWixFragment)
-    val compIds = wixFiles.map(_.compId)
-    val compRefFragment = compIds.map(toCompRef).foldLeft(NodeSeq.Empty)(_ ++ _)
-    val fragment = wixFiles.map(_.compFragment).foldLeft(NodeSeq.Empty)(_ ++ _)
-    WixFiles(compIds, compRefFragment, fragment)
-  }
-
-  case class WixFiles(compIds: Seq[String], compRefs: NodeSeq, compsFragment: NodeSeq)
-
-  case class WixFile(compId: String, compFragment: NodeSeq)
 
   /**
    *
