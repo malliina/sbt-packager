@@ -16,6 +16,7 @@ trait AzurePlugin extends Plugin {
   val azureSettings: Seq[Setting[_]] = Seq(
     azurePackage := None,
     azureConf := sbt.Path.userHome.toPath / "keys" / "azure-storage.sec",
+    azureContainerName := "files",
     azureContainer <<= (azureConf, azureContainerName) map ((conf, cont) => {
       val (account, key) = readCredentials(conf)
       val client = new StorageClient(account, key)

@@ -31,4 +31,5 @@ object GenericKeys extends Plugin {
   val printFiles = TaskKey[Unit]("files", "Prints the installed files")
   val logger = TaskKey[Logger]("logger", "Logger helper")
   val help = TaskKey[Unit]("helpme", "Shows help")
+  val verifySettings = TaskKey[Unit]("verify-settings", "Verifies that the required files for packaging exist in the project and that a main class has been specified")
 }

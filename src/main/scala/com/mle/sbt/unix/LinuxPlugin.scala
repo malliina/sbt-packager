@@ -12,7 +12,7 @@ import com.mle.sbt.GenericKeys._
 import scala.Some
 import com.mle.sbt.FileImplicits._
 import com.mle.sbt.{GenericPlugin, GenericKeys, PackagingUtil}
-import com.mle.sbt.azure.AzureKeys
+import com.mle.sbt.azure.{AzurePlugin, AzureKeys}
 
 object LinuxPlugin extends Plugin {
   val distroSettings = GenericPlugin.confSpecificSettings ++ Seq(
@@ -40,7 +40,9 @@ object LinuxPlugin extends Plugin {
       log info msg
     })
   )
-  val linuxSettings: Seq[Setting[_]] = UnixPlugin.unixSettings ++ Seq(
+  val linuxSettings: Seq[Setting[_]] = UnixPlugin.unixSettings ++ AzurePlugin.azureSettings ++ Seq(
+    linux.Keys.maintainer := "Firstname Lastname <email@address.com>",
+
     /**
      * Source settings
      */
@@ -80,24 +82,39 @@ object LinuxPlugin extends Plugin {
     configDestDir <<= (unixHome)(_ / confDir),
     libDestDir <<= (unixHome)(_ / libDir),
     confMappings <<= (configFiles, configSrcDir, configDestDir) map rebase,
-    linux.Keys.packageSummary <<= (name)(n => "This is a summary of " + n)
-  ))
+    linux.Keys.packageSummary <<= (name)(n => "This is a summary of " + n),
+    verifySettings <<= (controlDir, preInstall, postInstall,
+      preRemove, postRemove, defaultsFile,
+      copyrightFile, changelogFile, initScript)
+      .map((cD, preI, postI, preR, postR, dF, cF, changeF, iS) => {
+      PackagingUtil.verifyPathSetting(
+        controlDir -> cD,
+        preInstall -> preI,
+        postInstall -> postI,
+        preRemove -> preR,
+        postRemove -> postR,
+        defaultsFile -> dF,
+        copyrightFile -> cF,
+        changelogFile -> changeF,
+        initScript -> iS
+      )
+    })))
   val linuxMappings: Seq[Setting[_]] = Seq(
     linux.Keys.linuxPackageMappings <++= (
       unixHome, pkgHome in Linux, name in Linux, appJar,
       scriptMappings, unixLogDir, appJarName, defaultsFile, initScript, unixLibDest
       ) map (
       (home, pkgSrc, pkgName, jarFile, scripts, uLogdir, jarName, defFile, iScript, libD) => Seq(
-        fileMap(jarFile -> ((home / jarName).toString)),
+        fileMap(jarFile -> (home / jarName).toString),
         baseMaps(Seq((pkgSrc / libDir) -> libD.toString, (pkgSrc / logDir) -> uLogdir.toString), perms = "0755")
       ) ++ pkgMaps(Seq(iScript -> ("/etc/init.d/" + pkgName)) ++ scripts, perms = "0755")),
     linux.Keys.linuxPackageMappings <++= (unixHome, confMappings in Linux, name in Linux, defaultsFile,
       confFile in Linux) map ((h, confs, n, d, c) =>
-      pkgMaps(c.map(cFile => Seq(cFile -> ((h / cFile.getFileName).toString)))
+      pkgMaps(c.map(cFile => Seq(cFile -> (h / cFile.getFileName).toString))
         .getOrElse(Seq.empty[(Path, String)]), perms = "0600", isConfig = true) ++
         pkgMaps(confs ++ Seq(d -> ("/etc/default/" + n)), perms = "0640", isConfig = true)),
     linux.Keys.linuxPackageMappings <+= libMappings map (libs => fileMaps(libs))
-//    linux.Keys.linuxPackageMappings <++= pathMappings map pathMaps
+    //    linux.Keys.linuxPackageMappings <++= pathMappings map pathMaps
   )
 
   val debianSettings: Seq[Setting[_]] = linuxSettings ++ inConfig(Debian)(distroSettings ++ linuxMappings) ++ Seq(

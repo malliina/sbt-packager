@@ -18,7 +18,6 @@ object WinKeys {
   val msiName = SettingKey[String]("msi-name", "Name of MSI package built with task win")
   val win = TaskKey[Path]("win", "Verifies settings followed by package-msi")
   val printPaths = TaskKey[Seq[Path]]("print-win-paths", "Prints the paths to the required files for MSI packaging")
-  val verifySettings = TaskKey[Unit]("verify-settings", "Verifies that the required files for MSI packaging exist in the project and that a main class has been specified")
   val displayName = SettingKey[String]("display-name", "Display name of application")
   val exePath = SettingKey[Path]("exe-path", "Application .exe path on windows during packaging")
   val windowsJarPath = SettingKey[Path]("win-jar-path", "Path to jar on windows during packaging")
