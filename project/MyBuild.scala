@@ -17,7 +17,7 @@ object MyBuild extends Build {
     scalaVersion := "2.9.2",
     organization := "com.github.malliina",
     name := "sbt-packager",
-    version := releaseVersion,
+    version := snapshotVersion,
     sbtPlugin := true,
     exportJars := false,
     resolvers += "Sonatype snaps" at "http://oss.sonatype.org/content/repositories/snapshots/",
@@ -30,6 +30,8 @@ object MyBuild extends Build {
         }
       Some(repo)
     }),
+    licenses += ("BSD-style" -> url("http://www.opensource.org/licenses/BSD-3-Clause")),
+    scmInfo := Some(ScmInfo(url("https://github.com/malliina/sbt-packager"), "git@github.com:malliina/sbt-packager.git")),
     credentials += Credentials(Path.userHome / ".ivy2" / "sonatype.txt"),
     publishMavenStyle := true,
     publishArtifact in Test := false,
@@ -38,18 +40,6 @@ object MyBuild extends Build {
   )
 
   def extraPom = (
-    <url>https://github.com/malliina/sbt-packager</url>
-      <licenses>
-        <license>
-          <name>BSD-style</name>
-          <url>http://www.opensource.org/licenses/BSD-3-Clause</url>
-          <distribution>repo</distribution>
-        </license>
-      </licenses>
-      <scm>
-        <url>git@github.com:malliina/sbt-packager.git</url>
-        <connection>scm:git:git@github.com:malliina/sbt-packager.git</connection>
-      </scm>
       <developers>
         <developer>
           <id>malliina</id>
