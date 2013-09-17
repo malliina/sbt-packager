@@ -40,6 +40,7 @@ object MyBuild extends Build {
   )
 
   def extraPom = (
+      <url>https://github.com/malliina/sbt-packager</url>
       <developers>
         <developer>
           <id>malliina</id>
