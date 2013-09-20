@@ -9,7 +9,7 @@ import xml.NodeSeq
 import com.mle.sbt.{WixUtils, GenericKeys}
 
 /**
- * Need to set the "WIX" environment variable to the wix installation dir e.g. program files\wix. Use Wix 3.7 or newer.
+ * You need to set the "WIX" environment variable to the wix installation dir e.g. program files\wix. Use Wix 3.7 or newer.
  */
 object WixPackaging extends Plugin {
   val wixSettings: Seq[Setting[_]] = inConfig(Windows)(Seq(
@@ -18,6 +18,7 @@ object WixPackaging extends Plugin {
         val msiFiles = WixUtils.wix(msiMappings.value)
         val serviceFragments = serviceConf.value.map(s => ServiceFragments.fromConf(s, displayName.value))
           .getOrElse(ServiceFragments.Empty)
+
         // to prevent a reboot request before uninstallation, stop the service manually. ServiceControl doesn't cut it.
         val stopAppFragment = serviceConf.value.map(_ => {
           // it is illegal to schedule a deferred custom action before InstallValidate so this must be immediate (=> dos prompt shown)
@@ -26,7 +27,16 @@ object WixPackaging extends Plugin {
               <Custom Action="StopService" Before="InstallValidate"><![CDATA[(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")]]></Custom>
             </InstallExecuteSequence>)
         }).getOrElse(NodeSeq.Empty)
-        val postUrlFragment = postInstallUrl.value.map(OpenBrowserWix.forUrl).getOrElse(NodeSeq.Empty)
+
+        // shows icon in add/remove programs section of control panel
+        val iconFragment = appIcon.value.map(icon => {
+          (<Icon Id="icon.ico" SourceFile={icon.toAbsolutePath.toString}/>
+            <Property Id="ARPPRODUCTICON" Value="icon.ico"/>)
+        }).getOrElse(NodeSeq.Empty)
+
+        val postUrlFragment = postInstallUrl.value.map(OpenBrowserWix.forUrl)
+          .getOrElse(NodeSeq.Empty)
+
         // TODO
         val exeComp = NodeSeq.Empty
         val exeCompRef = NodeSeq.Empty
@@ -69,7 +79,7 @@ object WixPackaging extends Plugin {
                               Maximum={version.value}
                               IncludeMaximum='no'/>
             </Upgrade>
-
+            {iconFragment}
             {minJavaFragment}
             {postUrlFragment}
 

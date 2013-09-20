@@ -73,6 +73,7 @@ object WinPlugin extends Plugin {
       WixPackaging.wixSettings ++
       fileMappings ++
       Seq(
+        appIcon := None,
         minUpgradeVersion := "0.0.0",
         uuid := UUID.randomUUID().toString,
         // wtf?
@@ -107,7 +108,6 @@ object WinPlugin extends Plugin {
         logger.value info taskList
       },
       azurePackage := Some(win.value),
-      //      msiMappings <++= pathMappings,
       deployFiles := msiMappings.value.map(_._2),
       configDestDir := Paths get "config",
       libDestDir := Paths get "lib",
@@ -116,7 +116,6 @@ object WinPlugin extends Plugin {
       exePath := targetPath.value / (name.value + ".exe"),
       batPath := pkgHome.value / (name.value + ".bat"),
       licenseRtf := pkgHome.value / "license.rtf",
-      appIcon := pkgHome.value / "app.ico",
       serviceFeature := true,
       winSwExe := pkgHome.value / "winsw-1.13-bin.exe",
       winSwConf := targetPath.value / winSwConfName.value,
@@ -135,8 +134,8 @@ object WinPlugin extends Plugin {
           licenseRtf -> licenseRtf.value)
       },
       printPaths := {
-        val keys = Seq(launch4jcExe, appIcon, winSwExe, batPath, licenseRtf)
-        val values = Seq(launch4jcExe.value, appIcon.value, winSwExe.value, batPath.value, licenseRtf.value)
+        val keys = Seq(launch4jcExe, winSwExe, batPath, licenseRtf)
+        val values = Seq(launch4jcExe.value, winSwExe.value, batPath.value, licenseRtf.value)
         val pairs = keys zip values
         PackagingUtil.logPairs(pairs, streams.value)
         values

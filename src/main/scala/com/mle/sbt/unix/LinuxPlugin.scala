@@ -101,11 +101,11 @@ object LinuxPlugin extends Plugin {
     linux.Keys.linuxPackageMappings ++= {
       val linuxPkgHome = (pkgHome in Linux).value
       Seq(
-        fileMap(appJar.value -> (unixHome.value / appJar.value).toString),
+        fileMap(appJar.value -> (unixHome.value / appJarName.value).toString),
         baseMaps(Seq(
           (linuxPkgHome / libDir) -> unixLibDest.value.toString,
           (linuxPkgHome / logDir) -> unixLogDir.value.toString
-        ), perms = "0755"),
+        ), perms = "0750"),
         fileMaps(libMappings.value)
       ) ++ pkgMaps(Seq(
         initScript.value -> ("/etc/init.d/" + (name in Linux).value)

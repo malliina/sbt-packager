@@ -7,10 +7,10 @@ object WinKeys {
   /**
    * Source paths
    */
-  val appIcon = settingKey[Path]("Path to icon (.ico) file for the application on windows")
+  val appIcon = settingKey[Option[Path]]("App icon (.ico file) on Windows.")
   val launch4jcExe = settingKey[Path]("Path to launch4jc.exe")
   val winSwExe = settingKey[Path]("Windows Service Wrapper .exe path")
-  val licenseRtf = settingKey[Path]("Path to license RTF for windows. Shown to the user during installation.")
+  val licenseRtf = settingKey[Path]("Path to license RTF for Windows. Shown to the user during installation.")
   val batPath = settingKey[Path]("Application .bat")
   /**
    * Other

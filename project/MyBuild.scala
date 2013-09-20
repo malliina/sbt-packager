@@ -7,13 +7,13 @@ object MyBuild extends Build {
     .settings(addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "0.6.2"))
 
   val utilGroup = "com.github.malliina"
-  val utilVersion="1.0.0"
+  val utilVersion = "1.0.0"
   val utilDep = utilGroup %% "util" % utilVersion
   val azure = utilGroup %% "util-azure" % utilVersion
   val scalaTest = "org.scalatest" %% "scalatest" % "1.9.2" % "test"
 
   val releaseVersion = "1.1.2"
-  val snapshotVersion = "1.1.2-SNAPSHOT"
+  val snapshotVersion = "1.2.0-SNAPSHOT"
 
   override lazy val settings = super.settings ++ Seq(
     scalaVersion := "2.10.2",
@@ -42,7 +42,7 @@ object MyBuild extends Build {
   )
 
   def extraPom = (
-      <url>https://github.com/malliina/sbt-packager</url>
+    <url>https://github.com/malliina/sbt-packager</url>
       <developers>
         <developer>
           <id>malliina</id>
