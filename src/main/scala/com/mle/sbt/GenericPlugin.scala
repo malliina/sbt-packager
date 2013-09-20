@@ -16,28 +16,24 @@ import com.mle.sbt.azure.AzurePlugin
 
 object GenericPlugin extends Plugin {
   val genericSettings: Seq[Setting[_]] = Seq(
-    pkgHome <<= (basePath)(_ / "src" / "pkg"),
-    basePath <<= (baseDirectory)(_.toPath),
-    appJar <<= (packageBin in Compile, name) map ((jarFile, pkgName) => jarFile.toPath),
-    appJarName <<= (name)(_ + ".jar"),
-    homeVar <<= (name)(_.toUpperCase + "_HOME"),
-    libs <<= (
-      dependencyClasspath in Runtime,
-      exportedProducts in Compile
-      ) map ((cp, products) => {
+    pkgHome := (basePath.value / "src" / "pkg"),
+    basePath := baseDirectory.value.toPath,
+    appJar := (packageBin in Compile).value.toPath,
+    appJarName := name.value + ".jar",
+    homeVar := name.value.toUpperCase + "_HOME",
+    libs := {
+      val deps = (dependencyClasspath in Runtime).value
+      val exported = (exportedProducts in Compile).value
       // Libs, but not my own jars
-      cp.files.filter(f => !f.isDirectory && !products.files.contains(f)).map(_.toPath)
-    }),
-    printLibs <<= (libs, name) map ((l: Seq[Path], pkgName) => {
-      l foreach println
-    }),
+      deps.files.filter(f => !f.isDirectory && !exported.files.contains(f)).map(_.toPath)
+    },
+    printLibs := libs.value foreach println,
     confFile := None,
-    configSrcDir <<= (basePath)(_ / confDir),
+    configSrcDir := basePath.value / confDir,
     configFiles <<= listFiles(configSrcDir),
-    targetPath <<= (target)(_.toPath),
-//    versionFile <<= (targetPath)(_ / "version.txt"),
-    logger <<= (streams) map ((s: Keys.TaskStreams) => s.log),
-    help <<= (logger) map (log => {
+    targetPath := target.value.toPath,
+    logger := streams.value.log,
+    help := {
       import SbtNativePackager._
       def suggestTask(conf: Configuration) = conf.name + ":helpme"
       val winHelp = suggestTask(Windows)
@@ -45,33 +41,26 @@ object GenericPlugin extends Plugin {
       val rpmHelp = suggestTask(Rpm)
       val taskList = Seq(winHelp, debHelp, rpmHelp).mkString(FileUtilities.lineSep, FileUtilities.lineSep, FileUtilities.lineSep)
       val helpMsg = describe(pkgHome, appJar, libs, confFile)
-      val confMsg = "Three OS configurations are available: " + Windows.name + ", " + Debian.name + ", and " + Rpm.name
+      val confMsg = s"Three OS configurations are available: ${Windows.name}, ${Debian.name}, and ${Rpm.name}."
       val suggest = "Try the following: " + taskList
       val msg = Seq(helpMsg, confMsg, suggest).mkString(FileUtilities.lineSep + FileUtilities.lineSep)
-      log.info(msg)
-    })
+      logger.value.info(msg)
+    }
   )
   val confSpecificSettings: Seq[Setting[_]] = Seq(
-//    pathMappings <<= (version, versionFile, configDestDir) map ((v, vFile, confDest) => {
-//      // reads version setting, writes it to file, includes it in app distribution
-//      PackagingUtil.writerTo(vFile)(_.println(v))
-//      Seq(vFile -> confDest / vFile.getFileName)
-//    }),
-    printFiles <<= (deployFiles, streams) map ((destFiles, logger) => {
-      destFiles foreach (dest => logger.log.info(dest.toString))
-    }),
-    targetPath <<= target(_.toPath),
-    azureUpload <<= (azureContainer, azurePackage, logger) map ((container, pkg, log) => {
-      val path = pkg.getOrElse(throw new Exception(azurePackage.key.label + " not defined."))
+    printFiles := deployFiles.value foreach (dest => logger.value.info(dest.toString)),
+    targetPath := target.value.toPath,
+    azureUpload := {
+      val path: Path = azurePackage.value.getOrElse(throw new Exception(azurePackage.key.label + " not defined."))
       val srcPath = path.toAbsolutePath.toString
-      log info "Uploading to Azure: " + srcPath
-      val uri = container.upload(path)
-      log info "Uploaded " + srcPath + " to " + uri
+      logger.value info s"Uploading to Azure: $srcPath"
+      val uri = azureContainer.value.upload(path)
+      logger.value info s"Uploaded $srcPath to $uri"
       uri
-    })
+    }
   )
   val confSettings: Seq[Setting[_]] = Seq(
-    confFile <<= (pkgHome, name)((w, n) => Some(w / (n + ".conf")))
+    confFile := Some(pkgHome.value / (name.value + ".conf"))
   )
 
   def describe(tasks: ScopedTaskable[_]*) = tasks.map(_.key).map(t => {

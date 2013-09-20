@@ -19,61 +19,34 @@ object UnixZipPackaging {
     /**
      * Destination settings
      */
-    distribDir <<= (basePath)(b => b / outDir),
+    distribDir := basePath.value / outDir,
     copyConfs <<= copyTask(configFiles),
     copyScripts <<= copyTask(scriptFiles),
-    packageApp <<= (
-      copyLibs,
-      createJar,
-      copyConfs,
-      copyScripts
-      ) map ((libs, jars, confs, scripts) => {
-      libs ++ jars ++ confs ++ scripts
-    }),
+    packageApp := copyLibs.value ++ createJar.value ++ copyConfs.value ++ copyScripts.value,
     // TODO: bat is not for unix, Michael
-    bat <<= (distribDir, name, packageApp, copyScripts, streams) map ((appDir, appName, appFiles, scripts, logger) => {
-      launcher(appDir, scripts, appName, ".bat", appFiles,logger)
-    }),
-    sh <<= (distribDir, name, packageApp, copyScripts, streams) map ((appDir, appName, appFiles, scripts, logger) => {
-      launcher(appDir, scripts, appName, ".sh", appFiles,logger)
-    }),
-    zip <<= (
-      baseDirectory,
-      packageApp,
-      distribDir,
-      name,
-      streams
-      ) map ((base, files, distribDir, appName, logger) => {
-      Files.createDirectories(distribDir)
-      val zipFile = base / outDir / (appName + ".zip")
-      val rebaser = sbt.Path.rebase(distribDir.toFile, "")
-      val filez = files.map(_.toFile)
+    bat := launcher(distribDir.value, copyScripts.value, name.value, ".bat", packageApp.value, streams.value),
+    sh := launcher(distribDir.value, copyScripts.value, name.value, ".sh", packageApp.value, streams.value),
+    zip := {
+      Files.createDirectories(distribDir.value)
+      val zipFile = baseDirectory.value / outDir / (name.value + ".zip")
+      val rebaser = sbt.Path.rebase(distribDir.value.toFile, "")
+      val filez = packageApp.value.map(_.toFile)
       IO.zip(filez.map(f => (f, rebaser(f).get)), zipFile)
-      logger.log("Packaged: " + zipFile)
+      streams.value.log("Packaged: " + zipFile)
       zipFile
-    }),
-
-    copyLibs <<= (
-      libs,
-      distribDir
-      ) map ((libJars, dest) => {
-      val libDestination = dest resolve libDir
+    },
+    copyLibs := {
+      val libDestination = distribDir.value resolve libDir
       Files.createDirectories(libDestination)
-      libJars.map(libJar => Files.copy(libJar, libDestination resolve libJar.getFileName, StandardCopyOption.REPLACE_EXISTING))
-    }),
-    createJar <<= (
-      exportedProducts in Compile,
-      distribDir,
-      name,
-      version,
-      scalaVersion
-      ) map ((products, dest, appName, appVer, scalaVer) => {
-      Files.createDirectories(dest)
-      val versionSuffix = "_" + scalaVer + "-" + appVer
-      val jarPaths = products.files.map(_.toPath)
+      libs.value.map(libJar => Files.copy(libJar, libDestination resolve libJar.getFileName, StandardCopyOption.REPLACE_EXISTING))
+    },
+    createJar := {
+      Files.createDirectories(distribDir.value)
+      val versionSuffix = "_" + scalaVersion.value + "-" + version.value
+      val jarPaths = (exportedProducts in Compile).value.files.map(_.toPath)
       jarPaths.map(jarPath => {
-        Files.copy(jarPath, (dest / stripSection(jarPath.getFileName.toString, versionSuffix)), StandardCopyOption.REPLACE_EXISTING)
+        Files.copy(jarPath, distribDir.value / stripSection(jarPath.getFileName.toString, versionSuffix), StandardCopyOption.REPLACE_EXISTING)
       })
-    })
+    }
   )
 }

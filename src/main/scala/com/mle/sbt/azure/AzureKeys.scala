@@ -10,11 +10,11 @@ import com.mle.azure.StorageContainer
  * @author mle
  */
 trait AzureKeys {
-  val azureConf = SettingKey[Path]("azure-conf", "Path to Azure configuration file with account_name and account_key variables.")
-  val azureContainerName = SettingKey[String]("azure-container-name", "The Azure storage container name")
-  val azureContainer = TaskKey[StorageContainer]("azure-container", "Helper: Builds an Azure storage container. Used by other tasks.")
-  val azurePackage = TaskKey[Option[Path]]("azure-package", "Package to upload to Azure")
-  val azureUpload = TaskKey[java.net.URI]("azure-upload", "Packages the app and uploads it to Azure Storage")
+  val azureConf = settingKey[Path]("Path to Azure configuration file with account_name and account_key variables.")
+  val azureContainerName = settingKey[String]("The Azure storage container name")
+  val azureContainer = taskKey[StorageContainer]("Helper: Builds an Azure storage container. Used by other tasks.")
+  val azurePackage = taskKey[Option[Path]]("Package to upload to Azure")
+  val azureUpload = taskKey[java.net.URI]("Packages the app and uploads it to Azure Storage")
 }
 
 object AzureKeys extends AzureKeys

@@ -17,57 +17,56 @@ object WinPlugin extends Plugin {
   val windowsMappings = mappings in windows.Keys.packageMsi
 
   val fileMappings: Seq[Setting[_]] = inConfig(Windows)(Seq(
-
-    windowsMappings <++= (msiMappings) map ((msiMaps: Seq[(Path, Path)]) => msiMaps.map(mapping => {
-      val (src, dest) = mapping
-      src.toFile -> dest.toString
-    })),
-    msiMappings <++= (batPath, confFile, name, targetPath) map ((b, c, n, t) => {
-      val startService = t / (n + "-start.bat")
-      val stopService = t / (n + "-stop.bat")
-      PackagingUtil.writerTo(startService)(_.println(b.getFileName.toString + " start"))
-      PackagingUtil.writerTo(stopService)(_.println(b.getFileName.toString + " stop"))
-      val confMap = c.map(p => Seq(p -> p.getFileName)).getOrElse(Seq.empty[(Path, Path)])
+    //    windowsMappings ++= msiMappings.value.map(mapping => {
+    //      val (src, dest) = mapping
+    //      src.toFile -> dest.toString
+    //    }),
+    windowsMappings ++= msiMappings.value.map {
+      case (src, dest) => src.toFile -> dest.toString
+    },
+    msiMappings ++= {
+      val batFilePath = batPath.value
+      def servicePath(suffix: String) = targetPath.value / (name.value + suffix)
+      val startService = servicePath("-start.bat")
+      val stopService = servicePath("-stop.bat")
+      def write(path: Path, batCommand: String) = PackagingUtil.writerTo(path)(_.println(batFilePath.getFileName.toString + batCommand))
+      write(startService, " start")
+      write(stopService, " stop")
+      val confMap = confFile.value.map(p => Seq(p -> p.getFileName)).getOrElse(Seq.empty[(Path, Path)])
       confMap ++ Seq(
-        b -> b.getFileName,
+        batFilePath -> batFilePath.getFileName,
         startService -> startService.getFileName,
         stopService -> stopService.getFileName
       )
-    }),
-    msiMappings <++= (libs, libDestDir) map ((libz, libDest) => {
-      libz.map(libPath => libPath -> (libDest / libPath.getFileName))
-    }),
-    msiMappings <++= (configFiles, configSrcDir, configDestDir) map ((confs, baseDir, confDest) => {
-      val confFiles = confs.filter(_.isFile)
-      val absAndRelative = confFiles.map(abs => abs -> baseDir.relativize(abs))
+    },
+    msiMappings ++= libs.value.map(libPath => libPath -> (libDestDir.value / libPath.getFileName)),
+    msiMappings ++= {
+      val confFiles = configFiles.value.filter(_.isFile)
+      val absAndRelative = confFiles.map(abs => abs -> configSrcDir.value.relativize(abs))
       absAndRelative map (ar => {
         val (abs, rel) = ar
-        abs -> confDest.resolve(rel)
+        abs -> configDestDir.value.resolve(rel)
       })
-    }),
-    msiMappings <+= (appJar, appJarName) map (
-      (jar, jarName) => jar -> Paths.get(jarName)),
-    msiMappings <++= (name, targetPath, winSwExe, winSwExeName, winSwConfName, displayName, streams) map (
-      (n, t, w, wN, c, d, l) => {
-        l.log.info("Creating service wrapper")
-        //                val conf = WindowsServiceWrapper.conf2(n)
-        //                val confFile = t / c
-        //                PackagingUtil.writerTo(confFile)(_.println(conf))
-        // build winsw service wrapper XML configuration file
-        def toFile(xml: Elem, file: Path) {
-          PackagingUtil.writerTo(file)(_.println(xml.toString()))
-          l.log.info("Created: " + file.toAbsolutePath)
-        }
-        val conf = WindowsServiceWrapper.conf(n, d)
-        val confFile = t / c
-        toFile(conf, confFile)
-        val runtimeConf = WindowsServiceWrapper.netRuntimeConf
-        val runtimeFile = t / (wN + ".config")
-        toFile(runtimeConf, runtimeFile)
-        //        Seq(confFile.toFile -> c,w.toFile -> wN)
-        // why?
-        Seq.empty[(Path, Path)]
-      })))
+    },
+    msiMappings += appJar.value -> Paths.get(appJarName.value),
+    msiMappings ++= {
+      streams.value.log.info("Creating service wrapper")
+      // build winsw service wrapper XML configuration file
+      def toFile(xml: Elem, file: Path) {
+        PackagingUtil.writerTo(file)(_.println(xml.toString()))
+        streams.value.log.info("Created: " + file.toAbsolutePath)
+      }
+      val targetFilePath = targetPath.value
+      val conf = WindowsServiceWrapper.conf(name.value, displayName.value)
+      val confFile = targetFilePath / winSwConfName.value
+      toFile(conf, confFile)
+      val runtimeConf = WindowsServiceWrapper.netRuntimeConf
+      val runtimeFile = targetFilePath / (winSwExeName.value + ".config")
+      toFile(runtimeConf, runtimeFile)
+      // why?
+      Seq.empty[(Path, Path)]
+    }
+  ))
 
   val windowsSettings: Seq[Setting[_]] =
     GenericPlugin.genericSettings ++
@@ -78,11 +77,11 @@ object WinPlugin extends Plugin {
         uuid := UUID.randomUUID().toString,
         // wtf?
         msiMappings := Seq.empty[(Path, Path)],
-        pkgHome in Windows <<= (pkgHome)(_ / "windows"),
+        pkgHome in Windows := (pkgHome.value / "windows"),
         minJavaVersion := None,
         postInstallUrl := None
-      ) ++ inConfig(Windows)(GenericPlugin.confSpecificSettings ++ Seq(
-      help <<= (logger) map (log => {
+      ) ++ inConfig(Windows)(GenericPlugin.confSpecificSettings ++ WixPackaging.wixSettings ++ Seq(
+      help := {
         val taskList = GenericPlugin.describeWithAzure(
           windows.Keys.packageMsi,
           win,
@@ -105,61 +104,57 @@ object WinPlugin extends Plugin {
           serviceFeature,
           msiMappings,
           minUpgradeVersion)
-        log info taskList
-      }),
-      azurePackage <<= win map (msi => Some(msi)),
+        logger.value info taskList
+      },
+      azurePackage := Some(win.value),
       //      msiMappings <++= pathMappings,
-      deployFiles <<= msiMappings map (msis => msis.map(_._2)),
+      deployFiles := msiMappings.value.map(_._2),
       configDestDir := Paths get "config",
       libDestDir := Paths get "lib",
-      msiName <<= (name, version)((n, v) => n + "-" + v + ".msi"),
-      windowsJarPath <<= (targetPath, appJarName)((t, n) => t / n),
-      exePath <<= (targetPath, name)((t, n) => t / (n + ".exe")),
-      batPath <<= (pkgHome, name)((w, n) => w / (n + ".bat")),
-      licenseRtf <<= pkgHome(_ / "license.rtf"),
-      appIcon <<= pkgHome(_ / "app.ico"),
+      msiName := name.value + "-" + version.value + ".msi",
+      windowsJarPath := targetPath.value / appJarName.value,
+      exePath := targetPath.value / (name.value + ".exe"),
+      batPath := pkgHome.value / (name.value + ".bat"),
+      licenseRtf := pkgHome.value / "license.rtf",
+      appIcon := pkgHome.value / "app.ico",
       serviceFeature := true,
-      winSwExe <<= pkgHome(_ / "winsw-1.13-bin.exe"),
-      //            winSwExe <<= pkgHome(_ / "ServiceController.exe"),
-      winSwConf <<= (targetPath, winSwConfName)((t, n) => t / n),
-      winSwName <<= name(_ + "svc"),
-      winSwExeName <<= winSwName(_ + ".exe"),
-      winSwConfName <<= winSwName(_ + ".xml"),
+      winSwExe := pkgHome.value / "winsw-1.13-bin.exe",
+      winSwConf := targetPath.value / winSwConfName.value,
+      winSwName := name.value + "svc",
+      winSwExeName := winSwName.value + ".exe",
+      winSwConfName := winSwName.value + ".xml",
       //            winSwConfName := "conf.txt",
       launch4jcExe := Paths get """C:\Program Files (x86)\Launch4j\launch4jc.exe""",
-      launch4jcConf <<= targetPath(_ / "launch4jconf.xml"),
-      verifySettings <<= (launch4jcExe, appIcon, winSwExe, batPath, licenseRtf, mainClass)
-        .map((lE, aI, wE, bP, lR, mC) => {
-        if (mC.isEmpty)
+      launch4jcConf := targetPath.value / "launch4jconf.xml",
+      verifySettings := {
+        if (mainClass.value.isEmpty)
           throw new Exception("No mainClass specified; cannot create .exe")
         PackagingUtil.verifyPathSetting(
-          //          launch4jcExe -> lE,
-          //          appIcon -> aI,
-          winSwExe -> wE,
-          batPath -> bP,
-          licenseRtf -> lR)
-      }),
-      printPaths <<= (launch4jcExe, appIcon, winSwExe, batPath, licenseRtf, streams)
-        .map((lE, aI, wE, bP, lR, logger) => {
+          winSwExe -> winSwExe.value,
+          batPath -> batPath.value,
+          licenseRtf -> licenseRtf.value)
+      },
+      printPaths := {
         val keys = Seq(launch4jcExe, appIcon, winSwExe, batPath, licenseRtf)
-        val values = Seq(lE, aI, wE, bP, lR)
+        val values = Seq(launch4jcExe.value, appIcon.value, winSwExe.value, batPath.value, licenseRtf.value)
         val pairs = keys zip values
-        PackagingUtil.logPairs(pairs, logger)
+        PackagingUtil.logPairs(pairs, streams.value)
         values
-      }),
-      win <<= (windows.Keys.packageMsi, msiName, streams) map ((result, fileName, logger) => {
-        val msiFile = result.toPath
-        val msiRenamed = msiFile.resolveSibling(fileName)
+      },
+      win := {
+        val msiFile = windows.Keys.packageMsi.value.toPath
+        val msiRenamed = msiFile.resolveSibling(msiName.value)
         val packagedFile = Files.move(msiFile, msiRenamed, StandardCopyOption.REPLACE_EXISTING)
-        logger.log.info("Packaged: " + packagedFile.toAbsolutePath.toString)
+        streams.value.log.info("Packaged: " + packagedFile.toAbsolutePath.toString)
         packagedFile
-      }) dependsOn verifySettings,
+      },
       shortcut := false,
-      displayName <<= name(n => n),
-      mappingsPrint <<= (mappings in windows.Keys.packageMsi in Windows, streams) map ((maps, logger) => {
+      displayName := name.value,
+      mappingsPrint := {
+        val maps = (mappings in windows.Keys.packageMsi in Windows).value
         val output = maps.map(kv => kv._1.getAbsolutePath + "\n" + kv._2).mkString("\n---\n")
-        logger.log.info(output)
-      }),
+        streams.value.log.info(output)
+      },
       serviceConf <<= (serviceFeature, winSwExe, winSwExeName, winSwConfName)((s, exe, e, cN) => if (s) Some(ServiceConf(exe, e, cN)) else None)
     ))
 

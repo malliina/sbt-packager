@@ -31,7 +31,7 @@ object Launch4jWrapper {
 
   def buildLauncher(launch4jcExe: Path, config: NodeSeq, outputConf: Path, outputExe: Path) = {
     FileUtilities.writerTo(outputConf)(_.println(config.toString()))
-    println("Executing: " + launch4jcExe.toAbsolutePath + " " + outputConf.toAbsolutePath.toString)
+//    println("Executing: " + launch4jcExe.toAbsolutePath + " " + outputConf.toAbsolutePath.toString)
     Process(launch4jcExe.toAbsolutePath.toString, Seq(outputConf.toAbsolutePath.toString)).! match {
       case 0 => () // success
       case errorValue => throw new Exception("Unable to create .exe wrapper: "

@@ -17,6 +17,7 @@ trait AzurePlugin extends Plugin {
     azurePackage := None,
     azureConf := sbt.Path.userHome.toPath / "keys" / "azure-storage.sec",
     azureContainerName := "files",
+    // Compilation error if attempting to use .value syntax here. hmm?
     azureContainer <<= (azureConf, azureContainerName) map ((conf, cont) => {
       val (account, key) = readCredentials(conf)
       val client = new StorageClient(account, key)

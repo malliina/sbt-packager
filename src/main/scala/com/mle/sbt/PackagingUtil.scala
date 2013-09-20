@@ -32,19 +32,18 @@ object PackagingUtil {
     file -> (baseDir relativize file)
   })
 
-  def filesIn(dir: SettingKey[Option[Path]]): Project.Initialize[Task[Seq[Path]]] =
-    (dir).map((path: Option[Path]) => {
-      path.map(p =>
-        if (Files isDirectory p) FileUtilities.listPaths(p)
-        else Seq.empty[Path]
-      ).getOrElse(Seq.empty[Path])
-    })
-
-  def listFiles(dir: SettingKey[Path]): Project.Initialize[Task[Seq[Path]]] =
-    (dir).map((path: Path) => {
-      if (Files isDirectory path) FileUtilities.listPaths(path)
+  def filesIn(dir: SettingKey[Option[Path]]): Def.Initialize[Task[Seq[Path]]] = Def.task {
+    dir.value.map(p =>
+      if (Files isDirectory p) FileUtilities.listPaths(p)
       else Seq.empty[Path]
-    })
+    ).getOrElse(Seq.empty[Path])
+  }
+
+  def listFiles(dir: SettingKey[Path]): Def.Initialize[Task[Seq[Path]]] = Def.task {
+    val dirValue = dir.value
+    if (Files isDirectory dirValue) FileUtilities.listPaths(dirValue)
+    else Seq.empty[Path]
+  }
 
   def copyTask(files: TaskKey[Seq[Path]]) = (
     basePath,
@@ -82,7 +81,7 @@ object PackagingUtil {
   def verifyPathSetting(settings: (SettingKey[Path], Path)*) {
     val errors = settings flatMap verifyPath
     if (errors.nonEmpty) {
-      val messagesCombined = errors mkString "\n"
+      val messagesCombined = errors mkString FileUtilities.lineSep
       throw new FileNotFoundException("The following files were not found: \n" + messagesCombined)
     }
   }

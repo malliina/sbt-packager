@@ -4,32 +4,34 @@ import sbt._
 object MyBuild extends Build {
   lazy val sbtPackager = Project("sbt-packager", file("."))
     .settings(libraryDependencies ++= Seq(utilDep, scalaTest, azure))
-    .settings(addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "0.5.4"))
-  val malliinaGroup = "com.github.malliina"
-  val utilDep = malliinaGroup %% "util" % "0.7.0"
-  val azure = malliinaGroup %% "util-azure" % "0.7.1"
-  val scalaTest = "org.scalatest" %% "scalatest" % "1.9.1" % "test"
+    .settings(addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "0.6.2"))
 
-  val releaseVersion = "1.1.1"
+  val utilGroup = "com.github.malliina"
+  val utilVersion="1.0.0"
+  val utilDep = utilGroup %% "util" % utilVersion
+  val azure = utilGroup %% "util-azure" % utilVersion
+  val scalaTest = "org.scalatest" %% "scalatest" % "1.9.2" % "test"
+
+  val releaseVersion = "1.1.2"
   val snapshotVersion = "1.1.2-SNAPSHOT"
 
   override lazy val settings = super.settings ++ Seq(
-    scalaVersion := "2.9.2",
+    scalaVersion := "2.10.2",
     organization := "com.github.malliina",
     name := "sbt-packager",
     version := snapshotVersion,
     sbtPlugin := true,
     exportJars := false,
     resolvers += "Sonatype snaps" at "http://oss.sonatype.org/content/repositories/snapshots/",
-    publishTo <<= (version)(v => {
+    publishTo := {
       val repo =
-        if (v endsWith "SNAPSHOT") {
+        if (version.value endsWith "SNAPSHOT") {
           "Sonatype snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
         } else {
           "Sonatype releases" at "https://oss.sonatype.org/service/local/staging/deploy/maven2"
         }
       Some(repo)
-    }),
+    },
     licenses += ("BSD-style" -> url("http://www.opensource.org/licenses/BSD-3-Clause")),
     scmInfo := Some(ScmInfo(url("https://github.com/malliina/sbt-packager"), "git@github.com:malliina/sbt-packager.git")),
     credentials += Credentials(Path.userHome / ".ivy2" / "sonatype.txt"),
