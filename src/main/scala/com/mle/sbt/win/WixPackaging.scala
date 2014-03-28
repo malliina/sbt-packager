@@ -10,6 +10,8 @@ import com.mle.sbt.{WixUtils, GenericKeys}
 
 /**
  * You need to set the "WIX" environment variable to the wix installation dir e.g. program files\wix. Use Wix 3.7 or newer.
+ *
+ * Understanding any of this requires knowledge of WiX. The short story is that this is a complete fucking mess.
  */
 object WixPackaging extends Plugin {
   val wixSettings: Seq[Setting[_]] = inConfig(Windows)(Seq(
@@ -20,11 +22,14 @@ object WixPackaging extends Plugin {
           .getOrElse(ServiceFragments.Empty)
 
         // to prevent a reboot request before uninstallation, stop the service manually. ServiceControl doesn't cut it.
-        val stopAppFragment = serviceConf.value.map(_ => {
-          // it is illegal to schedule a deferred custom action before InstallValidate so this must be immediate (=> dos prompt shown)
+        val stopAppFragment = serviceConf.value.filter(_ => forceStopOnUninstall.value).map(_ => {
+          // It is illegal to schedule a deferred custom action before InstallValidate so this must be immediate (=> dos prompt shown).
+          // According to http://stackoverflow.com/questions/320921/how-to-add-a-wix-custom-action-that-happens-only-on-uninstall-via-msi,
+          // We want to run this action on uninstalls and upgrades. REMOVE="ALL" is true for uninstalls, modifications and upgrades. Seems
+          // good enough.
           (<CustomAction ExeCommand="stop" FileKey={batPath.value.getFileName.toString} Id="StopService" Impersonate="yes" Return="ignore" />
             <InstallExecuteSequence>
-              <Custom Action="StopService" Before="InstallValidate"><![CDATA[(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")]]></Custom>
+              <Custom Action="StopService" Before="InstallValidate"><![CDATA[(REMOVE="ALL")]]></Custom>
             </InstallExecuteSequence>)
         }).getOrElse(NodeSeq.Empty)
 

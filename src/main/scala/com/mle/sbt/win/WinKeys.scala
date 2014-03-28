@@ -27,6 +27,7 @@ object WinKeys {
   val winSwConfName = settingKey[String]("Windows Service Wrapper XML config file name on target")
   val winSwName = settingKey[String]("Windows Service Wrapper name on target")
   val serviceConf = settingKey[Option[ServiceConf]]("Winsw confs")
+  val forceStopOnUninstall = settingKey[Boolean]("If true, stops the service before uninstallation using an ugly custom action. Defaults to true.")
   val productGuid = settingKey[String]("Product GUID required for MSI packaging. Generate with UUID.randomUUID().")
   val upgradeGuid = settingKey[String]("Upgrade GUID required for MSI packaging. Generate with UUID.randomUUID().")
   val shortcut = settingKey[Boolean]("Whether or not to install a desktop shortcut to the main application executable")

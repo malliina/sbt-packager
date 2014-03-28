@@ -3,20 +3,16 @@ package com.mle.sbt.unix
 import com.typesafe.sbt.SbtNativePackager._
 import com.typesafe.sbt.packager._
 import java.nio.file.{Files, Paths, Path}
-import linux.LinuxPackageMapping
 import sbt.Keys._
 import sbt._
 import com.mle.sbt.unix.LinuxKeys._
 import UnixKeys._
 import com.mle.sbt.GenericKeys._
-import scala.Some
-import com.mle.sbt.FileImplicits._
 import com.mle.sbt.{GenericPlugin, GenericKeys, PackagingUtil}
 import com.mle.sbt.azure.{AzurePlugin, AzureKeys}
 import scala.Some
 import com.typesafe.sbt.packager.linux.LinuxPackageMapping
-import scala.Some
-import com.typesafe.sbt.packager.linux.LinuxPackageMapping
+import com.mle.sbt.FileImplicits._
 
 object LinuxPlugin extends Plugin {
   val distroSettings = GenericPlugin.confSpecificSettings ++ Seq(

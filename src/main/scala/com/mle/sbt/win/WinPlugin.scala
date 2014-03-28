@@ -80,7 +80,8 @@ object WinPlugin extends Plugin {
         msiMappings := Seq.empty[(Path, Path)],
         pkgHome in Windows := (pkgHome.value / "windows"),
         minJavaVersion := None,
-        postInstallUrl := None
+        postInstallUrl := None,
+        forceStopOnUninstall := true
       ) ++ inConfig(Windows)(GenericPlugin.confSpecificSettings ++ WixPackaging.wixSettings ++ Seq(
       help := {
         val taskList = GenericPlugin.describeWithAzure(

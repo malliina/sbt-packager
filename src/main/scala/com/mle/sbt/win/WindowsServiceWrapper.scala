@@ -12,6 +12,7 @@ object WindowsServiceWrapper {
         <startargument>start</startargument>
         <stopexecutable>%BASE%\{appName}.bat</stopexecutable>
         <stopargument>stop</stopargument>
+        <logpath>%TEMP%</logpath>
       </service>
     )
   def netRuntimeConf =
@@ -27,9 +28,4 @@ object WindowsServiceWrapper {
       "stop=" + appName + ".bat\n" +
       "stopParam=stop\n" +
       "name="+appName
-
-  /**
-   * <logpath>C:\</logpath>
-      <logmode>roll</logmode>
-   */
 }
