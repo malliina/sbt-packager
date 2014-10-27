@@ -1,12 +1,13 @@
 package com.mle.sbt.azure
 
-import sbt._
-import AzureKeys._
 import java.nio.file.Path
-import com.mle.util.Util
+
 import com.mle.azure.StorageClient
+import com.mle.file.StorageFile
 import com.mle.sbt.GenericPlugin
-import com.mle.util.FileImplicits.StorageFile
+import com.mle.sbt.azure.AzureKeys._
+import com.mle.util.Util
+import sbt._
 
 /**
  *

@@ -1,17 +1,15 @@
 package com.mle.sbt
 
-import com.mle.sbt.GenericKeys._
-import sbt._
-import sbt.Keys._
 import java.nio.file.Path
-import com.mle.sbt.PackagingUtil._
+
+import com.mle.file.FileUtilities
 import com.mle.sbt.FileImplicits._
+import com.mle.sbt.GenericKeys._
+import com.mle.sbt.PackagingUtil._
 import com.mle.sbt.azure.AzureKeys._
-import scala.Some
-import java.lang.Exception
-import com.typesafe.sbt.SbtNativePackager
-import com.mle.util.FileUtilities
 import com.mle.sbt.azure.AzurePlugin
+import sbt.Keys._
+import sbt._
 
 
 object GenericPlugin extends Plugin {
@@ -34,7 +32,7 @@ object GenericPlugin extends Plugin {
     targetPath := target.value.toPath,
     logger := streams.value.log,
     help := {
-      import SbtNativePackager._
+      import com.typesafe.sbt.SbtNativePackager._
       def suggestTask(conf: Configuration) = conf.name + ":helpme"
       val winHelp = suggestTask(Windows)
       val debHelp = suggestTask(Debian)

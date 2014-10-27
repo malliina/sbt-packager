@@ -1,13 +1,13 @@
 package com.mle.sbt
 
-import sbt._
-import java.nio.file.{StandardCopyOption, Files, Path}
-import sbt.Keys._
-import com.mle.util.FileUtilities
+import java.io.{FileNotFoundException, PrintWriter}
+import java.nio.file.{Files, Path, StandardCopyOption}
+
+import com.mle.file.FileUtilities
 import com.mle.sbt.GenericKeys._
-import unix.UnixZipKeys
-import java.io.{PrintWriter, FileNotFoundException}
-import scala.Some
+import com.mle.sbt.unix.UnixZipKeys
+import sbt.Keys._
+import sbt._
 
 /**
  *

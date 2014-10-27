@@ -1,6 +1,6 @@
 package com.mle.sbt.win
 
-import com.mle.util.FileUtilities
+import com.mle.file.FileUtilities
 import java.nio.file.Path
 import sys.process.Process
 import xml.NodeSeq
