@@ -11,20 +11,18 @@ object MyBuild extends Build {
   val utilDep = utilGroup %% "util" % utilVersion
   val azure = utilGroup %% "util-azure" % utilVersion
 
-  val releaseVersion = "1.3.0"
-  val snapshotVersion = "1.2.2-SNAPSHOT"
+  val releaseVersion = "1.4.0"
 
   lazy val packagerSettings = publishSettings ++ Seq(
+    version := releaseVersion,
     scalaVersion := "2.10.4",
-//    crossScalaVersions := Seq("2.11.2", "2.10.4"),
     organization := "com.github.malliina",
     gitUserName := "malliina",
     developerName := "Michael Skogberg",
-    version := releaseVersion,
     sbtPlugin := true,
     exportJars := false,
     resolvers ++= Seq(
-      "typesafe releases" at "http://repo.typesafe.com/typesafe/releases/",
+      "Typesafe releases" at "http://repo.typesafe.com/typesafe/releases/",
       "Sonatype releases" at "https://oss.sonatype.org/content/repositories/releases/"
     ),
     libraryDependencies ++= Seq(utilDep, azure),

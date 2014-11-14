@@ -12,34 +12,42 @@ object ServiceFragments {
   val Empty = ServiceFragments(NodeSeq.Empty, NodeSeq.Empty)
 
   def fromConf(conf: ServiceConf, displayName: String) = {
-    val exeConfigName = conf.exeName + ".config"
-    // this and the confFile are written during packaging
-    val xmlConf = WixUtils.wixify(conf.confName)
-    val exeConf = WixUtils.wixify(exeConfigName)
-
+    val xmlName = conf.xmlConf.getFileName.toString
+    val exeName = conf.exeName
+    val exeConfigName = conf.exeConfigName
     val compsFragment: NodeSeq = {
-      xmlConf.comp ++ exeConf.comp ++ (
+      (
         <Component Id='ServiceManager' Guid='*'>
-          <File Id={conf.exeName}
-                Name={conf.exeName}
+          <File Id={exeName}
+                Name={exeName}
                 DiskId='1'
                 Source={conf.serviceExe.toAbsolutePath.toString}
                 KeyPath="yes"/>
+          <File Id={exeConfigName}
+                Name={exeConfigName}
+                DiskId='1'
+                Source={conf.runtimeConf.toAbsolutePath.toString}
+                KeyPath="no"/>
+          <File Id={xmlName}
+                Name={xmlName}
+                DiskId='1'
+                Source={conf.xmlConf.toAbsolutePath.toString}
+                KeyPath="no"/>
           <ServiceInstall Id="ServiceInstaller"
-                          Type="ownProcess"
-                          Vital="yes"
                           Name={displayName}
                           DisplayName={displayName}
                           Description={"The " + displayName + " service"}
+                          Type="ownProcess"
+                          Vital="yes"
                           Start="auto"
                           Account="LocalSystem"
-                          ErrorControl="ignore"
+                          ErrorControl="normal"
                           Interactive="no"/>
-          <ServiceControl Stop="both"
-                          Remove="uninstall"
-                          Id="ServiceController"
-                          Start="install"
+          <ServiceControl Id="ServiceController"
                           Name={displayName}
+                          Start="install"
+                          Stop="both"
+                          Remove="uninstall"
                           Wait="yes"/>
         </Component>
         )
@@ -51,9 +59,10 @@ object ServiceFragments {
                 Description={"This will install " + displayName + " as a Windows service."}
                 Level='1'
                 Absent='disallow'>
-        <ComponentRef Id='ServiceManager'/>{xmlConf.ref}{exeConf.ref}
+        <ComponentRef Id='ServiceManager'/>
       </Feature>)
 
+//    under Feature: {exeConf.ref}{xmlConf.ref}
     ServiceFragments(compsFragment, featureFragment)
   }
 }

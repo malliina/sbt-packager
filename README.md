@@ -4,7 +4,7 @@ This is an SBT plugin for software packaging. It depends on [sbt-native-packager
 
 ## Installation ##
 
-    addSbtPlugin("com.github.malliina" % "sbt-packager" % "1.1.1")
+    addSbtPlugin("com.github.malliina" % "sbt-packager" % "1.4.0")
 
 ## Usage ##
 
@@ -75,6 +75,14 @@ To get a list of tasks and settings pertaining to this plugin, run the following
 [success] Total time: 0 s, completed 9.4.2013 20:07:47
 [myproject] $
 ```
+
+To create an installation log, run the following command instead of double-clicking the packaged MSI file:
+
+```
+msiexec /i "C:\app.msi" /L*V "C:\install.log"
+```
+
+(For more info, see http://www.advancedinstaller.com/user-guide/qa-log.html)
 
 ### Debian ###
 

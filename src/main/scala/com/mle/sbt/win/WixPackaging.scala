@@ -14,38 +14,53 @@ import com.mle.sbt.{WixUtils, GenericKeys}
  * Understanding any of this requires knowledge of WiX. The short story is that this is a complete fucking mess.
  */
 object WixPackaging extends Plugin {
+
+  def foldEmpty[T](opt: Option[T])(f: T => NodeSeq) = opt.map(f) getOrElse NodeSeq.Empty
+
   val wixSettings: Seq[Setting[_]] = inConfig(Windows)(Seq(
     windows.Keys.wixConfig := {
         GenericKeys.logger.value.info("Display name: " + displayName.value)
         val msiFiles = WixUtils.wix(msiMappings.value)
-        val serviceFragments = serviceConf.value.map(s => ServiceFragments.fromConf(s, displayName.value))
+        val serviceFragments = serviceConf.value
+          .map(s => ServiceFragments.fromConf(s, displayName.value))
           .getOrElse(ServiceFragments.Empty)
 
-        // to prevent a reboot request before uninstallation, stop the service manually. ServiceControl doesn't cut it.
-        val stopAppFragment = serviceConf.value.filter(_ => forceStopOnUninstall.value).map(_ => {
-          // It is illegal to schedule a deferred custom action before InstallValidate so this must be immediate (=> dos prompt shown).
-          // According to http://stackoverflow.com/questions/320921/how-to-add-a-wix-custom-action-that-happens-only-on-uninstall-via-msi,
-          // We want to run this action on uninstalls and upgrades. REMOVE="ALL" is true for uninstalls, modifications and upgrades. Seems
-          // good enough.
-          (<CustomAction ExeCommand="stop" FileKey={batPath.value.getFileName.toString} Id="StopService" Impersonate="yes" Return="ignore" />
+      val interactiveElement = foldEmpty(Option(interactiveInstallation.value).filter(_ == true))(_ => {
+          <UIRef Id="WixUI_FeatureTree"/>
+      })
+
+        // To prevent a reboot request before uninstallation, stop the service manually.
+        // ServiceControl doesn't cut it if interactiveInstallation is enabled.
+
+        // It is illegal to schedule a deferred custom action before InstallValidate so this must be immediate (=> dos prompt shown).
+        // See http://stackoverflow.com/questions/320921/how-to-add-a-wix-custom-action-that-happens-only-on-uninstall-via-msi.
+        // We want to run this action on uninstalls and upgrades. REMOVE="ALL" is true for uninstalls, modifications
+        // and upgrades. Seems good enough.
+        // <![CDATA[(REMOVE="ALL")]]>
+        val stopAppFragment = foldEmpty(serviceConf.value.filter(_ => forceStopOnUninstall.value))(_ => {
+          (<CustomAction Id="StopService"
+                         FileKey={batPath.value.getFileName.toString}
+                         ExeCommand="stop"
+                         Impersonate="yes"
+                         Return="ignore" />
             <InstallExecuteSequence>
-              <Custom Action="StopService" Before="InstallValidate"><![CDATA[(REMOVE="ALL")]]></Custom>
+              <Custom Action="StopService"
+                      Before="InstallValidate"><![CDATA[(REMOVE="ALL")]]></Custom>
             </InstallExecuteSequence>)
-        }).getOrElse(NodeSeq.Empty)
+        })
 
         // shows icon in add/remove programs section of control panel
-        val iconFragment = appIcon.value.map(icon => {
+        val iconFragment = foldEmpty(appIcon.value)(icon => {
           (<Icon Id="icon.ico" SourceFile={icon.toAbsolutePath.toString}/>
-            <Property Id="ARPPRODUCTICON" Value="icon.ico"/>)
-        }).getOrElse(NodeSeq.Empty)
+              <Property Id="ARPPRODUCTICON" Value="icon.ico"/>)
+        })
 
-        val postUrlFragment = postInstallUrl.value.map(OpenBrowserWix.forUrl)
-          .getOrElse(NodeSeq.Empty)
+        val postUrlFragment = foldEmpty(postInstallUrl.value)(OpenBrowserWix.forUrl)
 
         // TODO
         val exeComp = NodeSeq.Empty
         val exeCompRef = NodeSeq.Empty
-        val minJavaFragment = minJavaVersion.value.map(v => {
+        val minJavaFragment = foldEmpty(minJavaVersion.value)(v => {
           val spec = "Installed OR (JAVA_CURRENT_VERSION32 >= \"1."+v+"\" OR JAVA_CURRENT_VERSION64 >= \"1."+v+"\")"
           (<Property Id="JAVA_CURRENT_VERSION32">
             <RegistrySearch Id="JRE_CURRENT_VERSION_REGSEARCH32"
@@ -62,7 +77,7 @@ object WixPackaging extends Plugin {
                             Win64="yes" />
           </Property>
           <Condition Message={"Java "+v+" is required but not found. Please visit www.java.com to install Oracle Java "+v+" or later, then try again."}>{scala.xml.Unparsed("<![CDATA[%s]]>".format(spec))}</Condition>)
-        }).getOrElse(NodeSeq.Empty)
+        })
 
         (<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi' xmlns:util='http://schemas.microsoft.com/wix/UtilExtension'>
           <Product Name={displayName.value}
@@ -78,7 +93,8 @@ object WixPackaging extends Plugin {
                      InstallerVersion='200'
                      Compressed='yes'/>
             <Upgrade Id={upgradeGuid.value}>
-              <UpgradeVersion OnlyDetect='no' Property='PREVIOUSFOUND'
+              <UpgradeVersion OnlyDetect='no'
+                              Property='PREVIOUSFOUND'
                               Minimum={minUpgradeVersion.value}
                               IncludeMinimum='yes'
                               Maximum={version.value}
@@ -119,7 +135,7 @@ object WixPackaging extends Plugin {
             <MajorUpgrade AllowDowngrades="no"
                           Schedule="afterInstallInitialize"
                           DowngradeErrorMessage="A later version of [ProductName] is already installed. Setup will now exit."/>
-            <UIRef Id="WixUI_FeatureTree"/>
+            {interactiveElement}
             <UIRef Id="WixUI_ErrorProgressText"/>
             <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR"/>
             <WixVariable Id="WixUILicenseRtf" Value={licenseRtf.value.toAbsolutePath.toString}/>
@@ -129,44 +145,4 @@ object WixPackaging extends Plugin {
       },
     windows.Keys.lightOptions ++= Seq("-cultures:en-us") //  "-ext", "WixUtilExtension","-ext", "WixUIExtension",
   ))
-
-  /**
-   *
-   *
-   * <Component Id='AppLauncherPath' Guid='24241F02-194C-4AAD-8BD4-379B26F1C661'>
-    <Environment Id="PATH" Name="PATH" Value="[INSTALLDIR]" Permanent="no" Part="last" Action="set" System="yes"/>
-      </Component>
-    <Component Id='HomePath' Guid='24241F02-194C-4AAD-8BD4-379B26F1C661'>
-      <Environment Id="PimpHome" Name="PIMPHOME" Value="[INSTALLDIR]" Permanent="no" Part="last" Action="set" System="yes"/>
-    </Component>
-    <Feature Id='ConfigurePath'
-                   Title={"Add " + dispName + " to Windows system PATH"}
-                   Description={"This will append " + dispName + " to your Windows system path."}
-                   Level='1'>
-            <ComponentRef Id='AppLauncherPath'/>
-          </Feature>
-
-   <Component Id='HomePathEnvironment' Guid={UUID.randomUUID().toString}>
-                    <Environment Id="HomePath" Name={appName.toUpperCase} Value="[INSTALLDIR]" Permanent="no" Part="last" Action="set" System="yes"/>
-                    <CreateFolder/>
-                  </Component>
-
-   <ComponentRef Id='HomePathEnvironment'/>
-                   <ComponentRef Id='ApplicationExecutable'/>
-
-
-                                                      <Component Id='ApplicationExecutable' Guid='*'>
-                  <File Id='app_exe' Name={exeFileName} DiskId='1' Source={exe.toAbsolutePath.toString} KeyPath="yes">
-                    {shortcutFragment}
-                  </File>
-                </Component>
-   val shortcutFragment = ifSelected(desktopShortcut) {
-            <Shortcut Id='desktopShortcut' Directory='DesktopFolder' Name={dispName}
-                      WorkingDirectory='INSTALLDIR' Icon={exeFileName} IconIndex="0" Advertise="yes"/>
-        }
-
-    <Icon Id={exeFileName} SourceFile={icon.toAbsolutePath.toString}/>
-            <Property Id="ARPPRODUCTICON" Value={exeFileName}/>
-   */
-
 }

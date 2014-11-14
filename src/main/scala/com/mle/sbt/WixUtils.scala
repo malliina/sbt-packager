@@ -53,7 +53,8 @@ object WixUtils extends Log {
       val childComponents = childWixInfo.map(_.comp).foldLeft(NodeSeq.Empty)(_ ++ _)
       val dirId = d.toString.replace(File.separator, "_") + "_dir"
       val comp =
-        (<Directory Id={dirId} Name={d.getFileName.toString}>
+        (<Directory Id={dirId}
+                    Name={d.getFileName.toString}>
           {childComponents}
         </Directory>)
       WixCompInfo(childCompRefs, comp)

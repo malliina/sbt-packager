@@ -1,17 +1,17 @@
 package com.mle.sbt.win
 
-import java.nio.file.{Path, StandardCopyOption, Files, Paths}
-import sbt.Keys._
-import sbt._
-import com.typesafe.sbt.SbtNativePackager.Windows
-import com.mle.sbt.win.WinKeys._
+import java.nio.file.{Files, Path, Paths, StandardCopyOption}
+import java.util.UUID
+
 import com.mle.sbt.FileImplicits._
 import com.mle.sbt.GenericKeys._
-import com.mle.sbt.{PackagingUtil, GenericPlugin}
-import com.typesafe.sbt.packager.windows
-import java.util.UUID
 import com.mle.sbt.azure.AzureKeys._
-import scala.xml.Elem
+import com.mle.sbt.win.WinKeys._
+import com.mle.sbt.{GenericPlugin, PackagingUtil}
+import com.typesafe.sbt.SbtNativePackager.Windows
+import com.typesafe.sbt.packager.windows
+import sbt.Keys._
+import sbt._
 
 object WinPlugin extends Plugin {
   val windowsMappings = mappings in windows.Keys.packageMsi
@@ -50,20 +50,17 @@ object WinPlugin extends Plugin {
     },
     msiMappings += appJar.value -> Paths.get(appJarName.value),
     msiMappings ++= {
-      streams.value.log.info("Creating service wrapper")
-      // build winsw service wrapper XML configuration file
-      def toFile(xml: Elem, file: Path) {
-        PackagingUtil.writerTo(file)(_.println(xml.toString()))
-        streams.value.log.info("Created: " + file.toAbsolutePath)
-      }
-      val targetFilePath = targetPath.value
-      val conf = WindowsServiceWrapper.conf(name.value, displayName.value)
-      val confFile = targetFilePath / winSwConfName.value
-      toFile(conf, confFile)
-      val runtimeConf = WindowsServiceWrapper.netRuntimeConf
-      val runtimeFile = targetFilePath / (winSwExeName.value + ".config")
-      toFile(runtimeConf, runtimeFile)
-      // why?
+      val log = streams.value.log
+      // TODO fix this
+      serviceImplementation.value.fold(log.info("No service implementation."))(_.prepare(
+        streams.value.log,
+        targetPath.value,
+        name.value,
+        displayName.value,
+        winSwConfName.value,
+        runtimeConfTargetPath.value))
+      // the prepare method already creates the files and puts them into the target directory, so it would seem
+      // we don't need to do the mapping here, but this is extremely confusing
       Seq.empty[(Path, Path)]
     }
   ))
@@ -81,7 +78,10 @@ object WinPlugin extends Plugin {
         pkgHome in Windows := (pkgHome.value / "windows"),
         minJavaVersion := None,
         postInstallUrl := None,
-        forceStopOnUninstall := true
+        interactiveInstallation := false,
+        forceStopOnUninstall := interactiveInstallation.value,
+        productGuid := "*",
+        msi := (win in Windows).value
       ) ++ inConfig(Windows)(GenericPlugin.confSpecificSettings ++ WixPackaging.wixSettings ++ Seq(
       help := {
         val taskList = GenericPlugin.describeWithAzure(
@@ -103,7 +103,6 @@ object WinPlugin extends Plugin {
           winSwConfName,
           winSwName,
           serviceConf,
-          serviceFeature,
           msiMappings,
           minUpgradeVersion)
         logger.value info taskList
@@ -117,13 +116,13 @@ object WinPlugin extends Plugin {
       exePath := targetPath.value / (name.value + ".exe"),
       batPath := pkgHome.value / (name.value + ".bat"),
       licenseRtf := pkgHome.value / "license.rtf",
-      serviceFeature := true,
-      winSwExe := pkgHome.value / "winsw-1.13-bin.exe",
+      winSwExe := pkgHome.value / "winsw-1.16-bin.exe",
       winSwConf := targetPath.value / winSwConfName.value,
       winSwName := name.value + "svc",
       winSwExeName := winSwName.value + ".exe",
       winSwConfName := winSwName.value + ".xml",
-      //            winSwConfName := "conf.txt",
+      runtimeConfTargetPath := targetPath.value / (winSwExeName.value + ".config"),
+      winSwXmlTargetPath := targetPath.value / winSwConfName.value,
       launch4jcExe := Paths get """C:\Program Files (x86)\Launch4j\launch4jc.exe""",
       launch4jcConf := targetPath.value / "launch4jconf.xml",
       verifySettings := {
@@ -155,7 +154,8 @@ object WinPlugin extends Plugin {
         val output = maps.map(kv => kv._1.getAbsolutePath + "\n" + kv._2).mkString("\n---\n")
         streams.value.log.info(output)
       },
-      serviceConf <<= (serviceFeature, winSwExe, winSwExeName, winSwConfName)((s, exe, e, cN) => if (s) Some(ServiceConf(exe, e, cN)) else None)
+      serviceImplementation := Some(WinKeys.Winsw),
+      serviceConf <<= (serviceImplementation, winSwExe, winSwExeName, runtimeConfTargetPath, winSwXmlTargetPath)((s, exe, e, rt, xt) => if (s.isDefined) Some(ServiceConf(exe, e, rt, xt)) else None)
     ))
 
 
