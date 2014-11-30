@@ -21,9 +21,9 @@ object GenericPlugin extends Plugin {
     homeVar := name.value.toUpperCase + "_HOME",
     libs := {
       val deps = (dependencyClasspath in Runtime).value
-      val exported = (exportedProducts in Compile).value
-      // Libs, but not my own jars
-      deps.files.filter(f => !f.isDirectory && !exported.files.contains(f)).map(_.toPath)
+//      val exported = (exportedProducts in Compile).value
+      // Libs, but not my own jars  && !exported.files.contains(f)
+      deps.files.filter(f => !f.isDirectory).map(_.toPath)
     },
     printLibs := libs.value foreach println,
     confFile := None,

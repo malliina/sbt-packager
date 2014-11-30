@@ -48,7 +48,7 @@ object WinPlugin extends Plugin {
         abs -> configDestDir.value.resolve(rel)
       })
     },
-    msiMappings += appJar.value -> Paths.get(appJarName.value),
+//    msiMappings += appJar.value -> Paths.get(appJarName.value),
     msiMappings ++= {
       val log = streams.value.log
       // TODO fix this

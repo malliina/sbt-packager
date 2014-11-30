@@ -25,15 +25,4 @@ object LinuxKeys {
    * Misc
    */
   val printPaths = taskKey[Seq[Path]]("Prints unix packaging paths")
-  /**
-   * Destination keys
-   */
-  val unixHome = settingKey[Path]("Home dir on unix")
-  val unixLibDest = settingKey[Path]("Lib dir on unix")
-  val unixScriptDest = settingKey[Path]("Script dir on unix")
-  val unixLogDir = settingKey[Path]("Log dir on unix")
-  // Tasks
-  val libMappings = taskKey[Seq[(Path, String)]]("Libs mapped to paths")
-  val confMappings = taskKey[Seq[(Path, String)]]("Confs mapped to paths")
-  val scriptMappings = taskKey[Seq[(Path, String)]]("Scripts mapped to paths")
 }

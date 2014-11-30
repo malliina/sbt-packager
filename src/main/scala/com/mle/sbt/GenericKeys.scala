@@ -31,4 +31,5 @@ object GenericKeys extends Plugin {
   val logger = taskKey[Logger]("Logger helper")
   val help = taskKey[Unit]("Shows help")
   val verifySettings = taskKey[Unit]("Verifies that the required files for packaging exist in the project and that a main class has been specified")
+  val prepareFiles = taskKey[Seq[Path]]("Copies the files of the app to a target directory (for packaging).")
 }

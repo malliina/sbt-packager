@@ -42,6 +42,7 @@ object LinuxPlugin extends Plugin {
   )
   val linuxSettings: Seq[Setting[_]] = UnixPlugin.unixSettings ++ AzurePlugin.azureSettings ++ Seq(
     linux.Keys.maintainer := "Firstname Lastname <email@address.com>",
+    pkgHome in Linux := (pkgHome in UnixPlugin.Unix).value,
 
     /**
      * Source settings
@@ -57,11 +58,6 @@ object LinuxPlugin extends Plugin {
     /**
      * Destination settings
      */
-    // Linux directory layout
-    unixHome := Paths get ("/opt/" + (name in Linux).value),
-    unixLibDest := unixHome.value / libDir,
-    unixScriptDest := unixHome.value / scriptDir,
-    unixLogDir := unixHome.value / logDir,
     // rpm/deb postinst control files
     controlDir := (pkgHome in Linux).value / "control",
     preInstall := controlDir.value / "preinstall.sh",
@@ -72,14 +68,9 @@ object LinuxPlugin extends Plugin {
     changelogFile := (pkgHome in Linux).value / "changelog",
     initScript := (pkgHome in Linux).value / ((name in Linux).value + ".sh"),
     defaultsFile := (pkgHome in Linux).value / ((name in Linux).value + ".defaults"),
-    // Flat copy of libs to /lib on destination system
-    libMappings := libs.value.map(file => file -> (unixLibDest.value / file.getFileName).toString),
-    scriptMappings := rebase(scriptFiles.value, scriptPath.value, unixScriptDest.value),
     linux.Keys.packageDescription in Linux := "This is the description of the package."
   ) ++ inConfig(Linux)(distroSettings ++ Seq(
-    configDestDir := unixHome.value / confDir,
-    libDestDir := unixHome.value / libDir,
-    confMappings := rebase(configFiles.value, configSrcDir.value, configDestDir.value),
+
     linux.Keys.packageSummary := s"This is a summary of ${name.value}",
     verifySettings := PackagingUtil.verifyPathSetting(
       controlDir -> controlDir.value,
@@ -97,18 +88,17 @@ object LinuxPlugin extends Plugin {
     linux.Keys.linuxPackageMappings ++= {
       val linuxPkgHome = (pkgHome in Linux).value
       Seq(
-        fileMap(appJar.value -> (unixHome.value / appJarName.value).toString),
-        baseMaps(Seq(
-          (linuxPkgHome / libDir) -> unixLibDest.value.toString,
-          (linuxPkgHome / logDir) -> unixLogDir.value.toString
-        ), perms = "0750"),
-        fileMaps(libMappings.value)
-      ) ++ pkgMaps(Seq(
+//        fileMap(appJar.value -> (unixHome.value / appJarName.value).toString),
+        basePathMaps(Seq(
+          (linuxPkgHome / libDir) -> unixLibDest.value,
+          (linuxPkgHome / logDir) -> unixLogDir.value
+        ), perms = "0750")
+      ) ++ pathMaps(libMappings.value) ++ pkgMaps(Seq(
         initScript.value -> ("/etc/init.d/" + (name in Linux).value)
-      ) ++ scriptMappings.value, perms = "0755") ++
+      ) ++ scriptMappings.value.map(p => p._1 -> p._2.toString), perms = "0755") ++
         pkgMaps((confFile in Linux).value.map(cFile => Seq(cFile -> (unixHome.value / cFile.getFileName).toString))
           .getOrElse(Seq.empty[(Path, String)]), perms = "0600", isConfig = true) ++
-        pkgMaps((confMappings in Linux).value ++ Seq(defaultsFile.value -> ("/etc/default/" + (name in Linux).value)),
+        pkgMaps((confMappings in Linux).value.map(p => p._1 -> p._2.toString) ++ Seq(defaultsFile.value -> ("/etc/default/" + (name in Linux).value)),
           perms = "0640", isConfig = true)
     }
   )
@@ -173,9 +163,23 @@ object LinuxPlugin extends Plugin {
     fileMaps
   }
 
+  def basePathMaps(paths: Seq[(Path, Path)], perms: String,
+                   user: String = "root", group: String = "root") =
+    baseMaps(paths.map(p => p._1 -> p._2.toString), perms, user, group)
+
   def baseMaps(paths: Seq[(Path, String)], perms: String,
                user: String = "root", group: String = "root") =
     LinuxPackageMapping(paths.map(pair => pair._1.toFile -> pair._2)) withPerms perms withUser user withGroup group
+
+  // TODO fix this nonsense
+//  def pkgPathMaps(paths: Seq[(Path, String)],
+//                  user: String = "root",
+//                  group: String = "root",
+//                  perms: String = "0644",
+//                  dirPerms: String = "0755",
+//                  isConfig: Boolean = false,
+//                  gzipped: Boolean = false) =
+//    pkgMaps(paths.map(p => p._1 -> p._2.toString), user, group, perms, dirPerms, isConfig, gzipped)
 
   def pkgMaps(paths: Seq[(Path, String)],
               user: String = "root",
@@ -192,11 +196,11 @@ object LinuxPlugin extends Plugin {
 
   def rebase(file: Path, srcBase: Path, destBase: Path) = destBase resolve (srcBase relativize file)
 
-  def rebase(files: Seq[Path], srcBase: Path, destBase: Path): Seq[(Path, String)] =
-    files map (file => file -> rebase(file, srcBase, destBase).toString)
+  def rebase(files: Seq[Path], srcBase: Path, destBase: Path): Seq[(Path, Path)] =
+    files map (file => file -> rebase(file, srcBase, destBase))
 
-  def rebase(files: Seq[Path], maybeSrcBase: Option[Path], destBase: Path): Seq[(Path, String)] =
-    maybeSrcBase.map(srcBase => rebase(files, srcBase, destBase)).getOrElse(Seq.empty[(Path, String)])
+  def rebase(files: Seq[Path], maybeSrcBase: Option[Path], destBase: Path): Seq[(Path, Path)] =
+    maybeSrcBase.map(srcBase => rebase(files, srcBase, destBase)).getOrElse(Seq.empty[(Path, Path)])
 
   def printMappings(mappings: Seq[LinuxPackageMapping], logger: TaskStreams) = {
     mappings.foreach(mapping => {

@@ -4,14 +4,14 @@ import sbt.Keys._
 import sbt._
 
 object MyBuild extends Build {
-  lazy val sbtPackager = SbtProjects.mavenPublishProject("sbt-packager").settings(packagerSettings: _*)
+  lazy val sbtPackager = SbtProjects.mavenPublishProject("sbt-packager").settings(packagerSettings: _*)//.configs(leafConf)
 
   val utilGroup = "com.github.malliina"
   val utilVersion = "1.5.0"
   val utilDep = utilGroup %% "util" % utilVersion
   val azure = utilGroup %% "util-azure" % utilVersion
 
-  val releaseVersion = "1.4.0"
+  val releaseVersion = "1.4.12"
 
   lazy val packagerSettings = publishSettings ++ Seq(
     version := releaseVersion,
@@ -25,7 +25,7 @@ object MyBuild extends Build {
       "Typesafe releases" at "http://repo.typesafe.com/typesafe/releases/",
       "Sonatype releases" at "https://oss.sonatype.org/content/repositories/releases/"
     ),
-    libraryDependencies ++= Seq(utilDep, azure),
+    libraryDependencies ++= Seq(utilDep, azure, utilGroup %% "appbundler" % "0.0.3"),
     addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "0.6.2")
   )
 }

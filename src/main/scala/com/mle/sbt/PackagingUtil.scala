@@ -60,12 +60,13 @@ object PackagingUtil {
     val launcherFilename = appName.toLowerCase + extension
     val launcherDestination = appDir resolve launcherFilename
     val maybeLauncherFile = files.find(_.getFileName.toString == launcherFilename)
-    if (maybeLauncherFile.isDefined) {
+    val msg =  if (maybeLauncherFile.isDefined) {
       Files.copy(maybeLauncherFile.get, launcherDestination, StandardCopyOption.REPLACE_EXISTING)
-      logger.log.info("Launcher: " + launcherDestination)
+      "Launcher: " + launcherDestination
     } else {
-      logger.log.info("Did not find: " + launcherFilename)
+      "Did not find: " + launcherFilename
     }
+    logger.log info msg
     appFiles
   }
 
