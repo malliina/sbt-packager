@@ -50,14 +50,11 @@ object MacPlugin extends Plugin {
   protected def macConfigSettings: Seq[Setting[_]] = inConfig(Mac)(Seq(
     pkgHome := pkgHome.value / "mac",
     target := target.value / "mac",
-    initScript := pkgHome.value / (name.value + ".sh"),
     plistFile := pkgHome.value / "launchd.plist",
     pathMappings := confMappings.value ++ scriptMappings.value ++ libMappings.value,
     deployFiles := pathMappings.value.map(_._2),
     prepareFiles := pathMappings.value.map(p => {
       val (src, dest) = p
-      //      val destString = dest.toAbsolutePath.toString
-      //      val localDest = targetPath.value / (if (destString startsWith "/") destString.tail else destString)
       Option(dest.getParent).foreach(dir => Files.createDirectories(dir))
       Files.copy(src, dest, StandardCopyOption.REPLACE_EXISTING)
     })
