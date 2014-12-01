@@ -4,11 +4,11 @@ import sbt.Keys._
 import sbt._
 
 object MyBuild extends Build {
-  lazy val sbtPackager = SbtProjects.mavenPublishProject("sbt-packager").settings(packagerSettings: _*) //.configs(leafConf)
+  lazy val sbtPackager = SbtProjects.mavenPublishProject("sbt-packager").settings(packagerSettings: _*)
 
   val mleGroup = "com.github.malliina"
   val utilVersion = "1.5.0"
-  val releaseVersion = "1.4.12"
+  val releaseVersion = "1.4.16"
 
   lazy val packagerSettings = publishSettings ++ Seq(
     version := releaseVersion,

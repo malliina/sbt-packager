@@ -1,6 +1,6 @@
 package com.mle.sbt.mac
 
-import java.nio.file.{Files, StandardCopyOption}
+import java.nio.file.{Paths, Files, StandardCopyOption}
 
 import com.mle.appbundler.AppBundler.BundleStructure
 import com.mle.appbundler.{AppBundler, InfoPlistConf}
@@ -23,12 +23,21 @@ object MacPlugin extends Plugin {
   def macSettings: Seq[Setting[_]] = unixSettings ++ macOnlySettings ++ macConfigSettings
 
   protected def macOnlySettings: Seq[Setting[_]] = Seq(
+    pkgHome in Mac := pkgHome.value / "mac",
+    target in Mac := target.value / "mac",
+    macAppTarget := (targetPath in Mac).value / "OSXapp",
     appIdentifier := s"${organization.value}.${name.value}",
     hideDock := false,
+    jvmOptions := Nil,
+    jvmArguments := Nil,
+    embeddedJavaHome := Paths get "/usr/libexec/java_home",
+    infoPlistConf := None,
     app := {
+      val logger = streams.value.log
+      logger info s"Creating app package..."
       val mClass = mainClass.value.getOrElse(throw new Exception("No main class specified."))
       val dName = (displayName in Mac).value
-      val structure = BundleStructure((targetPath in Mac).value / "OSXapp", dName)
+      val structure = BundleStructure(macAppTarget.value, dName)
       val plist = infoPlistConf.value getOrElse InfoPlistConf(
         dName,
         name.value,
@@ -43,13 +52,12 @@ object MacPlugin extends Plugin {
         hideDock = hideDock.value
       )
       AppBundler.createBundle(structure, plist)
+      logger info s"Created ${structure.appDir}."
       structure.appDir
     }
   )
 
   protected def macConfigSettings: Seq[Setting[_]] = inConfig(Mac)(Seq(
-    pkgHome := pkgHome.value / "mac",
-    target := target.value / "mac",
     plistFile := pkgHome.value / "launchd.plist",
     pathMappings := confMappings.value ++ scriptMappings.value ++ libMappings.value,
     deployFiles := pathMappings.value.map(_._2),
