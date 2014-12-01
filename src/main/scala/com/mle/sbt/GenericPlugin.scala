@@ -16,6 +16,7 @@ object GenericPlugin extends Plugin {
   val genericSettings: Seq[Setting[_]] = Seq(
     pkgHome := (basePath.value / "src" / "pkg"),
     basePath := baseDirectory.value.toPath,
+    displayName := name.value,
     appJar := (packageBin in Compile).value.toPath,
     appJarName := name.value + ".jar",
     homeVar := name.value.toUpperCase + "_HOME",

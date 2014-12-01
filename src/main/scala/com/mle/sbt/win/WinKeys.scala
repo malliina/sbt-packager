@@ -12,7 +12,6 @@ object WinKeys {
   /**
    * Source paths
    */
-  val appIcon = settingKey[Option[Path]]("App icon (.ico file) on Windows.")
   val launch4jcExe = settingKey[Path]("Path to launch4jc.exe")
   val winSwExe = settingKey[Path]("Windows Service Wrapper .exe path")
   val licenseRtf = settingKey[Path]("Path to license RTF for Windows. Shown to the user during installation.")
@@ -24,7 +23,6 @@ object WinKeys {
   val win = taskKey[Path]("Verifies settings followed by package-msi")
   val msi = taskKey[Path]("Shortcut to windows:win (oh yes)")
   val printPaths = taskKey[Seq[Path]]("Prints the paths to the required files for MSI packaging")
-  val displayName = settingKey[String]("Display name of application")
   val exePath = settingKey[Path]("Application .exe path on windows during packaging")
   val windowsJarPath = settingKey[Path]("Path to jar on windows during packaging")
   val launch4jcConf = settingKey[Path]("Path to launch4j XML configuration file")

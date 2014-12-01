@@ -7,6 +7,7 @@ import sbt.Keys._
 import sbt._
 import xml.NodeSeq
 import com.mle.sbt.{WixUtils, GenericKeys}
+import com.mle.sbt.GenericKeys.{displayName, appIcon}
 
 /**
  * You need to set the "WIX" environment variable to the wix installation dir e.g. program files\wix. Use Wix 3.7 or newer.
@@ -19,7 +20,7 @@ object WixPackaging extends Plugin {
 
   val wixSettings: Seq[Setting[_]] = inConfig(Windows)(Seq(
     windows.Keys.wixConfig := {
-        GenericKeys.logger.value.info("Display name: " + displayName.value)
+        GenericKeys.logger.value info s"Display name: ${displayName.value}"
         val msiFiles = WixUtils.wix(msiMappings.value)
         val serviceFragments = serviceConf.value
           .map(s => ServiceFragments.fromConf(s, displayName.value))

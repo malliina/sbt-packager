@@ -148,7 +148,6 @@ object WinPlugin extends Plugin {
         packagedFile
       },
       shortcut := false,
-      displayName := name.value,
       mappingsPrint := {
         val maps = (mappings in windows.Keys.packageMsi in Windows).value
         val output = maps.map(kv => kv._1.getAbsolutePath + "\n" + kv._2).mkString("\n---\n")

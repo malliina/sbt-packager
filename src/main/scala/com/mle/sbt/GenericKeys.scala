@@ -9,6 +9,8 @@ object GenericKeys extends Plugin {
   val libDir = "lib"
   val scriptDir = "scripts"
   val logDir = "logs"
+  val displayName = settingKey[String]("Display name of application")
+  val appIcon = settingKey[Option[Path]]("App icon.")
   val configSrcDir = settingKey[Path]("Config file source dir")
   val configDestDir = settingKey[Path]("Config file destination dir")
   val libDestDir = settingKey[Path]("Destination dir for libraries, typically app_home/lib")
