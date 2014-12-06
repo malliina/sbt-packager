@@ -3,7 +3,7 @@ package com.mle.sbt.win
 import java.nio.file.{Files, Path, Paths, StandardCopyOption}
 import java.util.UUID
 
-import com.mle.sbt.FileImplicits._
+import com.mle.file.StorageFile
 import com.mle.sbt.GenericKeys._
 import com.mle.sbt.azure.AzureKeys._
 import com.mle.sbt.win.WinKeys._
@@ -41,7 +41,7 @@ object WinPlugin extends Plugin {
     },
     msiMappings ++= libs.value.map(libPath => libPath -> (libDestDir.value / libPath.getFileName)),
     msiMappings ++= {
-      val confFiles = configFiles.value.filter(_.isFile)
+      val confFiles = configFiles.value.filter(_.toFile.isFile)
       val absAndRelative = confFiles.map(abs => abs -> configSrcDir.value.relativize(abs))
       absAndRelative map (ar => {
         val (abs, rel) = ar

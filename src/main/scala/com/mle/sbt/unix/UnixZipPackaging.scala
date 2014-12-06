@@ -1,13 +1,14 @@
 package com.mle.sbt.unix
 
-import UnixZipKeys._
-import sbt.Keys._
-import java.nio.file.{StandardCopyOption, Files}
-import sbt._
-import UnixKeys._
-import com.mle.sbt.PackagingUtil._
-import com.mle.sbt.FileImplicits._
+import java.nio.file.{Files, StandardCopyOption}
+
+import com.mle.file.StorageFile
 import com.mle.sbt.GenericKeys._
+import com.mle.sbt.PackagingUtil._
+import com.mle.sbt.unix.UnixKeys._
+import com.mle.sbt.unix.UnixZipKeys._
+import sbt.Keys._
+import sbt._
 
 /**
  *

@@ -2,7 +2,7 @@ package com.mle.sbt.unix
 
 import java.nio.file.Paths
 
-import com.mle.sbt.FileImplicits._
+import com.mle.file.StorageFile
 import com.mle.sbt.GenericKeys._
 import com.mle.sbt.GenericPlugin
 import com.mle.sbt.PackagingUtil._

@@ -3,7 +3,7 @@ package com.mle.sbt
 import java.nio.file.Path
 
 import com.mle.file.FileUtilities
-import com.mle.sbt.FileImplicits._
+import com.mle.file.StorageFile
 import com.mle.sbt.GenericKeys._
 import com.mle.sbt.PackagingUtil._
 import com.mle.sbt.azure.AzureKeys._

@@ -8,7 +8,7 @@ object MyBuild extends Build {
 
   val mleGroup = "com.github.malliina"
   val utilVersion = "1.5.0"
-  val releaseVersion = "1.4.16"
+  val releaseVersion = "1.5.0"
 
   lazy val packagerSettings = publishSettings ++ Seq(
     version := releaseVersion,
@@ -25,7 +25,7 @@ object MyBuild extends Build {
     libraryDependencies ++= Seq(
       mleGroup %% "util" % utilVersion,
       mleGroup %% "util-azure" % utilVersion,
-      mleGroup %% "appbundler" % "0.1.0"),
+      mleGroup %% "appbundler" % "0.3.3"),
     addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "0.6.2")
   )
 }

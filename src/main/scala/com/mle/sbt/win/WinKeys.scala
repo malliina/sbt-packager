@@ -2,7 +2,7 @@ package com.mle.sbt.win
 
 import java.nio.file.Path
 
-import com.mle.sbt.FileImplicits._
+import com.mle.file.StorageFile
 import com.mle.sbt.PackagingUtil
 import sbt.{Logger, settingKey, taskKey}
 
