@@ -24,4 +24,16 @@ object MacKeys {
   val app = taskKey[Path]("Creates a .app package")
   val pkg = taskKey[Path]("Creates a .pkg package")
   val dmg = taskKey[Path]("Packages the app to a .dmg file")
+
+  val macPkgRoot = settingKey[Path]("Root folder for OSX packaging")
+  val macAppDir = settingKey[Path]("DisplayName.app dir")
+  val macContentsDir = settingKey[Path]("Contents dir")
+  val macResources = settingKey[Path]("HTML resources for OSX packaging")
+  val macScripts = settingKey[Path]("Scripts for OSX packaging")
+  val macPkgDir = settingKey[Path]("Temporary package-path for OSX")
+  val macDistribution = settingKey[Path]("Distribution.xml for OSX")
+  val macPkgBuild = taskKey[Seq[String]]("The /usr/bin/pkgbuild command to run")
+  val macProductBuild = taskKey[Seq[String]]("The /usr/bin/productbuild command to run")
+  val macPackagePath = settingKey[Path]("The path to the target .pkg for OSX")
+  val macPackage = taskKey[Path]("Creates a .pkg for OSX")
 }
