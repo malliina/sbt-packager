@@ -140,6 +140,24 @@ msiexec /i "C:\app.msi" /L*V "C:\install.log"
 [myproject] $
 ```
 
+### OSX ###
+
+Add `com.mle.sbt.mac.MacPlugin.macSettings` to your project and customize as necessary. Example:
+
+```
+def projectSettings = MacPlugin.macSettings ++ Seq(
+  jvmOptions ++= Seq("-Dhttp.port=4321"),
+  appIcon in Mac := Some(Paths get "appIcon.icns"),
+  displayName in Mac := "My OSX App"
+)
+```
+
+To create a .pkg OSX installer of your project, run:
+
+```
+pkg
+```
+
 ## To do ##
 
 - Set a better path for windows service wrapper logs

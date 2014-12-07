@@ -31,7 +31,7 @@ object MacPlugin extends Plugin {
     embeddedJavaHome := Paths get "/usr/libexec/java_home",
     defaultLaunchd := LaunchdConf(
       appIdentifier.value,
-      Seq(s"/Applications/${(displayName in Mac).value}.app/Contents/MacOS/JavaAppLauncher")),
+      Seq(LaunchdConf.executable((displayName in Mac).value))),
     infoPlistConf := InfoPlistConf(
       (displayName in Mac).value,
       name.value,
@@ -48,32 +48,22 @@ object MacPlugin extends Plugin {
     launchdConf := None,
     deleteOutOnComplete := true,
     installer := {
-      val destPath = (targetPath in Mac).value
-      val plist = infoPlistConf.value
       Installer(
-        destPath,
-        plist.displayName,
-        plist.name,
-        plist.version,
-        organization.value,
-        appIdentifier.value,
-        BundleStructure(destPath / "out" / "Applications", plist.displayName),
-        plist,
+        (targetPath in Mac).value,
+        infoPlistConf.value,
         launchdConf.value,
         deleteOutOnComplete = deleteOutOnComplete.value)
     },
     app := {
       val logger = streams.value.log
       logger info s"Creating app package..."
-      val dName = (displayName in Mac).value
-      val structure = BundleStructure(macAppTarget.value, dName)
-      AppBundler.createBundle(structure, infoPlistConf.value)
-      logger info s"Created ${structure.appDir}."
-      structure.appDir
+      val plist = infoPlistConf.value
+      val appDir = AppBundler.createBundle(plist, macAppTarget.value)
+      logger info s"Created $appDir."
+      appDir
     },
     pkg := {
       val i = installer.value
-      Files.createDirectories(i.launchdBuildPath.getParent)
       i.macPackage()
     }
   )
