@@ -152,7 +152,7 @@ def projectSettings = MacPlugin.macSettings ++ Seq(
 )
 ```
 
-To create a .pkg OSX installer of your project, run:
+To create a .pkg OSX installer of your project, run the following SBT task:
 
 ```
 pkg
