@@ -2,9 +2,12 @@
 
 This is an SBT plugin for software packaging. It depends on [sbt-native-packager](https://github.com/sbt/sbt-native-packager).
 
+You can create app installers for Windows (.msi), Debian (.deb), RPM (.rpm) and OSX (.pkg). You can optionally specify
+that your app should install itself as a service so that it starts automatically when the computer boots.
+
 ## Installation ##
 
-    addSbtPlugin("com.github.malliina" % "sbt-packager" % "1.4.0")
+    addSbtPlugin("com.github.malliina" % "sbt-packager" % "1.5.1")
 
 ## Usage ##
 
@@ -78,9 +81,7 @@ To get a list of tasks and settings pertaining to this plugin, run the following
 
 To create an installation log, run the following command instead of double-clicking the packaged MSI file:
 
-```
-msiexec /i "C:\app.msi" /L*V "C:\install.log"
-```
+    msiexec /i "C:\app.msi" /L*V "C:\install.log"
 
 (For more info, see http://www.advancedinstaller.com/user-guide/qa-log.html)
 
@@ -154,9 +155,7 @@ def projectSettings = MacPlugin.macSettings ++ Seq(
 
 To create a .pkg OSX installer of your project, run the following SBT task:
 
-```
-pkg
-```
+    pkg
 
 ## To do ##
 
