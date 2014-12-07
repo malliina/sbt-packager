@@ -18,7 +18,7 @@ object LinuxPlugin extends Plugin {
   val distroSettings = GenericPlugin.confSpecificSettings ++ Seq(
     deployFiles := destPaths(linux.Keys.linuxPackageMappings.value),
     mappingsPrint := printMappings(linux.Keys.linuxPackageMappings.value, streams.value),
-    help := {
+    helpMe := {
       val msg = GenericPlugin.describeWithAzure(
         controlDir,
         preInstall,

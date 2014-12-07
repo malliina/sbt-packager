@@ -8,7 +8,7 @@ object MyBuild extends Build {
 
   val mleGroup = "com.github.malliina"
   val utilVersion = "1.5.0"
-  val releaseVersion = "1.5.1"
+  val releaseVersion = "1.5.4"
 
   lazy val packagerSettings = publishSettings ++ Seq(
     version := releaseVersion,

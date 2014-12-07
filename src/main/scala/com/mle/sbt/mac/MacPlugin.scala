@@ -76,6 +76,25 @@ object MacPlugin extends Plugin {
       val (src, dest) = p
       Option(dest.getParent).foreach(dir => Files.createDirectories(dir))
       Files.copy(src, dest, StandardCopyOption.REPLACE_EXISTING)
-    })
+    }),
+    helpMe := {
+      val taskList = GenericPlugin.describe(
+        plistFile,
+        appIdentifier,
+        embeddedJavaHome,
+        jvmOptions,
+        jvmArguments,
+        hideDock,
+        infoPlistConf,
+        launchdConf,
+        defaultLaunchd,
+        installer,
+        deleteOutOnComplete,
+        macAppTarget,
+        app,
+        pkg
+      )
+      logger.value info taskList
+    }
   ) ++ GenericPlugin.confSpecificSettings)
 }

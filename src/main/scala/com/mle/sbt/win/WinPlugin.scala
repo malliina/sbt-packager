@@ -83,7 +83,7 @@ object WinPlugin extends Plugin {
         productGuid := "*",
         msi := (win in Windows).value
       ) ++ inConfig(Windows)(GenericPlugin.confSpecificSettings ++ WixPackaging.wixSettings ++ Seq(
-      help := {
+      helpMe := {
         val taskList = GenericPlugin.describeWithAzure(
           windows.Keys.packageMsi,
           win,

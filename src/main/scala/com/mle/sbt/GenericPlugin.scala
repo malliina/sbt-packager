@@ -32,7 +32,7 @@ object GenericPlugin extends Plugin {
     configFiles <<= listFiles(configSrcDir),
     targetPath := target.value.toPath,
     logger := streams.value.log,
-    help := {
+    helpMe := {
       import com.typesafe.sbt.SbtNativePackager._
       def suggestTask(conf: Configuration) = conf.name + ":helpme"
       val winHelp = suggestTask(Windows)
