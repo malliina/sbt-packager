@@ -2,7 +2,7 @@ package com.mle.sbt.mac
 
 import java.nio.file.Path
 
-import com.mle.appbundler.{Installer, LaunchdConf, InfoPlistConf}
+import com.mle.appbundler.{FileMapping, Installer, LaunchdConf, InfoPlistConf}
 import sbt._
 
 /**
@@ -19,6 +19,8 @@ object MacKeys {
   val launchdConf = settingKey[Option[LaunchdConf]]("The launchd configuration, if any")
   val defaultLaunchd = settingKey[LaunchdConf]("The default launchd configuration, if enabled")
   val installer = taskKey[Installer]("Installer conf")
+  val pkgIcon = settingKey[Option[Path]]("Path to the icon of the .pkg file")
+  val extraDmgFiles = settingKey[Seq[FileMapping]]("Files to include in the .dmg image, such as .DS_Store and images")
   val deleteOutOnComplete = settingKey[Boolean]("Delete temp dir after packaging")
   val macAppTarget = settingKey[Path]("Target path to the .app package")
   val app = taskKey[Path]("Creates a .app package")

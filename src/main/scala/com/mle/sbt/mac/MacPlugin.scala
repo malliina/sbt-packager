@@ -25,26 +25,34 @@ object MacPlugin extends Plugin {
     target in Mac := target.value / "mac",
     macAppTarget := (targetPath in Mac).value / "OSXapp",
     appIdentifier := s"${organization.value}.${name.value}",
+    pkgIcon := None,
     hideDock := false,
     jvmOptions := Nil,
     jvmArguments := Nil,
-    embeddedJavaHome := Paths get "/usr/libexec/java_home",
+    embeddedJavaHome := InfoPlistConf.DEFAULT_JAVA,
+    extraDmgFiles := Nil,
     defaultLaunchd := LaunchdConf(
       appIdentifier.value,
       Seq(LaunchdConf.executable((displayName in Mac).value))),
-    infoPlistConf := InfoPlistConf(
-      (displayName in Mac).value,
-      name.value,
-      appIdentifier.value,
-      version.value,
-      mainClass.value.getOrElse(throw new Exception("No main class specified.")),
-      libs.value,
-      embeddedJavaHome.value,
-      jvmOptions.value,
-      jvmArguments.value,
-      (appIcon in Mac).value,
-      hideDock = hideDock.value
-    ),
+    infoPlistConf := {
+      val libraryJars = libs.value
+      val jars =
+        if(exportJars.value) libraryJars
+        else libraryJars :+ (packageBin in Compile).value.toPath
+      InfoPlistConf(
+        (displayName in Mac).value,
+        name.value,
+        appIdentifier.value,
+        version.value,
+        mainClass.value.getOrElse(throw new Exception("No main class specified.")),
+        jars,
+        embeddedJavaHome.value,
+        jvmOptions.value,
+        jvmArguments.value,
+        (appIcon in Mac).value,
+        hideDock = hideDock.value
+      )
+    },
     launchdConf := None,
     deleteOutOnComplete := true,
     installer := {
@@ -52,6 +60,8 @@ object MacPlugin extends Plugin {
         (targetPath in Mac).value,
         infoPlistConf.value,
         launchdConf.value,
+        additionalDmgFiles = extraDmgFiles.value,
+        iconFile = pkgIcon.value,
         deleteOutOnComplete = deleteOutOnComplete.value)
     },
     app := {
@@ -65,6 +75,10 @@ object MacPlugin extends Plugin {
     pkg := {
       val i = installer.value
       i.macPackage()
+    },
+    dmg := {
+      val i = installer.value
+      i.dmgPackage()
     }
   )
 
