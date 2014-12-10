@@ -13,14 +13,12 @@ that your app should install itself as a service so that it starts automatically
 
 Add the following settings to your project:
 
-```
-SbtNativePackager.packagerSettings ++
+    SbtNativePackager.packagerSettings ++
     WinPlugin.windowsSettings ++
     LinuxPlugin.rpmSettings ++
     LinuxPlugin.debianSettings ++
     GenericPlugin.confSettings ++
     AzurePlugin.azureSettings
-```
 
 To get a list of tasks and settings pertaining to this plugin, run the following SBT tasks:
 - helpme
@@ -152,6 +150,10 @@ def projectSettings = macSettings ++ Seq(
 To create a .pkg OSX installer of your project, run the following SBT task:
 
     pkg
+
+To create a .dmg installer of your project, run:
+
+    dmg
 
 Available settings:
 

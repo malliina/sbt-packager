@@ -25,7 +25,7 @@ object MyBuild extends Build {
     libraryDependencies ++= Seq(
       mleGroup %% "util" % utilVersion,
       mleGroup %% "util-azure" % utilVersion,
-      mleGroup %% "appbundler" % "0.7.6"),
+      mleGroup %% "appbundler" % "0.8.0"),
     addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "0.6.2")
   )
 }

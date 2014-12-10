@@ -1,6 +1,6 @@
 package com.mle.sbt.mac
 
-import java.nio.file.{Files, Paths, StandardCopyOption}
+import java.nio.file.{Files, StandardCopyOption}
 
 import com.mle.appbundler._
 import com.mle.file.StorageFile
@@ -37,7 +37,7 @@ object MacPlugin extends Plugin {
     infoPlistConf := {
       val libraryJars = libs.value
       val jars =
-        if(exportJars.value) libraryJars
+        if (exportJars.value) libraryJars
         else libraryJars :+ (packageBin in Compile).value.toPath
       InfoPlistConf(
         (displayName in Mac).value,
@@ -103,6 +103,8 @@ object MacPlugin extends Plugin {
         launchdConf,
         defaultLaunchd,
         installer,
+        pkgIcon,
+        extraDmgFiles,
         deleteOutOnComplete,
         macAppTarget,
         app,
