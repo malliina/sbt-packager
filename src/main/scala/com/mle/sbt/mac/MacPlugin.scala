@@ -6,6 +6,7 @@ import com.mle.appbundler._
 import com.mle.file.StorageFile
 import com.mle.sbt.GenericKeys._
 import com.mle.sbt.GenericPlugin
+import com.mle.sbt.azure.AzureKeys
 import com.mle.sbt.mac.MacKeys._
 import com.mle.sbt.unix.UnixKeys._
 import com.mle.sbt.unix.UnixPlugin._
@@ -83,6 +84,7 @@ object MacPlugin extends Plugin {
   )
 
   protected def macConfigSettings: Seq[Setting[_]] = inConfig(Mac)(Seq(
+    AzureKeys.azurePackage := Some(dmg.value),
     plistFile := pkgHome.value / "launchd.plist",
     pathMappings := confMappings.value ++ scriptMappings.value ++ libMappings.value,
     deployFiles := pathMappings.value.map(_._2),

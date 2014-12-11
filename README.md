@@ -7,7 +7,7 @@ that your app should install itself as a service so that it starts automatically
 
 ## Installation ##
 
-    addSbtPlugin("com.github.malliina" % "sbt-packager" % "1.5.4")
+    addSbtPlugin("com.github.malliina" % "sbt-packager" % "1.5.10")
 
 ## Usage ##
 
@@ -21,10 +21,10 @@ Add the following settings to your project:
     AzurePlugin.azureSettings
 
 To get a list of tasks and settings pertaining to this plugin, run the following SBT tasks:
-- helpme
-- windows:helpme
-- debian:helpme
-- rpm:helpme
+- helpMe
+- windows:helpMe
+- debian:helpMe
+- rpm:helpMe
 
     [myproject] $ helpMe
     [info] pkg-home                 Packaging home directory
