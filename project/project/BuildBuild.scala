@@ -6,11 +6,13 @@ object BuildBuild extends Build {
     scalaVersion := "2.10.4",
     resolvers ++= Seq(
       "Sonatype snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/",
-      Resolver.url("scalasbt", new URL("http://scalasbt.artifactoryonline.com/scalasbt/sbt-plugin-releases"))(Resolver.ivyStylePatterns))
+      Resolver.url("scalasbt", url("http://scalasbt.artifactoryonline.com/scalasbt/sbt-plugin-releases"))(Resolver.ivyStylePatterns),
+      Resolver.url("malliina bintray sbt", url("https://dl.bintray.com/malliina/sbt-plugins/"))(Resolver.ivyStylePatterns))
   ) ++ sbtPlugins
 
   def sbtPlugins = Seq(
-    "com.github.malliina" %% "sbt-utils" % "0.0.5"
+    "com.github.malliina" %% "sbt-utils" % "0.2.0",
+    "me.lessis" % "bintray-sbt" % "0.3.0"
   ) map addSbtPlugin
 
   //  override lazy val projects = Seq(root)

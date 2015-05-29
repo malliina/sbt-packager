@@ -15,9 +15,10 @@ import sbt.Keys._
 import sbt._
 
 object LinuxPlugin extends Plugin {
+  private val linuxKeys = com.typesafe.sbt.packager.Keys //linux.LinuxPlugin.autoImport
   val distroSettings = GenericPlugin.confSpecificSettings ++ Seq(
-    deployFiles := destPaths(linux.Keys.linuxPackageMappings.value),
-    mappingsPrint := printMappings(linux.Keys.linuxPackageMappings.value, streams.value),
+    deployFiles := destPaths(linuxKeys.linuxPackageMappings.value),
+    mappingsPrint := printMappings(linuxKeys.linuxPackageMappings.value, streams.value),
     helpMe := {
       val msg = GenericPlugin.describeWithAzure(
         controlDir,
@@ -41,7 +42,7 @@ object LinuxPlugin extends Plugin {
     }
   )
   val linuxSettings: Seq[Setting[_]] = UnixPlugin.unixSettings ++ AzurePlugin.azureSettings ++ Seq(
-    linux.Keys.maintainer := "Firstname Lastname <email@address.com>",
+    linuxKeys.maintainer := "Firstname Lastname <email@address.com>",
     pkgHome in Linux := (pkgHome in UnixPlugin.Unix).value,
 
     /**
@@ -68,10 +69,10 @@ object LinuxPlugin extends Plugin {
     changelogFile := (pkgHome in Linux).value / "changelog",
     initScript := (pkgHome in Linux).value / ((name in Linux).value + ".sh"),
     defaultsFile := (pkgHome in Linux).value / ((name in Linux).value + ".defaults"),
-    linux.Keys.packageDescription in Linux := "This is the description of the package."
+    linuxKeys.packageDescription in Linux := "This is the description of the package."
   ) ++ inConfig(Linux)(distroSettings ++ Seq(
 
-    linux.Keys.packageSummary := s"This is a summary of ${name.value}",
+    linuxKeys.packageSummary := s"This is a summary of ${name.value}",
     verifySettings := PackagingUtil.verifyPathSetting(
       controlDir -> controlDir.value,
       preInstall -> preInstall.value,
@@ -85,7 +86,7 @@ object LinuxPlugin extends Plugin {
     )))
   // TODO improve readability
   val linuxMappings: Seq[Setting[_]] = Seq(
-    linux.Keys.linuxPackageMappings ++= {
+    linuxKeys.linuxPackageMappings ++= {
       val linuxPkgHome = (pkgHome in Linux).value
       Seq(
 //        fileMap(appJar.value -> (unixHome.value / appJarName.value).toString),
@@ -110,8 +111,8 @@ object LinuxPlugin extends Plugin {
     libDestDir in Debian := (configDestDir in Linux).value,
     //    debian.Keys.version := "0.1",
     // rpm:maintainer defaults to linux:maintainer, but debian:maintainer is empty (?), this fixes that
-    debian.Keys.maintainer in Debian := linux.Keys.maintainer.value,
-    debian.Keys.linuxPackageMappings in Debian ++= Seq(
+    linuxKeys.maintainer in Debian := linuxKeys.maintainer.value,
+    linuxKeys.linuxPackageMappings in Debian ++= Seq(
       // http://lintian.debian.org/tags/no-copyright-file.html
       fileMap(copyrightFile.value -> ("/usr/share/doc/" + name.value + "/copyright")),
       fileMap(changelogFile.value -> ("/usr/share/doc/" + name.value + "/changelog.gz"), gzipped = true) asDocs(),
@@ -129,12 +130,12 @@ object LinuxPlugin extends Plugin {
     AzureKeys.azurePackage in Rpm := Some((packageBin in Rpm).value.toPath),
     configDestDir in Rpm := (configDestDir in Linux).value,
     libDestDir in Rpm := (configDestDir in Linux).value,
-    rpm.Keys.rpmVendor := GenericKeys.manufacturer.value,
-    rpm.Keys.rpmLicense := Some("All rights reserved."),
-    rpm.Keys.rpmPre := fileToString(preInstall.value),
-    rpm.Keys.rpmPost := fileToString(postInstall.value),
-    rpm.Keys.rpmPreun := fileToString(preRemove.value),
-    rpm.Keys.rpmPostun := fileToString(postRemove.value)
+    linuxKeys.rpmVendor := GenericKeys.manufacturer.value,
+    linuxKeys.rpmLicense := Some("All rights reserved."),
+    linuxKeys.rpmPre := fileToString(preInstall.value),
+    linuxKeys.rpmPost := fileToString(postInstall.value),
+    linuxKeys.rpmPreun := fileToString(preRemove.value),
+    linuxKeys.rpmPostun := fileToString(postRemove.value)
   )
 
   def fileToString(file: Path) =

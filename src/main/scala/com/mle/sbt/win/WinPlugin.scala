@@ -14,7 +14,8 @@ import sbt.Keys._
 import sbt._
 
 object WinPlugin extends Plugin {
-  val windowsMappings = mappings in windows.Keys.packageMsi
+  val windowsKeys = com.typesafe.sbt.packager.Keys
+  val windowsMappings = mappings in packageBin in Windows
 
   val fileMappings: Seq[Setting[_]] = inConfig(Windows)(Seq(
     //    windowsMappings ++= msiMappings.value.map(mapping => {
@@ -85,7 +86,7 @@ object WinPlugin extends Plugin {
       ) ++ inConfig(Windows)(GenericPlugin.confSpecificSettings ++ WixPackaging.wixSettings ++ Seq(
       helpMe := {
         val taskList = GenericPlugin.describeWithAzure(
-          windows.Keys.packageMsi,
+          packageBin in Windows,
           win,
           batPath,
           licenseRtf,
@@ -141,7 +142,7 @@ object WinPlugin extends Plugin {
         values
       },
       win := {
-        val msiFile = windows.Keys.packageMsi.value.toPath
+        val msiFile = (packageBin in Windows).value.toPath
         val msiRenamed = msiFile.resolveSibling(msiName.value)
         val packagedFile = Files.move(msiFile, msiRenamed, StandardCopyOption.REPLACE_EXISTING)
         streams.value.log.info("Packaged: " + packagedFile.toAbsolutePath.toString)
@@ -149,7 +150,7 @@ object WinPlugin extends Plugin {
       },
       shortcut := false,
       mappingsPrint := {
-        val maps = (mappings in windows.Keys.packageMsi in Windows).value
+        val maps = (mappings in packageBin in Windows).value
         val output = maps.map(kv => kv._1.getAbsolutePath + "\n" + kv._2).mkString("\n---\n")
         streams.value.log.info(output)
       },

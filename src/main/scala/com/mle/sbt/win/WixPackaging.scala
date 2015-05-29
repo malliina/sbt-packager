@@ -16,10 +16,12 @@ import com.mle.sbt.GenericKeys.{displayName, appIcon}
  */
 object WixPackaging extends Plugin {
 
+  val windowsKeys = com.typesafe.sbt.packager.Keys
+
   def foldEmpty[T](opt: Option[T])(f: T => NodeSeq) = opt.map(f) getOrElse NodeSeq.Empty
 
   val wixSettings: Seq[Setting[_]] = inConfig(Windows)(Seq(
-    windows.Keys.wixConfig := {
+    windowsKeys.wixConfig := {
         GenericKeys.logger.value info s"Display name: ${displayName.value}"
         val msiFiles = WixUtils.wix(msiMappings.value)
         val serviceFragments = serviceConf.value
@@ -144,6 +146,6 @@ object WixPackaging extends Plugin {
           </Product>
         </Wix>)
       },
-    windows.Keys.lightOptions ++= Seq("-cultures:en-us") //  "-ext", "WixUtilExtension","-ext", "WixUIExtension",
+    windowsKeys.lightOptions ++= Seq("-cultures:en-us") //  "-ext", "WixUtilExtension","-ext", "WixUIExtension",
   ))
 }
