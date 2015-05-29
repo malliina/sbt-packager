@@ -1,7 +1,6 @@
+import bintray.BintrayKeys.{bintray => bintrayConf, bintrayOrganization, bintrayRepository}
 import com.mle.sbtutils.SbtProjects
-import com.mle.sbtutils.SbtUtils._
 import sbt.Keys._
-import bintray.BintrayKeys.{bintrayOrganization, bintrayRepository, bintray => bintrayConf}
 import sbt._
 
 object MyBuild extends Build {
@@ -16,8 +15,6 @@ object MyBuild extends Build {
     version := releaseVersion,
     scalaVersion := "2.10.4",
     organization := "com.github.malliina",
-    gitUserName := "malliina",
-    developerName := "Michael Skogberg",
     sbtPlugin := true,
     exportJars := false,
     libraryDependencies ++= Seq(
