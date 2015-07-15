@@ -21,6 +21,13 @@ object LinuxKeys {
   val changelogFile = settingKey[Path]("The changelog file")
   val initScript = settingKey[Path]("Init script for unix")
 
+  // for play
+  val httpPort = settingKey[Option[Int]]("http.port")
+  val httpsPort = settingKey[Option[Int]]("https.port")
+  val pidFile = settingKey[Option[Path]]("PID file path")
+  val appHome = settingKey[Option[Path]]("app home dir on destination")
+  val playConf = settingKey[Option[LinuxPlayConf]]("play configuration")
+
   /**
    * Misc
    */

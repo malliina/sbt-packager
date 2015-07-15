@@ -9,13 +9,21 @@ import com.mle.sbt.unix.LinuxKeys._
 import com.mle.sbt.unix.UnixKeys._
 import com.mle.sbt.{GenericKeys, GenericPlugin, PackagingUtil}
 import com.typesafe.sbt.SbtNativePackager._
-import com.typesafe.sbt.packager._
 import com.typesafe.sbt.packager.linux.LinuxPackageMapping
 import sbt.Keys._
 import sbt._
 
 object LinuxPlugin extends Plugin {
   private val linuxKeys = com.typesafe.sbt.packager.Keys //linux.LinuxPlugin.autoImport
+
+  val linuxNativeSettings = GenericPlugin.genericSettings ++ GenericPlugin.confSettings ++ Seq(
+    linuxKeys.maintainer := "Firstname Lastname <email@address.com>",
+    pkgHome in Linux := (pkgHome in UnixPlugin.Unix).value,
+    playConf in Linux := None,
+    javaOptions in Universal ++= (playConf in Linux).value.map(_.javaOptions).getOrElse(Nil)
+  )
+
+  @deprecated("Use linuxNativeSettings instead")
   val distroSettings = GenericPlugin.confSpecificSettings ++ Seq(
     deployFiles := destPaths(linuxKeys.linuxPackageMappings.value),
     mappingsPrint := printMappings(linuxKeys.linuxPackageMappings.value, streams.value),
@@ -41,6 +49,8 @@ object LinuxPlugin extends Plugin {
       logger.value info msg
     }
   )
+
+  @deprecated("Use linuxNativeSettings instead")
   val linuxSettings: Seq[Setting[_]] = UnixPlugin.unixSettings ++ AzurePlugin.azureSettings ++ Seq(
     linuxKeys.maintainer := "Firstname Lastname <email@address.com>",
     pkgHome in Linux := (pkgHome in UnixPlugin.Unix).value,
@@ -89,7 +99,7 @@ object LinuxPlugin extends Plugin {
     linuxKeys.linuxPackageMappings ++= {
       val linuxPkgHome = (pkgHome in Linux).value
       Seq(
-//        fileMap(appJar.value -> (unixHome.value / appJarName.value).toString),
+        //        fileMap(appJar.value -> (unixHome.value / appJarName.value).toString),
         basePathMaps(Seq(
           (linuxPkgHome / libDir) -> unixLibDest.value,
           (linuxPkgHome / logDir) -> unixLogDir.value
@@ -104,6 +114,7 @@ object LinuxPlugin extends Plugin {
     }
   )
 
+  @deprecated("Use linuxNativeSettings instead")
   val debianSettings: Seq[Setting[_]] = linuxSettings ++ inConfig(Debian)(distroSettings ++ linuxMappings) ++ Seq(
     //    debian.Keys.linuxPackageMappings <++= linux.Keys.linuxPackageMappings in Linux,
     AzureKeys.azurePackage in Debian := Some((packageBin in Debian).value.toPath),
@@ -125,6 +136,7 @@ object LinuxPlugin extends Plugin {
     )
   )
 
+  @deprecated("Use linuxNativeSettings instead")
   val rpmSettings: Seq[Setting[_]] = linuxSettings ++ inConfig(Rpm)(distroSettings ++ linuxMappings) ++ Seq(
     //    rpm.Keys.linuxPackageMappings in Rpm <++= linux.Keys.linuxPackageMappings in Linux,
     AzureKeys.azurePackage in Rpm := Some((packageBin in Rpm).value.toPath),
@@ -173,14 +185,14 @@ object LinuxPlugin extends Plugin {
     LinuxPackageMapping(paths.map(pair => pair._1.toFile -> pair._2)) withPerms perms withUser user withGroup group
 
   // TODO fix this nonsense
-//  def pkgPathMaps(paths: Seq[(Path, String)],
-//                  user: String = "root",
-//                  group: String = "root",
-//                  perms: String = "0644",
-//                  dirPerms: String = "0755",
-//                  isConfig: Boolean = false,
-//                  gzipped: Boolean = false) =
-//    pkgMaps(paths.map(p => p._1 -> p._2.toString), user, group, perms, dirPerms, isConfig, gzipped)
+  //  def pkgPathMaps(paths: Seq[(Path, String)],
+  //                  user: String = "root",
+  //                  group: String = "root",
+  //                  perms: String = "0644",
+  //                  dirPerms: String = "0755",
+  //                  isConfig: Boolean = false,
+  //                  gzipped: Boolean = false) =
+  //    pkgMaps(paths.map(p => p._1 -> p._2.toString), user, group, perms, dirPerms, isConfig, gzipped)
 
   def pkgMaps(paths: Seq[(Path, String)],
               user: String = "root",

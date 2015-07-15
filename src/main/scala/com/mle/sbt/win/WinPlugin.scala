@@ -67,9 +67,6 @@ object WinPlugin extends Plugin {
   ))
 
   val windowsSettings: Seq[Setting[_]] =
-    GenericPlugin.genericSettings ++
-      WixPackaging.wixSettings ++
-      fileMappings ++
       Seq(
         appIcon := None,
         minUpgradeVersion := "0.0.0",
@@ -83,7 +80,9 @@ object WinPlugin extends Plugin {
         forceStopOnUninstall := interactiveInstallation.value,
         productGuid := "*",
         msi := (win in Windows).value
-      ) ++ inConfig(Windows)(GenericPlugin.confSpecificSettings ++ WixPackaging.wixSettings ++ Seq(
+      ) ++ inConfig(Windows)(GenericPlugin.genericSettings ++
+      WixPackaging.wixSettings ++
+      fileMappings ++ GenericPlugin.confSpecificSettings ++ WixPackaging.wixSettings ++ Seq(
       helpMe := {
         val taskList = GenericPlugin.describeWithAzure(
           packageBin in Windows,

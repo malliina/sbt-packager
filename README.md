@@ -7,7 +7,7 @@ that your app should install itself as a service so that it starts automatically
 
 ## Installation ##
 
-    addSbtPlugin("com.github.malliina" % "sbt-packager" % "1.5.10")
+    addSbtPlugin("com.github.malliina" % "sbt-packager" % "1.7.0")
 
 ## Usage ##
 

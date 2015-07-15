@@ -11,7 +11,6 @@ import com.mle.sbt.azure.AzurePlugin
 import sbt.Keys._
 import sbt._
 
-
 object GenericPlugin extends Plugin {
   val genericSettings: Seq[Setting[_]] = Seq(
     pkgHome := (basePath.value / "src" / "pkg"),
@@ -22,8 +21,6 @@ object GenericPlugin extends Plugin {
     homeVar := name.value.toUpperCase + "_HOME",
     libs := {
       val deps = (dependencyClasspath in Runtime).value
-//      val exported = (exportedProducts in Compile).value
-      // Libs, but not my own jars  && !exported.files.contains(f)
       deps.files.filter(f => !f.isDirectory).map(_.toPath)
     },
     printLibs := libs.value foreach println,
