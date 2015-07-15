@@ -19,9 +19,26 @@ object LinuxPlugin extends Plugin {
   val linuxNativeSettings = GenericPlugin.genericSettings ++ GenericPlugin.confSettings ++ Seq(
     linuxKeys.maintainer := "Firstname Lastname <email@address.com>",
     pkgHome in Linux := (pkgHome in UnixPlugin.Unix).value,
-    playConf in Linux := None,
-    javaOptions in Universal ++= (playConf in Linux).value.map(_.javaOptions).getOrElse(Nil)
+    appHome in Linux := Option(s"/var/run/${(name in Linux).value}"),
+    javaOptions in Universal ++= {
+      (appHome in Linux).value.map(home => s"-D${(name in Linux).value}.home=$home").toSeq
+    }
   )
+
+  lazy val playSettings = linuxNativeSettings ++ inConfig(Linux){
+    Seq(
+      httpPort := Option("8456"),
+      httpsPort := Option("disabled"),
+      pidFile := appHome.value.map(home => s"$home/${(name in Linux).value}.pid"),
+      javaOptions in Universal ++= {
+        Seq(
+          httpPort.value.map(port => s"-Dhttp.port=$port"),
+          httpsPort.value.map(sslPort => s"-Dhttps.port=$sslPort"),
+          pidFile.value.map(path => s"-Dpidfile.path=$path")
+        ).flatten
+      }
+    )
+  }
 
   @deprecated("Use linuxNativeSettings instead")
   val distroSettings = GenericPlugin.confSpecificSettings ++ Seq(

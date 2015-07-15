@@ -22,11 +22,10 @@ object LinuxKeys {
   val initScript = settingKey[Path]("Init script for unix")
 
   // for play
-  val httpPort = settingKey[Option[Int]]("http.port")
-  val httpsPort = settingKey[Option[Int]]("https.port")
-  val pidFile = settingKey[Option[Path]]("PID file path")
-  val appHome = settingKey[Option[Path]]("app home dir on destination")
-  val playConf = settingKey[Option[LinuxPlayConf]]("play configuration")
+  val httpPort = settingKey[Option[String]]("http.port, can be 'disabled'")
+  val httpsPort = settingKey[Option[String]]("https.port, can be 'disabled'")
+  val pidFile = settingKey[Option[String]]("PID file path")
+  val appHome = settingKey[Option[String]]("App home dir on destination")
 
   /**
    * Misc
