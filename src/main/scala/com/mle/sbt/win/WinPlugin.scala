@@ -49,7 +49,7 @@ object WinPlugin extends Plugin {
         abs -> configDestDir.value.resolve(rel)
       })
     },
-//    msiMappings += appJar.value -> Paths.get(appJarName.value),
+    //    msiMappings += appJar.value -> Paths.get(appJarName.value),
     msiMappings ++= {
       val log = streams.value.log
       // TODO fix this
@@ -63,26 +63,35 @@ object WinPlugin extends Plugin {
       // the prepare method already creates the files and puts them into the target directory, so it would seem
       // we don't need to do the mapping here, but this is extremely confusing
       Seq.empty[(Path, Path)]
+    },
+    msiMappings ++= {
+      if (exportJars.value) {
+        Nil
+      } else {
+        val src = (packageBin in Compile).value.toPath
+        val dest = libDestDir.value / src.getFileName
+        Seq(src -> dest)
+      }
     }
   ))
 
-  val windowsSettings: Seq[Setting[_]] =
-      Seq(
-        appIcon := None,
-        minUpgradeVersion := "0.0.0",
-        uuid := UUID.randomUUID().toString,
-        // wtf?
-        msiMappings := Seq.empty[(Path, Path)],
-        pkgHome in Windows := (pkgHome.value / "windows"),
-        minJavaVersion := None,
-        postInstallUrl := None,
-        interactiveInstallation := false,
-        forceStopOnUninstall := interactiveInstallation.value,
-        productGuid := "*",
-        msi := (win in Windows).value
-      ) ++ inConfig(Windows)(GenericPlugin.genericSettings ++
-      WixPackaging.wixSettings ++
-      fileMappings ++ GenericPlugin.confSpecificSettings ++ WixPackaging.wixSettings ++ Seq(
+  val windowsSettings: Seq[Setting[_]] = GenericPlugin.genericSettings ++
+    Seq(
+      appIcon := None,
+      minUpgradeVersion := "0.0.0",
+      uuid := UUID.randomUUID().toString,
+      // wtf?
+      msiMappings := Seq.empty[(Path, Path)],
+      pkgHome in Windows := (pkgHome.value / "windows"),
+      minJavaVersion := None,
+      postInstallUrl := None,
+      interactiveInstallation := false,
+      forceStopOnUninstall := interactiveInstallation.value,
+      productGuid := "*",
+      msi := (win in Windows).value
+    ) ++ inConfig(Windows)(fileMappings ++
+      GenericPlugin.confSpecificSettings ++
+      WixPackaging.wixSettings ++ Seq(
       helpMe := {
         val taskList = GenericPlugin.describeWithAzure(
           packageBin in Windows,
@@ -114,9 +123,9 @@ object WinPlugin extends Plugin {
       msiName := name.value + "-" + version.value + ".msi",
       windowsJarPath := targetPath.value / appJarName.value,
       exePath := targetPath.value / (name.value + ".exe"),
-      batPath := pkgHome.value / (name.value + ".bat"),
-      licenseRtf := pkgHome.value / "license.rtf",
-      winSwExe := pkgHome.value / "winsw-1.16-bin.exe",
+      batPath := (pkgHome in Windows).value / (name.value + ".bat"),
+      licenseRtf := (pkgHome in Windows).value / "license.rtf",
+      winSwExe := (pkgHome in Windows).value / "winsw-1.16-bin.exe",
       winSwConf := targetPath.value / winSwConfName.value,
       winSwName := name.value + "svc",
       winSwExeName := winSwName.value + ".exe",
