@@ -23,7 +23,7 @@ object LinuxKeys {
 
   // for play
   val httpPort = settingKey[Option[String]]("http.port, can be 'disabled'")
-  val httpsPort = settingKey[Option[String]]("https.port, can be 'disabled'")
+  val httpsPort = settingKey[Option[String]]("https.port, cannot be 'disabled', use None to disable")
   val pidFile = settingKey[Option[String]]("PID file path")
   val appHome = settingKey[Option[String]]("App home dir on destination")
 

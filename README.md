@@ -5,42 +5,24 @@ This is an SBT plugin for software packaging. It depends on [sbt-native-packager
 You can create app installers for Windows (.msi), Debian (.deb), RPM (.rpm) and OSX (.pkg). You can optionally specify
 that your app should install itself as a service so that it starts automatically when the computer boots.
 
+This plugin may prove useful if you wish to run Scala services on Windows or OSX. If you only use linux,
+[sbt-native-packager](https://github.com/sbt/sbt-native-packager) probably works well enough.
+
 ## Installation ##
 
-    addSbtPlugin("com.github.malliina" % "sbt-packager" % "1.7.0")
+    addSbtPlugin("com.github.malliina" % "sbt-packager" % "1.8.5")
 
 ## Usage ##
 
 Add the following settings to your project:
 
-    SbtNativePackager.packagerSettings ++
     WinPlugin.windowsSettings ++
-    LinuxPlugin.rpmSettings ++
-    LinuxPlugin.debianSettings ++
+    LinuxPlugin.linuxNativeSettings ++
     GenericPlugin.confSettings ++
-    AzurePlugin.azureSettings
+    AzurePlugin.azureSettings ++
+    LinuxPlugin.playSettings
 
-To get a list of tasks and settings pertaining to this plugin, run the following SBT tasks:
-- helpMe
-- windows:helpMe
-- debian:helpMe
-- rpm:helpMe
-
-    [myproject] $ helpMe
-    [info] pkg-home                 Packaging home directory
-    [info] app-jar                  The application jar
-    [info] libs                     All (managed and unmanaged) libs
-    [info] conf-file                Configuration file
-    [info] version-file             Version file (written upon packaging)
-    [info]
-    [info] Three OS configurations are available: windows, debian, and rpm
-    [info]
-    [info] Try the following:
-    [info] windows:helpme
-    [info] debian:helpme
-    [info] rpm:helpme
-    [success] Total time: 0 s, completed 9.4.2013 20:05:50
-    [myproject] $
+Three OS configurations are available: windows, mac, debian, and rpm.
 
 ### Windows ###
 
@@ -81,55 +63,11 @@ To create an installation log, run the following command instead of double-click
 
 ### Debian ###
 
-    [myproject] $ debian:helpMe
-    [info] control-dir              Directory for control files for native packaging
-    [info] pre-install              Preinstall script
-    [info] post-install             Postinstall script
-    [info] pre-remove               Preremove script
-    [info] post-remove              Postremove script
-    [info] defaults-file            The defaults config file
-    [info] copyright-file           The copyright file
-    [info] changelog-file           The changelog file
-    [info] init-script              Init script for unix
-    [info] unix-home                Home dir on unix
-    [info] unix-lib-home            Lib dir on unix
-    [info] unix-script-home         Script dir on unix
-    [info] unix-log-home            Log dir on unix
-    [info] lib-mappings             Libs mapped to paths
-    [info] conf-mappings            Confs mapped to paths
-    [info] script-mappings          Scripts mapped to paths
-    [info] azure-upload             Packages the app and uploads it to Azure Storage
-    [info] azure-package            Package to upload to Azure
-    [info] azure-conf               Path to Azure configuration file with account_name and account_key variables.
-    [info] azure-container-name     The Azure storage container name
-    [success] Total time: 0 s, completed 9.4.2013 20:08:06
-    [myproject] $
+Package with `debian:lintian`, thanks sbt-native-packager.
 
 ### Rpm ###
 
-    [myproject] $ rpm:helpMe
-    [info] control-dir              Directory for control files for native packaging
-    [info] pre-install              Preinstall script
-    [info] post-install             Postinstall script
-    [info] pre-remove               Preremove script
-    [info] post-remove              Postremove script
-    [info] defaults-file            The defaults config file
-    [info] copyright-file           The copyright file
-    [info] changelog-file           The changelog file
-    [info] init-script              Init script for unix
-    [info] unix-home                Home dir on unix
-    [info] unix-lib-home            Lib dir on unix
-    [info] unix-script-home         Script dir on unix
-    [info] unix-log-home            Log dir on unix
-    [info] lib-mappings             Libs mapped to paths
-    [info] conf-mappings            Confs mapped to paths
-    [info] script-mappings          Scripts mapped to paths
-    [info] azure-upload             Packages the app and uploads it to Azure Storage
-    [info] azure-package            Package to upload to Azure
-    [info] azure-conf               Path to Azure configuration file with account_name and account_key variables.
-    [info] azure-container-name     The Azure storage container name
-    [success] Total time: 0 s, completed 9.4.2013 20:08:24
-    [myproject] $
+Package with `rpm:packageBin`, courtesy of sbt-native-packager.
 
 ### OSX ###
 
@@ -174,8 +112,3 @@ Available settings:
     [info] pkg                      Creates a .pkg installer
     [success] Total time: 0 s, completed 7.12.2014 15:35:59
     [myproject] $
-
-## To do ##
-
-- Set a better path for windows service wrapper logs
-

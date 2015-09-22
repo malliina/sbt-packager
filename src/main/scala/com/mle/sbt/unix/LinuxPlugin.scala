@@ -16,19 +16,38 @@ import sbt._
 object LinuxPlugin extends Plugin {
   private val linuxKeys = com.typesafe.sbt.packager.Keys //linux.LinuxPlugin.autoImport
 
-  val linuxNativeSettings = GenericPlugin.genericSettings ++ GenericPlugin.confSettings ++ Seq(
-    linuxKeys.maintainer := "Firstname Lastname <email@address.com>",
-    pkgHome in Linux := (pkgHome in UnixPlugin.Unix).value,
-    appHome in Linux := Option(s"/var/run/${(name in Linux).value}"),
-    javaOptions in Universal ++= {
-      (appHome in Linux).value.map(home => s"-D${(name in Linux).value}.home=$home").toSeq
-    }
-  )
+  val linuxNativeSettings =
+    GenericPlugin.genericSettings ++
+      GenericPlugin.confSettings ++
+//      linuxConfSettings ++
+      debianConfSettings ++
+      rpmConfSettings ++ Seq(
+      linuxKeys.maintainer := "Firstname Lastname <email@address.com>",
+      pkgHome in Linux := (pkgHome in UnixPlugin.Unix).value,
+      appHome in Linux := Option(s"/var/run/${(name in Linux).value}"),
+      javaOptions in Universal ++= {
+        (appHome in Linux).value.map(home => s"-D${(name in Linux).value}.home=$home").toSeq
+      },
+      linuxKeys.rpmLicense := Option("MIT License")
+    )
 
-  lazy val playSettings = linuxNativeSettings ++ inConfig(Linux){
+  lazy val debianConfSettings = inConfig(Debian)(GenericPlugin.confSpecificSettings ++ Seq(
+    AzureKeys.azurePackage in Debian := Some((packageBin in Debian).value.toPath),
+    deployFiles := destPaths(linuxKeys.linuxPackageMappings.value)
+  ))
+
+  lazy val rpmConfSettings = inConfig(Rpm)(GenericPlugin.confSpecificSettings ++ Seq(
+    AzureKeys.azurePackage in Rpm := Some((packageBin in Rpm).value.toPath),
+    deployFiles := destPaths(linuxKeys.linuxPackageMappings.value)
+  ))
+
+//  lazy val linuxConfSettings = inConfig(Linux)(Seq(
+//  ))
+
+  lazy val playSettings = linuxNativeSettings ++ inConfig(Linux) {
     Seq(
       httpPort := Option("8456"),
-      httpsPort := Option("disabled"),
+      httpsPort := None,
       pidFile := appHome.value.map(home => s"$home/${(name in Linux).value}.pid"),
       javaOptions in Universal ++= {
         Seq(
@@ -98,7 +117,6 @@ object LinuxPlugin extends Plugin {
     defaultsFile := (pkgHome in Linux).value / ((name in Linux).value + ".defaults"),
     linuxKeys.packageDescription in Linux := "This is the description of the package."
   ) ++ inConfig(Linux)(distroSettings ++ Seq(
-
     linuxKeys.packageSummary := s"This is a summary of ${name.value}",
     verifySettings := PackagingUtil.verifyPathSetting(
       controlDir -> controlDir.value,
