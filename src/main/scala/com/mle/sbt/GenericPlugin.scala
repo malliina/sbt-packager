@@ -12,7 +12,7 @@ import sbt.Keys._
 import sbt._
 
 object GenericPlugin extends Plugin {
-  val genericSettings: Seq[Setting[_]] = Seq(
+  val genericSettings: Seq[Setting[_]] = AzurePlugin.azureSettings ++ Seq(
     pkgHome := (basePath.value / "src" / "pkg"),
     basePath := baseDirectory.value.toPath,
     displayName := name.value,

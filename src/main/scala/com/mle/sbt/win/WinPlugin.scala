@@ -9,7 +9,6 @@ import com.mle.sbt.azure.AzureKeys._
 import com.mle.sbt.win.WinKeys._
 import com.mle.sbt.{GenericPlugin, PackagingUtil}
 import com.typesafe.sbt.SbtNativePackager.Windows
-import com.typesafe.sbt.packager.windows
 import sbt.Keys._
 import sbt._
 
@@ -18,10 +17,6 @@ object WinPlugin extends Plugin {
   val windowsMappings = mappings in packageBin in Windows
 
   val fileMappings: Seq[Setting[_]] = inConfig(Windows)(Seq(
-    //    windowsMappings ++= msiMappings.value.map(mapping => {
-    //      val (src, dest) = mapping
-    //      src.toFile -> dest.toString
-    //    }),
     windowsMappings ++= msiMappings.value.map {
       case (src, dest) => src.toFile -> dest.toString
     },
@@ -49,7 +44,6 @@ object WinPlugin extends Plugin {
         abs -> configDestDir.value.resolve(rel)
       })
     },
-    //    msiMappings += appJar.value -> Paths.get(appJarName.value),
     msiMappings ++= {
       val log = streams.value.log
       // TODO fix this
@@ -165,6 +159,4 @@ object WinPlugin extends Plugin {
       serviceImplementation := Some(WinKeys.Winsw),
       serviceConf <<= (serviceImplementation, winSwExe, winSwExeName, runtimeConfTargetPath, winSwXmlTargetPath)((s, exe, e, rt, xt) => if (s.isDefined) Some(ServiceConf(exe, e, rt, xt)) else None)
     ))
-
-
 }

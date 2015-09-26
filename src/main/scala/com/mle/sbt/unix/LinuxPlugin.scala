@@ -14,35 +14,32 @@ import sbt.Keys._
 import sbt._
 
 object LinuxPlugin extends Plugin {
-  private val linuxKeys = com.typesafe.sbt.packager.Keys //linux.LinuxPlugin.autoImport
+  private val linuxKeys = com.typesafe.sbt.packager.Keys
 
   val linuxNativeSettings =
     GenericPlugin.genericSettings ++
       GenericPlugin.confSettings ++
-//      linuxConfSettings ++
       debianConfSettings ++
       rpmConfSettings ++ Seq(
       linuxKeys.maintainer := "Firstname Lastname <email@address.com>",
       pkgHome in Linux := (pkgHome in UnixPlugin.Unix).value,
       appHome in Linux := Option(s"/var/run/${(name in Linux).value}"),
       javaOptions in Universal ++= {
-        (appHome in Linux).value.map(home => s"-D${(name in Linux).value}.home=$home").toSeq
+        val linuxName = (name in Linux).value
+        (appHome in Linux).value.map(home => s"-D$linuxName.home=$home").toSeq
       },
       linuxKeys.rpmLicense := Option("MIT License")
     )
 
   lazy val debianConfSettings = inConfig(Debian)(GenericPlugin.confSpecificSettings ++ Seq(
-    AzureKeys.azurePackage in Debian := Some((packageBin in Debian).value.toPath),
-    deployFiles := destPaths(linuxKeys.linuxPackageMappings.value)
+    deployFiles := destPaths(linuxKeys.linuxPackageMappings.value),
+    AzureKeys.azurePackage in Debian := Some((packageBin in Debian).value.toPath)
   ))
 
   lazy val rpmConfSettings = inConfig(Rpm)(GenericPlugin.confSpecificSettings ++ Seq(
-    AzureKeys.azurePackage in Rpm := Some((packageBin in Rpm).value.toPath),
-    deployFiles := destPaths(linuxKeys.linuxPackageMappings.value)
+    deployFiles := destPaths(linuxKeys.linuxPackageMappings.value),
+    AzureKeys.azurePackage in Rpm := Some((packageBin in Rpm).value.toPath)
   ))
-
-//  lazy val linuxConfSettings = inConfig(Linux)(Seq(
-//  ))
 
   lazy val playSettings = linuxNativeSettings ++ inConfig(Linux) {
     Seq(
@@ -50,11 +47,16 @@ object LinuxPlugin extends Plugin {
       httpsPort := None,
       pidFile := appHome.value.map(home => s"$home/${(name in Linux).value}.pid"),
       javaOptions in Universal ++= {
-        Seq(
+        val linuxName = (name in Linux).value
+        val always = Seq(
+          s"-Dlog.dir=/var/run/$linuxName/logs"
+        )
+        val optional = Seq(
           httpPort.value.map(port => s"-Dhttp.port=$port"),
           httpsPort.value.map(sslPort => s"-Dhttps.port=$sslPort"),
           pidFile.value.map(path => s"-Dpidfile.path=$path")
         ).flatten
+        always ++ optional
       }
     )
   }
