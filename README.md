@@ -10,7 +10,7 @@ This plugin may prove useful if you wish to run Scala services on Windows or OSX
 
 ## Installation ##
 
-    addSbtPlugin("com.github.malliina" % "sbt-packager" % "1.8.5")
+    addSbtPlugin("com.malliina" % "sbt-packager" % "1.9.0")
 
 ## Usage ##
 
@@ -74,7 +74,7 @@ Package with `rpm:packageBin`, courtesy of sbt-native-packager.
 Add `com.malliina.sbt.mac.MacPlugin.macSettings` to your project and customize as necessary. Example:
 
 ```
-import com.mle.sbt.GenericKeys.{appIcon, displayName}
+import com.malliina.sbt.GenericKeys.{appIcon, displayName}
 import com.malliina.sbt.mac.MacKeys.jvmOptions
 import com.malliina.sbt.mac.MacPlugin.{macSettings, Mac}
 
