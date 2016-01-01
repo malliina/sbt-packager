@@ -3,7 +3,7 @@ import sbt._
 
 object BuildBuild extends Build {
   override lazy val settings = super.settings ++ Seq(
-    scalaVersion := "2.10.4",
+    scalaVersion := "2.10.6",
     resolvers ++= Seq(
       "Sonatype snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/",
       Resolver.url("scalasbt", url("http://scalasbt.artifactoryonline.com/scalasbt/sbt-plugin-releases"))(Resolver.ivyStylePatterns),
@@ -11,7 +11,7 @@ object BuildBuild extends Build {
   ) ++ sbtPlugins
 
   def sbtPlugins = Seq(
-    "com.github.malliina" %% "sbt-utils" % "0.2.0",
+    "com.malliina" %% "sbt-utils" % "0.3.0",
     "me.lessis" % "bintray-sbt" % "0.3.0"
   ) map addSbtPlugin
 

@@ -71,12 +71,12 @@ Package with `rpm:packageBin`, courtesy of sbt-native-packager.
 
 ### OSX ###
 
-Add `com.mle.sbt.mac.MacPlugin.macSettings` to your project and customize as necessary. Example:
+Add `com.malliina.sbt.mac.MacPlugin.macSettings` to your project and customize as necessary. Example:
 
 ```
 import com.mle.sbt.GenericKeys.{appIcon, displayName}
-import com.mle.sbt.mac.MacKeys.jvmOptions
-import com.mle.sbt.mac.MacPlugin.{macSettings, Mac}
+import com.malliina.sbt.mac.MacKeys.jvmOptions
+import com.malliina.sbt.mac.MacPlugin.{macSettings, Mac}
 
 def projectSettings = macSettings ++ Seq(
   jvmOptions ++= Seq("-Dhttp.port=4321"),
