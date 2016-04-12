@@ -3,10 +3,6 @@ package com.malliina.sbt.unix
 import sbt.{settingKey, taskKey}
 import java.nio.file.Path
 
-/**
- *
- * @author mle
- */
 object LinuxKeys {
   /**
    * Source keys

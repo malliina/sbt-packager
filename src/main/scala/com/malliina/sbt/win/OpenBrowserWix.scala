@@ -1,9 +1,5 @@
 package com.malliina.sbt.win
 
-/**
- *
- * @author mle
- */
 object OpenBrowserWix {
 
   def forUrl(url: String) =

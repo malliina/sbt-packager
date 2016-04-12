@@ -8,10 +8,6 @@ import com.malliina.sbt.unix.UnixZipKeys
 import sbt.Keys._
 import sbt._
 
-/**
- *
- * @author mle
- */
 object PackagingUtil {
   def writerTo(path: Path)(op: PrintWriter => Unit) {
     Files.createDirectories(path.getParent)

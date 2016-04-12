@@ -13,9 +13,6 @@ import com.malliina.sbt.{GenericKeys, GenericPlugin}
 import sbt.Keys._
 import sbt.{Plugin, _}
 
-/**
- * @author mle
- */
 object MacPlugin extends Plugin {
   val Mac = config("mac") extend Unix
 

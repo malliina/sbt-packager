@@ -9,8 +9,8 @@ object MyBuild extends Build {
     .settings(packagerSettings: _*)
 
   val malliinaGroup = "com.malliina"
-  val utilVersion = "2.1.0"
-  val releaseVersion = "1.9.0"
+  val utilVersion = "2.2.3"
+  val releaseVersion = "2.1.0"
 
   lazy val packagerSettings = Seq(
     version := releaseVersion,
@@ -22,7 +22,7 @@ object MyBuild extends Build {
     libraryDependencies ++= Seq(
       malliinaGroup %% "util" % utilVersion,
       malliinaGroup %% "util-azure" % utilVersion,
-      malliinaGroup %% "appbundler" % "0.9.0"),
+      malliinaGroup %% "appbundler" % "0.9.2"),
     addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.0.1"),
     bintrayOrganization in bintrayConf := None,
     bintrayRepository in bintrayConf := "sbt-plugins",

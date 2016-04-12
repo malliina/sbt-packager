@@ -1,14 +1,12 @@
 package com.malliina.sbt.azure
 
-import sbt._
 import java.nio.file.Path
-import com.mle.azure.StorageContainer
 
-/**
- * Keys for uploading packaged artifacts to Azure Storage.
- *
- * @author mle
- */
+import com.malliina.azure.StorageContainer
+import sbt._
+
+/** Keys for uploading packaged artifacts to Azure Storage.
+  */
 trait AzureKeys {
   val azureConf = settingKey[Path]("Path to Azure configuration file with account_name and account_key variables.")
   val azureContainerName = settingKey[String]("The Azure storage container name")

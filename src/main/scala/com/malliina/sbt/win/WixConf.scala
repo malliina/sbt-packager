@@ -3,9 +3,8 @@ package com.malliina.sbt.win
 import java.nio.file.Path
 
 /**
- * wip
- * @author mle
- */
+  * wip
+  */
 trait WixConf {
   def appName: String
 
@@ -18,29 +17,29 @@ trait WixConf {
   def bat: Path
 
   /**
-   *
-   * @return license.rtf, the content of which is displayed prior to installation
-   */
+    *
+    * @return license.rtf, the content of which is displayed prior to installation
+    */
   def license: Path
 
   /**
-   * @return icon for MSI installation package file
-   */
+    * @return icon for MSI installation package file
+    */
   def icon: Path
 
   /**
-   * @return path to the original winsw.exe
-   */
+    * @return path to the original winsw.exe
+    */
   def winswExe: Path
 
   /**
-   * @return name of winsw.exe on the target
-   */
+    * @return name of winsw.exe on the target
+    */
   def winswExeName: String
 
   /**
-   * @return name of winsw.xml on the target
-   */
+    * @return name of winsw.xml on the target
+    */
   def winswConfName: String
 
   def homeVar: String

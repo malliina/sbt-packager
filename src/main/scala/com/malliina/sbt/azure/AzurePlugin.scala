@@ -2,17 +2,13 @@ package com.malliina.sbt.azure
 
 import java.nio.file.Path
 
+import com.malliina.azure.StorageClient
 import com.malliina.file.StorageFile
 import com.malliina.sbt.GenericPlugin
 import com.malliina.sbt.azure.AzureKeys._
 import com.malliina.util.Util
-import com.mle.azure.StorageClient
 import sbt._
 
-/**
- *
- * @author mle
- */
 trait AzurePlugin extends Plugin {
   val azureSettings: Seq[Setting[_]] = Seq(
     azurePackage := None,

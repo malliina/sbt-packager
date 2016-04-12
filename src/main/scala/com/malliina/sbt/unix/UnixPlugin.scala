@@ -11,11 +11,8 @@ import com.typesafe.sbt.SbtNativePackager.Linux
 import sbt.Keys._
 import sbt._
 
-/**
- * Using Linux configuration for Unix. Shame on me.
- *
- * @author mle
- */
+/** Using Linux configuration for Unix. Shame on me.
+  */
 object UnixPlugin {
   val Unix = config("unix")
   val unixSettings: Seq[Setting[_]] = GenericPlugin.genericSettings ++ Seq(

@@ -4,8 +4,6 @@ import java.nio.file.Path
 
 /**
  * wip
- *
- * @author mle
  */
 trait Launch4jConf {
   /**

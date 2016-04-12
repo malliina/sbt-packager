@@ -2,9 +2,6 @@ package com.malliina.sbt.win
 
 import scala.xml.NodeSeq
 
-/**
- * @author Michael
- */
 case class ServiceFragments(components: NodeSeq, feature: NodeSeq)
 
 object ServiceFragments {

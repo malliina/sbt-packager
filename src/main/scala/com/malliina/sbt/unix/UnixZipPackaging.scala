@@ -11,16 +11,12 @@ import com.malliina.sbt.{GenericKeys, PackagingUtil}
 import sbt.Keys._
 import sbt._
 
-/**
- *
- * @author mle
- */
 object UnixZipPackaging {
   val outDir = "distrib"
   val unixZipSettings = UnixPlugin.unixSettings ++ Seq(
     /**
-     * Destination settings
-     */
+      * Destination settings
+      */
     distribDir := basePath.value / outDir,
     copyConfs <<= copyTask(configFiles),
     copyScripts <<= copyTask(scriptFiles),

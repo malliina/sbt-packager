@@ -5,14 +5,10 @@ import sbt._
 import java.nio.file.Path
 import GenericKeys._
 
-/**
- *
- * @author mle
- */
 object UnixZipKeys {
   /**
-   * Destination
-   */
+    * Destination
+    */
   val outDir = "distrib"
   val libOutDir = outDir + "/" + libDir
   val confOutDir = outDir + "/" + confDir

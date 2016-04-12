@@ -7,9 +7,6 @@ import com.malliina.util.Log
 
 import scala.xml.NodeSeq
 
-/**
- * @author Michael
- */
 object WixUtils extends Log {
   def wixify(srcPath: String, destFileName: String): WixCompInfo = {
     val fileId = destFileName.replace('-', '_')

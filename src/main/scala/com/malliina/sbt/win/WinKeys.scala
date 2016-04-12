@@ -10,15 +10,15 @@ import scala.xml.Elem
 
 object WinKeys {
   /**
-   * Source paths
-   */
+    * Source paths
+    */
   val launch4jcExe = settingKey[Path]("Path to launch4jc.exe")
   val winSwExe = settingKey[Path]("Windows Service Wrapper .exe path")
   val licenseRtf = settingKey[Path]("Path to license RTF for Windows. Shown to the user during installation.")
   val batPath = settingKey[Path]("Application .bat")
   /**
-   * Other
-   */
+    * Other
+    */
   val msiName = settingKey[String]("Name of MSI package built with task win")
   val win = taskKey[Path]("Verifies settings followed by package-msi")
   val msi = taskKey[Path]("Shortcut to windows:win (oh yes)")
@@ -46,11 +46,11 @@ object WinKeys {
   val interactiveInstallation = settingKey[Boolean]("True if the MSI-installer should be interactive, false otherwise. If true, the installer will prompt for reboots when upgrading, if the service is running. I don't know why.")
 
   sealed trait ServiceImplementation {
-    def prepare(log: Logger, targetFilePath: Path, n: String, dN: String, swConfName: String, confDest:Path): Unit = ()
+    def prepare(log: Logger, targetFilePath: Path, n: String, dN: String, swConfName: String, confDest: Path): Unit = ()
   }
 
   case object Winsw extends ServiceImplementation {
-    override def prepare(log: Logger, targetFilePath: Path, n: String, dN: String, swConfName: String, confDest:Path): Unit = {
+    override def prepare(log: Logger, targetFilePath: Path, n: String, dN: String, swConfName: String, confDest: Path): Unit = {
       log.info("Creating service wrapper")
       // build winsw service wrapper XML configuration file
       def toFile(xml: Elem, file: Path) {

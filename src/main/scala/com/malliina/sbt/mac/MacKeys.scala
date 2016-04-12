@@ -5,9 +5,6 @@ import java.nio.file.Path
 import com.malliina.appbundler.{FileMapping, InfoPlistConf, Installer, LaunchdConf}
 import sbt._
 
-/**
- * @author mle
- */
 object MacKeys {
   val plistFile = settingKey[Path]("Path to .plist file")
   val appIdentifier = settingKey[String]("Globally unique app ID")
