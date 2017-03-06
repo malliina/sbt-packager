@@ -1,8 +1,8 @@
 import sbt.Keys._
 import sbt._
 
-object BuildBuild extends Build {
-  override lazy val settings = super.settings ++ Seq(
+object BuildBuild {
+  lazy val settings = Seq(
     scalaVersion := "2.10.6",
     resolvers ++= Seq(
       "Sonatype snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/",
@@ -11,10 +11,7 @@ object BuildBuild extends Build {
   ) ++ sbtPlugins
 
   def sbtPlugins = Seq(
-    "com.malliina" %% "sbt-utils" % "0.3.0",
-    "me.lessis" % "bintray-sbt" % "0.3.0"
+    "com.malliina" %% "sbt-utils" % "0.6.1",
+    "me.lessis" % "bintray-sbt" % "0.2.1"
   ) map addSbtPlugin
-
-  //  override lazy val projects = Seq(root)
-  lazy val root = Project("plugins", file("."))
 }
