@@ -2,54 +2,61 @@ package com.malliina.sbt.unix
 
 import java.nio.file.{Files, Path, Paths}
 
-import com.malliina.file.StorageFile
 import com.malliina.sbt.GenericKeys._
-import com.malliina.sbt.azure.{AzureKeys, AzurePlugin}
+import com.malliina.sbt.GenericPlugin.{confSettings, confSpecificSettings, genericSettings}
+import com.malliina.sbt.azure.AzureKeys.azurePackage
 import com.malliina.sbt.unix.LinuxKeys._
-import com.malliina.sbt.unix.UnixKeys._
-import com.malliina.sbt.{GenericKeys, GenericPlugin, PackagingUtil}
 import com.typesafe.sbt.SbtNativePackager._
+import com.typesafe.sbt.packager.Keys._
 import com.typesafe.sbt.packager.linux.LinuxPackageMapping
+import com.typesafe.sbt.packager.linux.LinuxPlugin.autoImport.packageTemplateMapping
 import sbt.Keys._
 import sbt._
 
 object LinuxPlugin extends Plugin {
-  private val linuxKeys = com.typesafe.sbt.packager.Keys
-
   val linuxNativeSettings =
-    GenericPlugin.genericSettings ++
-      GenericPlugin.confSettings ++
+    genericSettings ++
+      confSettings ++
       debianConfSettings ++
       rpmConfSettings ++ Seq(
-      linuxKeys.maintainer := "Firstname Lastname <email@address.com>",
+      maintainer := "Firstname Lastname <email@address.com>",
       pkgHome in Linux := (pkgHome in UnixPlugin.Unix).value,
-      appHome in Linux := Option(s"/var/run/${(name in Linux).value}"),
+      appHome in Linux := s"/var/run/${(name in Linux).value}",
       javaOptions in Universal ++= {
         val linuxName = (name in Linux).value
-        (appHome in Linux).value.map(home => s"-D$linuxName.home=$home").toSeq
+        val home = (appHome in Linux).value
+        Seq(s"-D$linuxName.home=$home")
       },
-      linuxKeys.rpmLicense := Option("MIT License")
+      linuxPackageMappings += {
+        // adds empty dir
+        packageTemplateMapping((appHome in Linux).value)()
+          .withUser((daemonUser in Linux).value)
+          .withGroup((daemonGroup in Linux).value)
+      },
+      rpmLicense := Option("MIT License")
     )
 
-  lazy val debianConfSettings = inConfig(Debian)(GenericPlugin.confSpecificSettings ++ Seq(
-    deployFiles := destPaths(linuxKeys.linuxPackageMappings.value),
-    AzureKeys.azurePackage in Debian := Some((packageBin in Debian).value.toPath)
+  lazy val debianConfSettings = inConfig(Debian)(confSpecificSettings ++ Seq(
+    deployFiles := destPaths(linuxPackageMappings.value),
+    azurePackage in Debian := Some((packageBin in Debian).value.toPath)
   ))
 
-  lazy val rpmConfSettings = inConfig(Rpm)(GenericPlugin.confSpecificSettings ++ Seq(
-    deployFiles := destPaths(linuxKeys.linuxPackageMappings.value),
-    AzureKeys.azurePackage in Rpm := Some((packageBin in Rpm).value.toPath)
+  lazy val rpmConfSettings = inConfig(Rpm)(confSpecificSettings ++ Seq(
+    deployFiles := destPaths(linuxPackageMappings.value),
+    azurePackage in Rpm := Some((packageBin in Rpm).value.toPath)
   ))
 
-  lazy val playSettings = linuxNativeSettings ++ inConfig(Linux) {
+  lazy val playSettings = linuxNativeSettings ++ ciSettings ++ inConfig(Linux) {
     Seq(
       httpPort := Option("8456"),
       httpsPort := None,
-      pidFile := appHome.value.map(home => s"$home/${(name in Linux).value}.pid"),
+      pidFile := Option(s"${appHome.value}/${(name in Linux).value}.pid"),
       javaOptions in Universal ++= {
-        val linuxName = (name in Linux).value
+        val home = (appHome in Linux).value
         val always = Seq(
-          s"-Dlog.dir=/var/run/$linuxName/logs"
+          s"-Dlog.dir=$home/logs",
+          "-Dfile.encoding=UTF-8",
+          "-Dsun.jnu.encoding=UTF-8"
         )
         val optional = Seq(
           httpPort.value.map(port => s"-Dhttp.port=$port"),
@@ -61,130 +68,23 @@ object LinuxPlugin extends Plugin {
     )
   }
 
-  @deprecated("Use linuxNativeSettings instead")
-  val distroSettings = GenericPlugin.confSpecificSettings ++ Seq(
-    deployFiles := destPaths(linuxKeys.linuxPackageMappings.value),
-    mappingsPrint := printMappings(linuxKeys.linuxPackageMappings.value, streams.value),
-    helpMe := {
-      val msg = GenericPlugin.describeWithAzure(
-        controlDir,
-        preInstall,
-        postInstall,
-        preRemove,
-        postRemove,
-        defaultsFile,
-        copyrightFile,
-        changelogFile,
-        initScript,
-        unixHome,
-        unixLibDest,
-        unixScriptDest,
-        unixLogDir,
-        libMappings,
-        confMappings,
-        scriptMappings
-      )
-      logger.value info msg
+  lazy val ciSettings = Seq(
+    ciBuild := {
+      val file = (packageBin in Debian).value
+      val lintianExitValue = Process(Seq("lintian", "-c", "-v", file.getName), Some(file.getParentFile)).!
+      if (lintianExitValue > 1) {
+        sys.error(s"Invalid lintian exit value: '$lintianExitValue'.")
+      }
+      val destName = s"${(name in Debian).value}.${file.ext}"
+      val destFile = file.getParentFile / destName
+      val success = file.renameTo(file.getParentFile / destName)
+      if (!success) {
+        sys.error(s"Unable to rename '$file' to '$destFile'.")
+      } else {
+        streams.value.log.info(s"Renamed '$file' to '$destFile'.")
+        destFile
+      }
     }
-  )
-
-  @deprecated("Use linuxNativeSettings instead")
-  val linuxSettings: Seq[Setting[_]] = UnixPlugin.unixSettings ++ AzurePlugin.azureSettings ++ Seq(
-    linuxKeys.maintainer := "Firstname Lastname <email@address.com>",
-    pkgHome in Linux := (pkgHome in UnixPlugin.Unix).value,
-
-    /**
-     * Source settings
-     */
-    printPaths := {
-      val keys = Seq(controlDir, preInstall, postInstall, preRemove, postRemove)
-      val values = Seq(controlDir.value, preInstall.value, postInstall.value, preRemove.value, postRemove.value)
-      val pairs = keys zip values
-      PackagingUtil.logPairs(pairs, streams.value)
-      values
-    },
-
-    /**
-     * Destination settings
-     */
-    // rpm/deb postinst control files
-    controlDir := (pkgHome in Linux).value / "control",
-    preInstall := controlDir.value / "preinstall.sh",
-    postInstall := controlDir.value / "postinstall.sh",
-    preRemove := controlDir.value / "preuninstall.sh",
-    postRemove := controlDir.value / "postuninstall.sh",
-    copyrightFile := (pkgHome in Linux).value / "copyright",
-    changelogFile := (pkgHome in Linux).value / "changelog",
-    initScript := (pkgHome in Linux).value / ((name in Linux).value + ".sh"),
-    defaultsFile := (pkgHome in Linux).value / ((name in Linux).value + ".defaults"),
-    linuxKeys.packageDescription in Linux := "This is the description of the package."
-  ) ++ inConfig(Linux)(distroSettings ++ Seq(
-    linuxKeys.packageSummary := s"This is a summary of ${name.value}",
-    verifySettings := PackagingUtil.verifyPathSetting(
-      controlDir -> controlDir.value,
-      preInstall -> preInstall.value,
-      postInstall -> postInstall.value,
-      preRemove -> preRemove.value,
-      postRemove -> postRemove.value,
-      defaultsFile -> defaultsFile.value,
-      copyrightFile -> copyrightFile.value,
-      changelogFile -> changelogFile.value,
-      initScript -> initScript.value
-    )))
-  // TODO improve readability
-  val linuxMappings: Seq[Setting[_]] = Seq(
-    linuxKeys.linuxPackageMappings ++= {
-      val linuxPkgHome = (pkgHome in Linux).value
-      Seq(
-        //        fileMap(appJar.value -> (unixHome.value / appJarName.value).toString),
-        basePathMaps(Seq(
-          (linuxPkgHome / libDir) -> unixLibDest.value,
-          (linuxPkgHome / logDir) -> unixLogDir.value
-        ), perms = "0750")
-      ) ++ pathMaps(libMappings.value) ++ pkgMaps(Seq(
-        initScript.value -> ("/etc/init.d/" + (name in Linux).value)
-      ) ++ scriptMappings.value.map(p => p._1 -> p._2.toString), perms = "0755") ++
-        pkgMaps((confFile in Linux).value.map(cFile => Seq(cFile -> (unixHome.value / cFile.getFileName).toString))
-          .getOrElse(Seq.empty[(Path, String)]), perms = "0600", isConfig = true) ++
-        pkgMaps((confMappings in Linux).value.map(p => p._1 -> p._2.toString) ++ Seq(defaultsFile.value -> ("/etc/default/" + (name in Linux).value)),
-          perms = "0640", isConfig = true)
-    }
-  )
-
-  @deprecated("Use linuxNativeSettings instead")
-  val debianSettings: Seq[Setting[_]] = linuxSettings ++ inConfig(Debian)(distroSettings ++ linuxMappings) ++ Seq(
-    //    debian.Keys.linuxPackageMappings <++= linux.Keys.linuxPackageMappings in Linux,
-    AzureKeys.azurePackage in Debian := Some((packageBin in Debian).value.toPath),
-    configDestDir in Debian := (configDestDir in Linux).value,
-    libDestDir in Debian := (configDestDir in Linux).value,
-    //    debian.Keys.version := "0.1",
-    // rpm:maintainer defaults to linux:maintainer, but debian:maintainer is empty (?), this fixes that
-    linuxKeys.maintainer in Debian := linuxKeys.maintainer.value,
-    linuxKeys.linuxPackageMappings in Debian ++= Seq(
-      // http://lintian.debian.org/tags/no-copyright-file.html
-      fileMap(copyrightFile.value -> ("/usr/share/doc/" + name.value + "/copyright")),
-      fileMap(changelogFile.value -> ("/usr/share/doc/" + name.value + "/changelog.gz"), gzipped = true) asDocs(),
-      fileMaps(Seq(
-        preInstall.value -> "DEBIAN/preinst",
-        postInstall.value -> "DEBIAN/postinst",
-        preRemove.value -> "DEBIAN/prerm",
-        postRemove.value -> "DEBIAN/postrm"
-      ), perms = "0755")
-    )
-  )
-
-  @deprecated("Use linuxNativeSettings instead")
-  val rpmSettings: Seq[Setting[_]] = linuxSettings ++ inConfig(Rpm)(distroSettings ++ linuxMappings) ++ Seq(
-    //    rpm.Keys.linuxPackageMappings in Rpm <++= linux.Keys.linuxPackageMappings in Linux,
-    AzureKeys.azurePackage in Rpm := Some((packageBin in Rpm).value.toPath),
-    configDestDir in Rpm := (configDestDir in Linux).value,
-    libDestDir in Rpm := (configDestDir in Linux).value,
-    linuxKeys.rpmVendor := GenericKeys.manufacturer.value,
-    linuxKeys.rpmLicense := Some("All rights reserved."),
-    linuxKeys.rpmPre := fileToString(preInstall.value),
-    linuxKeys.rpmPost := fileToString(postInstall.value),
-    linuxKeys.rpmPreun := fileToString(preRemove.value),
-    linuxKeys.rpmPostun := fileToString(postRemove.value)
   )
 
   def fileToString(file: Path) =
@@ -220,16 +120,6 @@ object LinuxPlugin extends Plugin {
   def baseMaps(paths: Seq[(Path, String)], perms: String,
                user: String = "root", group: String = "root") =
     LinuxPackageMapping(paths.map(pair => pair._1.toFile -> pair._2)) withPerms perms withUser user withGroup group
-
-  // TODO fix this nonsense
-  //  def pkgPathMaps(paths: Seq[(Path, String)],
-  //                  user: String = "root",
-  //                  group: String = "root",
-  //                  perms: String = "0644",
-  //                  dirPerms: String = "0755",
-  //                  isConfig: Boolean = false,
-  //                  gzipped: Boolean = false) =
-  //    pkgMaps(paths.map(p => p._1 -> p._2.toString), user, group, perms, dirPerms, isConfig, gzipped)
 
   def pkgMaps(paths: Seq[(Path, String)],
               user: String = "root",

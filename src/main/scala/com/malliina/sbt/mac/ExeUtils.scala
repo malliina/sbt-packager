@@ -3,9 +3,6 @@ package com.malliina.sbt.mac
 import sbt.Keys._
 import sbt._
 
-/**
- * @author Michael
- */
 object ExeUtils {
   /**
    * Executes the supplied command with the given parameters,
