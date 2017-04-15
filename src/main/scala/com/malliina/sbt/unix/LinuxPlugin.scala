@@ -8,6 +8,7 @@ import com.malliina.sbt.azure.AzureKeys.azurePackage
 import com.malliina.sbt.unix.LinuxKeys._
 import com.typesafe.sbt.SbtNativePackager._
 import com.typesafe.sbt.packager.Keys._
+import com.typesafe.sbt.packager.archetypes.ServerLoader
 import com.typesafe.sbt.packager.linux.LinuxPackageMapping
 import com.typesafe.sbt.packager.linux.LinuxPlugin.autoImport.packageTemplateMapping
 import sbt.Keys._
@@ -33,7 +34,8 @@ object LinuxPlugin extends Plugin {
           .withUser((daemonUser in Linux).value)
           .withGroup((daemonGroup in Linux).value)
       },
-      rpmLicense := Option("MIT License")
+      rpmLicense := Option("MIT License"),
+      serverLoading in Debian := ServerLoader.Systemd
     )
 
   lazy val debianConfSettings = inConfig(Debian)(confSpecificSettings ++ Seq(
