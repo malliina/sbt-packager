@@ -17,7 +17,7 @@ object MyBuild {
     libraryDependencies ++= Seq(
       malliinaGroup %% "util" % utilVersion,
       malliinaGroup %% "util-azure" % utilVersion,
-      malliinaGroup %% "appbundler" % "0.9.2"),
+      malliinaGroup %% "appbundler" % "0.9.3"),
     addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.1.5")
   )
 }

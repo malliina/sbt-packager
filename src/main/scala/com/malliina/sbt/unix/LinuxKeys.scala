@@ -1,12 +1,13 @@
 package com.malliina.sbt.unix
 
-import sbt.{File, settingKey, taskKey}
 import java.nio.file.Path
+
+import sbt.{File, settingKey, taskKey}
 
 object LinuxKeys {
   /**
-   * Source keys
-   */
+    * Source keys
+    */
   val controlDir = settingKey[Path]("Directory for control files for native packaging")
   val preInstall = settingKey[Path]("Preinstall script")
   val postInstall = settingKey[Path]("Postinstall script")
@@ -22,10 +23,12 @@ object LinuxKeys {
   val httpsPort = settingKey[Option[String]]("https.port, cannot be 'disabled', use None to disable")
   val pidFile = settingKey[Option[String]]("PID file path")
   val appHome = settingKey[String]("App home dir on destination")
+  val runDir = settingKey[String]("Run dir for temp files, e.g. PID files")
+  val logsDir = settingKey[String]("Log dir")
 
   /**
-   * Misc
-   */
+    * Misc
+    */
   val printPaths = taskKey[Seq[Path]]("Prints unix packaging paths")
   val ciBuild = taskKey[File]("Packages and renames the app (for CI).")
 }

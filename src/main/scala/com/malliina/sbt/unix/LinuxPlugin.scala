@@ -22,17 +22,21 @@ object LinuxPlugin extends Plugin {
       rpmConfSettings ++ Seq(
       maintainer := "Firstname Lastname <email@address.com>",
       pkgHome in Linux := (pkgHome in UnixPlugin.Unix).value,
-      appHome in Linux := s"/var/run/${(name in Linux).value}",
+      appHome in Linux := s"/var/lib/${(name in Linux).value}",
+      runDir in Linux := s"/var/run/${(name in Linux).value}",
+      logsDir in Linux := s"/var/log/${(name in Linux).value}",
       javaOptions in Universal ++= {
         val linuxName = (name in Linux).value
         val home = (appHome in Linux).value
         Seq(s"-D$linuxName.home=$home")
       },
-      linuxPackageMappings += {
+      linuxPackageMappings ++= {
         // adds empty dir
-        packageTemplateMapping((appHome in Linux).value)()
-          .withUser((daemonUser in Linux).value)
-          .withGroup((daemonGroup in Linux).value)
+        Seq((appHome in Linux).value, (runDir in Linux).value, (logsDir in Linux).value).map { dir =>
+          packageTemplateMapping(dir)()
+            .withUser((daemonUser in Linux).value)
+            .withGroup((daemonGroup in Linux).value)
+        }
       },
       rpmLicense := Option("MIT License"),
       serverLoading in Debian := ServerLoader.Systemd
@@ -52,11 +56,11 @@ object LinuxPlugin extends Plugin {
     Seq(
       httpPort := Option("8456"),
       httpsPort := None,
-      pidFile := Option(s"${appHome.value}/${(name in Linux).value}.pid"),
+      pidFile := Option(s"${(runDir in Linux).value}/${(name in Linux).value}.pid"),
       javaOptions in Universal ++= {
-        val home = (appHome in Linux).value
+        val logs = (logsDir in Linux).value
         val always = Seq(
-          s"-Dlog.dir=$home/logs",
+          s"-Dlog.dir=$logs",
           "-Dfile.encoding=UTF-8",
           "-Dsun.jnu.encoding=UTF-8"
         )
