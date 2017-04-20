@@ -4,7 +4,9 @@ import java.nio.file.Path
 
 import sbt.{File, settingKey, taskKey}
 
-object LinuxKeys {
+object LinuxKeys extends LinuxKeys
+
+trait LinuxKeys {
   /**
     * Source keys
     */

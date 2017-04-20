@@ -8,14 +8,42 @@ import com.malliina.sbt.azure.AzureKeys.azurePackage
 import com.malliina.sbt.unix.LinuxKeys._
 import com.typesafe.sbt.SbtNativePackager._
 import com.typesafe.sbt.packager.Keys._
-import com.typesafe.sbt.packager.archetypes.ServerLoader
+import com.typesafe.sbt.packager.archetypes.{JavaServerAppPackaging, ServerLoader}
 import com.typesafe.sbt.packager.linux.LinuxPackageMapping
 import com.typesafe.sbt.packager.linux.LinuxPlugin.autoImport.packageTemplateMapping
 import sbt.Keys._
 import sbt._
 
-object LinuxPlugin extends Plugin {
-  val linuxNativeSettings =
+object LinuxPlugin extends AutoPlugin {
+  override def requires = JavaServerAppPackaging
+
+  object autoImport extends LinuxKeys
+
+  override def projectSettings = playSettings
+
+  lazy val playSettings = linuxNativeSettings ++ ciSettings ++ inConfig(Linux) {
+    Seq(
+      httpPort := Option("8456"),
+      httpsPort := None,
+      pidFile := Option(s"${(runDir in Linux).value}/${(name in Linux).value}.pid"),
+      javaOptions in Universal ++= {
+        val logs = (logsDir in Linux).value
+        val always = Seq(
+          s"-Dlog.dir=$logs",
+          "-Dfile.encoding=UTF-8",
+          "-Dsun.jnu.encoding=UTF-8"
+        )
+        val optional = Seq(
+          httpPort.value.map(port => s"-Dhttp.port=$port"),
+          httpsPort.value.map(sslPort => s"-Dhttps.port=$sslPort"),
+          pidFile.value.map(path => s"-Dpidfile.path=$path")
+        ).flatten
+        always ++ optional
+      }
+    )
+  }
+
+  lazy val linuxNativeSettings =
     genericSettings ++
       confSettings ++
       debianConfSettings ++
@@ -51,28 +79,6 @@ object LinuxPlugin extends Plugin {
     deployFiles := destPaths(linuxPackageMappings.value),
     azurePackage in Rpm := Some((packageBin in Rpm).value.toPath)
   ))
-
-  lazy val playSettings = linuxNativeSettings ++ ciSettings ++ inConfig(Linux) {
-    Seq(
-      httpPort := Option("8456"),
-      httpsPort := None,
-      pidFile := Option(s"${(runDir in Linux).value}/${(name in Linux).value}.pid"),
-      javaOptions in Universal ++= {
-        val logs = (logsDir in Linux).value
-        val always = Seq(
-          s"-Dlog.dir=$logs",
-          "-Dfile.encoding=UTF-8",
-          "-Dsun.jnu.encoding=UTF-8"
-        )
-        val optional = Seq(
-          httpPort.value.map(port => s"-Dhttp.port=$port"),
-          httpsPort.value.map(sslPort => s"-Dhttps.port=$sslPort"),
-          pidFile.value.map(path => s"-Dpidfile.path=$path")
-        ).flatten
-        always ++ optional
-      }
-    )
-  }
 
   lazy val ciSettings = Seq(
     ciBuild := {
