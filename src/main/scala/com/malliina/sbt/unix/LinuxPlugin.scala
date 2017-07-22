@@ -4,15 +4,17 @@ import java.nio.file.{Files, Path, Paths}
 
 import com.malliina.sbt.GenericKeys._
 import com.malliina.sbt.GenericPlugin.{confSettings, confSpecificSettings, genericSettings}
-import com.malliina.sbt.azure.AzureKeys.azurePackage
 import com.malliina.sbt.unix.LinuxKeys._
 import com.typesafe.sbt.SbtNativePackager._
 import com.typesafe.sbt.packager.Keys._
-import com.typesafe.sbt.packager.archetypes.{JavaServerAppPackaging, ServerLoader}
+import com.typesafe.sbt.packager.archetypes.JavaServerAppPackaging
+import com.typesafe.sbt.packager.archetypes.systemloader.ServerLoader
 import com.typesafe.sbt.packager.linux.LinuxPackageMapping
 import com.typesafe.sbt.packager.linux.LinuxPlugin.autoImport.packageTemplateMapping
 import sbt.Keys._
 import sbt._
+
+import scala.io.Source
 
 object LinuxPlugin extends AutoPlugin {
   override def requires = JavaServerAppPackaging
@@ -67,17 +69,15 @@ object LinuxPlugin extends AutoPlugin {
         }
       },
       rpmLicense := Option("MIT License"),
-      serverLoading in Debian := ServerLoader.Systemd
+      serverLoading in Debian := Option(ServerLoader.Systemd)
     )
 
   lazy val debianConfSettings = inConfig(Debian)(confSpecificSettings ++ Seq(
-    deployFiles := destPaths(linuxPackageMappings.value),
-    azurePackage in Debian := Some((packageBin in Debian).value.toPath)
+    deployFiles := destPaths(linuxPackageMappings.value)
   ))
 
   lazy val rpmConfSettings = inConfig(Rpm)(confSpecificSettings ++ Seq(
-    deployFiles := destPaths(linuxPackageMappings.value),
-    azurePackage in Rpm := Some((packageBin in Rpm).value.toPath)
+    deployFiles := destPaths(linuxPackageMappings.value)
   ))
 
   lazy val ciSettings = Seq(
@@ -101,7 +101,7 @@ object LinuxPlugin extends AutoPlugin {
 
   def fileToString(file: Path) =
     if (Files exists file) {
-      Some(io.Source.fromFile(file.toFile).getLines().mkString("\n"))
+      Some(Source.fromFile(file.toFile).getLines().mkString("\n"))
     } else {
       None
     }

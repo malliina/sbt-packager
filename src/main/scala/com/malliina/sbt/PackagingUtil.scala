@@ -40,11 +40,9 @@ object PackagingUtil {
     else Seq.empty[Path]
   }
 
-  def copyTask(files: TaskKey[Seq[Path]]) = (
-    GenericKeys.basePath,
-    files,
-    UnixZipKeys.distribDir
-    ) map ((base, filez, dest) => FileUtilities.copy(base, filez.toSet, dest).toSeq)
+  def copyTask(files: TaskKey[Seq[Path]]) = Def.task {
+    FileUtilities.copy(GenericKeys.basePath.value, files.value.toSet, UnixZipKeys.distribDir.value).toSeq
+  }
 
   def launcher(appDir: Path,
                files: Seq[Path],

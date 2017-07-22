@@ -7,7 +7,6 @@ import com.malliina.sbt.GenericKeys._
 import com.malliina.sbt.PackagingUtil._
 import com.malliina.sbt.unix.UnixKeys._
 import com.malliina.sbt.unix.UnixZipKeys._
-import com.malliina.sbt.{GenericKeys, PackagingUtil}
 import sbt.Keys._
 import sbt._
 
@@ -18,8 +17,8 @@ object UnixZipPackaging {
       * Destination settings
       */
     distribDir := basePath.value / outDir,
-    copyConfs <<= copyTask(configFiles),
-    copyScripts <<= copyTask(scriptFiles),
+    copyConfs := copyTask(configFiles).value,
+    copyScripts := copyTask(scriptFiles).value,
     packageApp := copyLibs.value ++ createJar.value ++ copyConfs.value ++ copyScripts.value,
     // TODO: bat is not for unix, Michael
     bat := launcher(distribDir.value, copyScripts.value, name.value, ".bat", packageApp.value, streams.value),

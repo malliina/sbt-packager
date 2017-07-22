@@ -5,11 +5,10 @@ import java.nio.file.{Files, StandardCopyOption}
 import com.malliina.appbundler._
 import com.malliina.file.StorageFile
 import com.malliina.sbt.GenericKeys._
-import com.malliina.sbt.azure.AzureKeys
+import com.malliina.sbt.GenericPlugin
 import com.malliina.sbt.mac.MacKeys._
 import com.malliina.sbt.unix.UnixKeys._
 import com.malliina.sbt.unix.UnixPlugin._
-import com.malliina.sbt.{GenericKeys, GenericPlugin}
 import sbt.Keys._
 import sbt.{Plugin, _}
 
@@ -81,7 +80,6 @@ object MacPlugin extends Plugin {
   )
 
   protected def macConfigSettings: Seq[Setting[_]] = inConfig(Mac)(Seq(
-    AzureKeys.azurePackage := Some(dmg.value),
     plistFile := pkgHome.value / "launchd.plist",
     pathMappings := confMappings.value ++ scriptMappings.value ++ libMappings.value,
     deployFiles := pathMappings.value.map(_._2),

@@ -5,9 +5,8 @@ import java.util.UUID
 
 import com.malliina.file.StorageFile
 import com.malliina.sbt.GenericKeys._
-import com.malliina.sbt.azure.AzureKeys._
 import com.malliina.sbt.win.WinKeys._
-import com.malliina.sbt.{GenericKeys, GenericPlugin, PackagingUtil}
+import com.malliina.sbt.{GenericPlugin, PackagingUtil}
 import com.typesafe.sbt.SbtNativePackager.Windows
 import sbt.Keys._
 import sbt._
@@ -110,7 +109,6 @@ object WinPlugin extends Plugin {
           minUpgradeVersion)
         logger.value info taskList
       },
-      azurePackage := Some(win.value),
       deployFiles := msiMappings.value.map(_._2),
       configDestDir := Paths get "config",
       libDestDir := Paths get "lib",
@@ -157,6 +155,10 @@ object WinPlugin extends Plugin {
         streams.value.log.info(output)
       },
       serviceImplementation := Some(WinKeys.Winsw),
-      serviceConf <<= (serviceImplementation, winSwExe, winSwExeName, runtimeConfTargetPath, winSwXmlTargetPath)((s, exe, e, rt, xt) => if (s.isDefined) Some(ServiceConf(exe, e, rt, xt)) else None)
+      serviceConf := {
+        serviceImplementation.value.map { s =>
+          ServiceConf(winSwExe.value, winSwExeName.value, runtimeConfTargetPath.value, winSwXmlTargetPath.value)
+        }
+      }
     ))
 }

@@ -4,13 +4,11 @@ import java.nio.file.Path
 
 import com.malliina.file.{FileUtilities, StorageFile}
 import com.malliina.sbt.GenericKeys._
-import com.malliina.sbt.azure.AzureKeys.{azureContainer, azurePackage, azureUpload}
-import com.malliina.sbt.azure.AzurePlugin
 import sbt.Keys._
 import sbt._
 
 object GenericPlugin extends Plugin {
-  val genericSettings: Seq[Setting[_]] = AzurePlugin.azureSettings ++ Seq(
+  val genericSettings: Seq[Setting[_]] = Seq(
     pkgHome := (basePath.value / "src" / "pkg"),
     basePath := baseDirectory.value.toPath,
     displayName := name.value,
@@ -24,7 +22,7 @@ object GenericPlugin extends Plugin {
     printLibs := libs.value foreach println,
     confFile := None,
     configSrcDir := basePath.value / confDir,
-    configFiles <<= PackagingUtil.listFiles(configSrcDir),
+    configFiles := PackagingUtil.listFiles(configSrcDir).value,
     targetPath := target.value.toPath,
     logger := streams.value.log,
     helpMe := {
@@ -43,15 +41,7 @@ object GenericPlugin extends Plugin {
   )
   val confSpecificSettings: Seq[Setting[_]] = Seq(
     printFiles := deployFiles.value foreach (dest => logger.value.info(dest.toString)),
-    targetPath := target.value.toPath,
-    azureUpload := {
-      val path: Path = azurePackage.value.getOrElse(throw new Exception(azurePackage.key.label + " not defined."))
-      val srcPath = path.toAbsolutePath.toString
-      logger.value info s"Uploading to Azure: $srcPath"
-      val uri = azureContainer.value.upload(path)
-      logger.value info s"Uploaded $srcPath to $uri"
-      uri
-    }
+    targetPath := target.value.toPath
   )
   val confSettings: Seq[Setting[_]] = Seq(
     confFile := Some(pkgHome.value / (name.value + ".conf"))
@@ -67,6 +57,5 @@ object GenericPlugin extends Plugin {
     t.label + sep + t.description.getOrElse("No description")
   }).mkString(FileUtilities.lineSep)
 
-  def describeWithAzure(tasks: ScopedTaskable[_]*) =
-    describe(tasks: _*) + FileUtilities.lineSep + AzurePlugin.describe
+  def describeWithAzure(tasks: ScopedTaskable[_]*) = describe(tasks: _*)
 }
