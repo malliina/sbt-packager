@@ -11,7 +11,7 @@ object WindowsServiceWrapper {
         <startargument>start</startargument>
         <stopexecutable>%BASE%\{appName}.bat</stopexecutable>
         <stopargument>stop</stopargument>
-        <logpath>%TEMP%</logpath>
+        <logpath>%SystemDrive%\ProgramData\{appName}\logs</logpath>
       </service>
     )
   def netRuntimeConf =

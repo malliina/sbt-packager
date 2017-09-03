@@ -117,7 +117,7 @@ object WinPlugin extends Plugin {
       exePath := targetPath.value / (name.value + ".exe"),
       batPath := (pkgHome in Windows).value / (name.value + ".bat"),
       licenseRtf := (pkgHome in Windows).value / "license.rtf",
-      winSwExe := (pkgHome in Windows).value / "winsw-1.16-bin.exe",
+      winSwExe := (pkgHome in Windows).value / "WinSW.NET2.exe",
       winSwConf := targetPath.value / winSwConfName.value,
       winSwName := name.value + "svc",
       winSwExeName := winSwName.value + ".exe",
