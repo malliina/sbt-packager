@@ -1,7 +1,5 @@
 package com.malliina.sbt
 
-import java.nio.file.Path
-
 import com.malliina.file.{FileUtilities, StorageFile}
 import com.malliina.sbt.GenericKeys._
 import sbt.Keys._

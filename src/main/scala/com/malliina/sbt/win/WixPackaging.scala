@@ -28,9 +28,9 @@ object WixPackaging extends Plugin {
           .map(s => ServiceFragments.fromConf(s, displayName.value))
           .getOrElse(ServiceFragments.Empty)
 
-      val interactiveElement = foldEmpty(Option(interactiveInstallation.value).filter(_ == true))(_ => {
+      val interactiveElement = foldEmpty(Option(interactiveInstallation.value).filter(_ == true)) { _ =>
           <UIRef Id="WixUI_FeatureTree"/>
-      })
+      }
 
         // To prevent a reboot request before uninstallation, stop the service manually.
         // ServiceControl doesn't cut it if interactiveInstallation is enabled.
@@ -60,7 +60,6 @@ object WixPackaging extends Plugin {
 
         val postUrlFragment = foldEmpty(postInstallUrl.value)(OpenBrowserWix.forUrl)
 
-        // TODO
         val exeComp = NodeSeq.Empty
         val exeCompRef = NodeSeq.Empty
         val minJavaFragment = foldEmpty(minJavaVersion.value)(v => {

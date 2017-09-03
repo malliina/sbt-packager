@@ -15,23 +15,23 @@ object PackagingUtil {
   }
 
   def logPairs(pairs: Seq[(SettingKey[Path], Types.Id[Path])], logger: TaskStreams) {
-    pairs.foreach(pair => {
+    pairs.foreach { pair =>
       val (key, value) = pair
       val actualKey = key.key
       val keyPrinted = actualKey.description.getOrElse(actualKey.label)
       logger.log.info(keyPrinted + "\n" + value.toAbsolutePath.toString + "\nExists: " + Files.exists(value))
-    })
+    }
   }
 
-  def relativize(files: Seq[Path], baseDir: Path) = files.map(file => {
+  def relativize(files: Seq[Path], baseDir: Path) = files.map { file =>
     file -> (baseDir relativize file)
-  })
+  }
 
   def filesIn(dir: SettingKey[Option[Path]]): Def.Initialize[Task[Seq[Path]]] = Def.task {
-    dir.value.map(p =>
+    dir.value.map { p =>
       if (Files isDirectory p) FileUtilities.listPaths(p)
       else Seq.empty[Path]
-    ).getOrElse(Seq.empty[Path])
+    }.getOrElse { Seq.empty[Path] }
   }
 
   def listFiles(dir: SettingKey[Path]): Def.Initialize[Task[Seq[Path]]] = Def.task {

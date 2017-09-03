@@ -4,6 +4,7 @@ import java.nio.file.Path
 
 import com.malliina.file.StorageFile
 import com.malliina.sbt.PackagingUtil
+import com.malliina.sbt.win.WindowsServiceWrapper.WinswConf
 import sbt.{Logger, settingKey, taskKey}
 
 import scala.xml.Elem
@@ -30,6 +31,11 @@ object WinKeys {
   val winSwExeName = settingKey[String]("Windows Service Wrapper executable name on target")
   val winSwConfName = settingKey[String]("Windows Service Wrapper XML config file name on target")
   val winSwName = settingKey[String]("Windows Service Wrapper name on target")
+  val winSwStartExecutable = settingKey[String]("Executable to start")
+  val winSwStopExecutable = settingKey[String]("Executable to stop")
+  val winSwStartArgument = settingKey[String]("Argument to start")
+  val winSwStopArgument = settingKey[String]("Argument to stop")
+  val winSwLogPath = settingKey[String]("Windows Service Wrapper log path, i.e. the logpath value")
   val runtimeConfTargetPath = settingKey[Path]("Path to winsw.exe.config after build")
   val winSwXmlTargetPath = settingKey[Path]("Path to winsw.xml after build")
   val serviceConf = settingKey[Option[ServiceConf]]("Winsw confs")
@@ -46,19 +52,20 @@ object WinKeys {
   val interactiveInstallation = settingKey[Boolean]("True if the MSI-installer should be interactive, false otherwise. If true, the installer will prompt for reboots when upgrading, if the service is running. I don't know why.")
 
   sealed trait ServiceImplementation {
-    def prepare(log: Logger, targetFilePath: Path, n: String, dN: String, swConfName: String, confDest: Path): Unit = ()
+    def prepare(log: Logger, targetFilePath: Path, swConfName: String, confDest: Path, conf: WinswConf): Unit = ()
   }
 
   case object Winsw extends ServiceImplementation {
-    override def prepare(log: Logger, targetFilePath: Path, n: String, dN: String, swConfName: String, confDest: Path): Unit = {
+    override def prepare(log: Logger, targetFilePath: Path, swConfName: String, confDest: Path, winswConf: WinswConf): Unit = {
       log.info("Creating service wrapper")
-      // build winsw service wrapper XML configuration file
-      def toFile(xml: Elem, file: Path) {
+
+      // builds winsw XML configuration file
+      def toFile(xml: Elem, file: Path): Unit = {
         PackagingUtil.writerTo(file)(_.println(xml.toString()))
-        log.info("Created: " + file.toAbsolutePath)
+        log.info(s"Created: ${file.toAbsolutePath}")
       }
 
-      val conf = WindowsServiceWrapper.conf(n, dN)
+      val conf = WindowsServiceWrapper.conf(winswConf)
       val confFile = targetFilePath / swConfName
       toFile(conf, confFile)
 
@@ -70,4 +77,3 @@ object WinKeys {
   case object KingMichaelImplementation extends ServiceImplementation
 
 }
-
