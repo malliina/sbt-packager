@@ -11,7 +11,7 @@ import com.typesafe.sbt.SbtNativePackager.Windows
 import sbt.Keys._
 import sbt._
 
-object WinPlugin extends Plugin {
+object WinPlugin {
   val windowsKeys = com.typesafe.sbt.packager.Keys
   val windowsMappings = mappings in packageBin in Windows
 
@@ -58,10 +58,10 @@ object WinPlugin extends Plugin {
       Seq.empty[(Path, Path)]
     },
     msiMappings ++= {
+      val src = (packageBin in Compile).value.toPath
       if (exportJars.value) {
         Nil
       } else {
-        val src = (packageBin in Compile).value.toPath
         val dest = libDestDir.value / src.getFileName
         Seq(src -> dest)
       }

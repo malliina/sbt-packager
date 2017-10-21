@@ -1,7 +1,8 @@
 package com.malliina.sbt.mac
 
 import sbt.Keys._
-import sbt._
+
+import scala.sys.process.Process
 
 object ExeUtils {
   /**
@@ -25,7 +26,6 @@ object ExeUtils {
    */
   def execute2(cmd: Seq[String], logger: TaskStreams): Stream[String] = {
     logger.log.info(cmd.mkString(" "))
-    Process(cmd.head, cmd.tail).lines
+    Process(cmd.head, cmd.tail).lineStream
   }
 }
-

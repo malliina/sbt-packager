@@ -15,6 +15,7 @@ import sbt.Keys._
 import sbt._
 
 import scala.io.Source
+import scala.sys.process.Process
 
 object LinuxPlugin extends AutoPlugin {
   override def requires = JavaServerAppPackaging
@@ -82,6 +83,7 @@ object LinuxPlugin extends AutoPlugin {
 
   lazy val ciSettings = Seq(
     ciBuild := {
+      val log = streams.value.log
       val file = (packageBin in Debian).value
       val lintianExitValue = Process(Seq("lintian", "-c", "-v", file.getName), Some(file.getParentFile)).!
       if (lintianExitValue > 1) {
@@ -93,7 +95,7 @@ object LinuxPlugin extends AutoPlugin {
       if (!success) {
         sys.error(s"Unable to rename '$file' to '$destFile'.")
       } else {
-        streams.value.log.info(s"Renamed '$file' to '$destFile'.")
+        log.info(s"Renamed '$file' to '$destFile'.")
         destFile
       }
     }

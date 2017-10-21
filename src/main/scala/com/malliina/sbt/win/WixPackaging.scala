@@ -14,7 +14,7 @@ import scala.xml.NodeSeq
  *
  * Understanding any of this requires knowledge of WiX. The short story is that this is a complete fucking mess.
  */
-object WixPackaging extends Plugin {
+object WixPackaging {
 
   val windowsKeys = com.typesafe.sbt.packager.Keys
 

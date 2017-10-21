@@ -10,9 +10,9 @@ import com.malliina.sbt.mac.MacKeys._
 import com.malliina.sbt.unix.UnixKeys._
 import com.malliina.sbt.unix.UnixPlugin._
 import sbt.Keys._
-import sbt.{Plugin, _}
+import sbt._
 
-object MacPlugin extends Plugin {
+object MacPlugin {
   val Mac = config("mac") extend Unix
 
   def macSettings: Seq[Setting[_]] = unixSettings ++ macOnlySettings ++ macConfigSettings
@@ -33,9 +33,10 @@ object MacPlugin extends Plugin {
       Seq(LaunchdConf.executable((displayName in Mac).value))),
     infoPlistConf := {
       val libraryJars = libs.value
+      val appJar = (packageBin in Compile).value
       val jars =
         if (exportJars.value) libraryJars
-        else libraryJars :+ (packageBin in Compile).value.toPath
+        else libraryJars :+ appJar.toPath
       InfoPlistConf(
         (displayName in Mac).value,
         name.value,

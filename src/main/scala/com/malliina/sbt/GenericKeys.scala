@@ -4,7 +4,7 @@ import java.nio.file.Path
 
 import sbt._
 
-object GenericKeys extends Plugin {
+object GenericKeys {
   // These string literals double as directory names on both source and destination
   val confDir = "config"
   val libDir = "lib"

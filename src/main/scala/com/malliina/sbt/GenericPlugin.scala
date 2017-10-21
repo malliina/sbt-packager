@@ -1,13 +1,11 @@
 package com.malliina.sbt
 
-import java.nio.file.Path
-
 import com.malliina.file.{FileUtilities, StorageFile}
 import com.malliina.sbt.GenericKeys._
 import sbt.Keys._
 import sbt._
 
-object GenericPlugin extends Plugin {
+object GenericPlugin {
   val genericSettings: Seq[Setting[_]] = Seq(
     pkgHome := (basePath.value / "src" / "pkg"),
     basePath := baseDirectory.value.toPath,
@@ -40,7 +38,10 @@ object GenericPlugin extends Plugin {
     }
   )
   val confSpecificSettings: Seq[Setting[_]] = Seq(
-    printFiles := deployFiles.value foreach (dest => logger.value.info(dest.toString)),
+    printFiles := {
+      val log = logger.value
+      deployFiles.value foreach (dest => log.info(dest.toString))
+    },
     targetPath := target.value.toPath
   )
   val confSettings: Seq[Setting[_]] = Seq(
