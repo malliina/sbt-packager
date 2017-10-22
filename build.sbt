@@ -10,5 +10,8 @@ resolvers ++= Seq(
   Resolver.bintrayRepo("malliina", "maven"),
   "Sonatype releases" at "https://oss.sonatype.org/content/repositories/releases/"
 )
-libraryDependencies += "com.malliina" %% "appbundler" % "1.0.1"
+libraryDependencies ++= Seq(
+  "com.malliina" %% "util" % "2.8.2",
+  "com.malliina" %% "appbundler" % "1.1.3"
+)
 addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.2.2")
