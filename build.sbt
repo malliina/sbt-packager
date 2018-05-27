@@ -2,7 +2,7 @@ import com.malliina.sbtutils.SbtProjects
 
 lazy val p = SbtProjects.sbtPlugin("sbt-packager")
 
-scalaVersion := "2.12.4"
+scalaVersion := "2.12.6"
 scalacOptions := Seq("-unchecked", "-deprecation")
 organization := "com.malliina"
 exportJars := false
@@ -11,7 +11,7 @@ resolvers ++= Seq(
   "Sonatype releases" at "https://oss.sonatype.org/content/repositories/releases/"
 )
 libraryDependencies ++= Seq(
-  "com.malliina" %% "util" % "2.8.2",
-  "com.malliina" %% "appbundler" % "1.1.3"
+  "com.malliina" %% "util" % "2.10.2",
+  "com.malliina" %% "appbundler" % "1.2.0"
 )
-addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.2.2")
+addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.3.4")

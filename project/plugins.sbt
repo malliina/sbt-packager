@@ -5,6 +5,6 @@ resolvers ++= Seq(
   Resolver.url("malliina bintray sbt", url("https://dl.bintray.com/malliina/sbt-plugins/"))(Resolver.ivyStylePatterns)
 )
 Seq(
-  "com.malliina" %% "sbt-utils" % "0.7.0",
+  "com.malliina" %% "sbt-utils" % "0.8.0",
   "org.foundweekends" % "sbt-bintray" % "0.5.1"
 ) map addSbtPlugin
