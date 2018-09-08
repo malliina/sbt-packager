@@ -2,8 +2,8 @@ package com.malliina.sbt.win
 
 import java.nio.file.Path
 
-import com.malliina.file.StorageFile
 import com.malliina.sbt.PackagingUtil
+import com.malliina.sbt.file.PathOps
 import com.malliina.sbt.win.WindowsServiceWrapper.WinswConf
 import sbt.{Logger, settingKey, taskKey}
 

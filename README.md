@@ -10,7 +10,7 @@ This plugin may prove useful if you wish to run Scala services on Windows or OSX
 
 ## Installation ##
 
-    addSbtPlugin("com.malliina" % "sbt-packager" % "1.9.0")
+    addSbtPlugin("com.malliina" % "sbt-packager" % "2.4.1")
 
 ## Usage ##
 
@@ -19,7 +19,6 @@ Add the following settings to your project:
     WinPlugin.windowsSettings ++
     LinuxPlugin.linuxNativeSettings ++
     GenericPlugin.confSettings ++
-    AzurePlugin.azureSettings ++
     LinuxPlugin.playSettings
 
 Three OS configurations are available: windows, mac, debian, and rpm.

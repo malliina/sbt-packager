@@ -1,7 +1,10 @@
 package com.malliina.sbt.win
 
-import com.malliina.file.FileUtilities
+import java.io.{BufferedWriter, FileWriter, PrintWriter}
 import java.nio.file.Path
+
+import com.malliina.util.Utils
+
 import sys.process.Process
 import xml.NodeSeq
 
@@ -30,7 +33,7 @@ object Launch4jWrapper {
   }
 
   def buildLauncher(launch4jcExe: Path, config: NodeSeq, outputConf: Path, outputExe: Path) = {
-    FileUtilities.writerTo(outputConf)(_.println(config.toString()))
+    writerTo(outputConf)(_.println(config.toString()))
 //    println("Executing: " + launch4jcExe.toAbsolutePath + " " + outputConf.toAbsolutePath.toString)
     Process(launch4jcExe.toAbsolutePath.toString, Seq(outputConf.toAbsolutePath.toString)).! match {
       case 0 => () // success
@@ -39,6 +42,9 @@ object Launch4jWrapper {
     }
     outputExe
   }
+
+  def writerTo(filename: Path)(op: PrintWriter => Unit): Unit =
+    Utils.using(new PrintWriter(new BufferedWriter(new FileWriter(filename.toFile))))(op)
 
   /**
    *

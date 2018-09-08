@@ -23,7 +23,7 @@ object WixPackaging {
   val wixSettings: Seq[Setting[_]] = inConfig(Windows)(Seq(
     windowsKeys.wixConfig := {
         GenericKeys.logger.value info s"Display name: ${displayName.value}"
-        val msiFiles = WixUtils.wix(msiMappings.value)
+        val msiFiles = WixUtils.wix(msiMappings.value, streams.value)
         val serviceFragments = serviceConf.value
           .map(s => ServiceFragments.fromConf(s, displayName.value))
           .getOrElse(ServiceFragments.Empty)

@@ -1,11 +1,12 @@
 package com.malliina.sbt
 
-import com.malliina.file.{FileUtilities, StorageFile}
+import com.malliina.appbundler.StorageFile
 import com.malliina.sbt.GenericKeys._
 import sbt.Keys._
 import sbt._
 
 object GenericPlugin {
+  val lineSep = PackagingUtil.lineSep
   val genericSettings: Seq[Setting[_]] = Seq(
     pkgHome := (basePath.value / "src" / "pkg"),
     basePath := baseDirectory.value.toPath,
@@ -26,14 +27,15 @@ object GenericPlugin {
     helpMe := {
       import com.typesafe.sbt.SbtNativePackager._
       def suggestTask(conf: Configuration) = conf.name + ":helpme"
+
       val winHelp = suggestTask(Windows)
       val debHelp = suggestTask(Debian)
       val rpmHelp = suggestTask(Rpm)
-      val taskList = Seq(winHelp, debHelp, rpmHelp).mkString(FileUtilities.lineSep, FileUtilities.lineSep, FileUtilities.lineSep)
+      val taskList = Seq(winHelp, debHelp, rpmHelp).mkString(lineSep, lineSep, lineSep)
       val helpMsg = describe(pkgHome, appJar, libs, confFile)
       val confMsg = s"Three OS configurations are available: ${Windows.name}, ${Debian.name}, and ${Rpm.name}."
       val suggest = "Try the following: " + taskList
-      val msg = Seq(helpMsg, confMsg, suggest).mkString(FileUtilities.lineSep + FileUtilities.lineSep)
+      val msg = Seq(helpMsg, confMsg, suggest).mkString(lineSep + lineSep)
       logger.value.info(msg)
     }
   )
@@ -56,7 +58,7 @@ object GenericPlugin {
     }
     val sep = (1 to tabCount).map(_ => "\t").mkString
     t.label + sep + t.description.getOrElse("No description")
-  }).mkString(FileUtilities.lineSep)
+  }).mkString(lineSep)
 
   def describeWithAzure(tasks: ScopedTaskable[_]*) = describe(tasks: _*)
 }
