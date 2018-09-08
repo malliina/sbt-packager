@@ -22,11 +22,19 @@ object WixPackaging {
 
   val wixSettings: Seq[Setting[_]] = inConfig(Windows)(Seq(
     windowsKeys.wixConfig := {
-        GenericKeys.logger.value info s"Display name: ${displayName.value}"
-        val msiFiles = WixUtils.wix(msiMappings.value, streams.value)
-        val serviceFragments = serviceConf.value
-          .map(s => ServiceFragments.fromConf(s, displayName.value))
-          .getOrElse(ServiceFragments.Empty)
+      streams.value.log info s"Display name: ${displayName.value}"
+      val svcConf = serviceConf.value
+      val serviceFragments = svcConf
+        .map(s => ServiceFragments.fromConf(s, displayName.value))
+        .getOrElse(ServiceFragments.Empty)
+      val wixable =
+        svcConf.map { conf =>
+          val excluded = Seq(conf.runtimeConf, conf.xmlConf)
+          msiMappings.value.filter { case (_, dest) => !excluded.exists(p => p.getFileName.toString == dest.getFileName.toString) }
+        }.getOrElse {
+          msiMappings.value
+        }
+      val msiFiles = WixUtils.wix(wixable, streams.value)
 
       val interactiveElement = foldEmpty(Option(interactiveInstallation.value).filter(_ == true)) { _ =>
           <UIRef Id="WixUI_FeatureTree"/>

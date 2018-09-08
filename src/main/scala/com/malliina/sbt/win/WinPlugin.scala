@@ -6,9 +6,8 @@ import java.util.UUID
 import com.malliina.appbundler.StorageFile
 import com.malliina.sbt.GenericKeys._
 import com.malliina.sbt.win.WinKeys._
-import com.malliina.sbt.win.WindowsServiceWrapper.WinswConf
 import com.malliina.sbt.{GenericPlugin, PackagingUtil}
-import com.typesafe.sbt.SbtNativePackager.Windows
+import com.typesafe.sbt.SbtNativePackager.{Windows, Universal}
 import sbt.Keys._
 import sbt._
 
@@ -20,48 +19,10 @@ object WinPlugin {
     windowsMappings ++= msiMappings.value.map {
       case (src, dest) => src.toFile -> dest.toString
     },
-    msiMappings ++= {
-      val batFilePath = batPath.value
-
-      def servicePath(suffix: String) = targetPath.value / (name.value + suffix)
-
-      val startService = servicePath("-start.bat")
-      val stopService = servicePath("-stop.bat")
-
-      def write(path: Path, batCommand: String) = PackagingUtil.writerTo(path)(_.println(batFilePath.getFileName.toString + batCommand))
-
-      write(startService, " start")
-      write(stopService, " stop")
-      val confMap = confFile.value.map(p => Seq(p -> p.getFileName)).getOrElse(Seq.empty[(Path, Path)])
-      confMap ++ Seq(
-        batFilePath -> batFilePath.getFileName,
-        startService -> startService.getFileName,
-        stopService -> stopService.getFileName
-      )
-    },
-    msiMappings ++= libs.value.map(libPath => libPath -> (libDestDir.value / libPath.getFileName)),
-    msiMappings ++= {
-      val confFiles = configFiles.value.filter(_.toFile.isFile)
-      val absAndRelative = confFiles.map(abs => abs -> configSrcDir.value.relativize(abs))
-      absAndRelative map { ar =>
-        val (abs, rel) = ar
-        abs -> configDestDir.value.resolve(rel)
-      }
-    },
-    msiMappings ++= {
-      val log = streams.value.log
-      val conf = WinswConf(name.value, displayName.value, winSwStartExecutable.value,
-        winSwStartArgument.value, winSwStopExecutable.value, winSwStopArgument.value,
-        winSwLogPath.value)
-      serviceImplementation.value.fold(log.info("No service implementation."))(_.prepare(
-        streams.value.log,
-        targetPath.value,
-        winSwConfName.value,
-        runtimeConfTargetPath.value,
-        conf))
-      // if non-empty, would probably cause double-entries in the wix due to ServiceFragments.fromConf
-      Seq.empty[(Path, Path)]
-    },
+    // Includes universal mappings except docs
+    msiMappings in Windows := (mappings in Universal).value
+      .filter { case (_, dest) => !dest.startsWith("share") }
+      .map { case (src, dest) => (src.toPath, Paths.get(dest)) },
     msiMappings ++= {
       val src = (packageBin in Compile).value.toPath
       if (exportJars.value) {
@@ -115,6 +76,7 @@ object WinPlugin {
       logger.value info taskList
     },
     deployFiles := msiMappings.value.map(_._2),
+    binDestDir := Paths get "bin",
     configDestDir := Paths get "config",
     libDestDir := Paths get "lib",
     msiName := name.value + "-" + version.value + ".msi",
@@ -129,8 +91,8 @@ object WinPlugin {
     winSwConfName := winSwName.value + ".xml",
     runtimeConfTargetPath := targetPath.value / (winSwExeName.value + ".config"),
     winSwXmlTargetPath := targetPath.value / winSwConfName.value,
-    winSwStartExecutable := s"%BASE%\\${name.value}.bat",
-    winSwStopExecutable := s"%BASE%\\${name.value}.bat",
+    winSwStartExecutable := s"%BASE%\\bin\\${name.value}.bat",
+    winSwStopExecutable := s"%BASE%\\bin\\${name.value}.bat",
     winSwStartArgument := "start",
     winSwStopArgument := "stop",
     winSwLogPath := s"%SystemDrive%\\ProgramData\\${displayName.value}\\logs",
@@ -151,6 +113,26 @@ object WinPlugin {
       PackagingUtil.logPairs(pairs, streams.value)
       values
     },
+    preparePackaging := {
+      val log = streams.value.log
+      val conf =
+        if (useTerminateProcess.value) {
+          ShortWinswConf(name.value, displayName.value, winSwStartExecutable.value, winSwLogPath.value)
+        } else {
+          FullWinswConf(name.value, displayName.value, winSwStartExecutable.value,
+            winSwStartArgument.value, winSwStopExecutable.value, winSwStopArgument.value,
+            winSwLogPath.value)
+        }
+      serviceImplementation.value.map { impl =>
+        impl.prepare(conf,
+          winSwXmlTargetPath.value,
+          runtimeConfTargetPath.value,
+          log)
+      }.getOrElse {
+        log.info("Not packaging as a service.")
+        Nil
+      }
+    },
     win := {
       val msiFile = (packageBin in Windows).value.toPath
       val msiRenamed = msiFile.resolveSibling(msiName.value)
@@ -158,6 +140,7 @@ object WinPlugin {
       streams.value.log.info("Packaged: " + packagedFile.toAbsolutePath.toString)
       packagedFile
     },
+    win := win.dependsOn(preparePackaging).value,
     shortcut := false,
     mappingsPrint := {
       val maps = (mappings in packageBin in Windows).value

@@ -40,7 +40,7 @@ object WixUtils {
    * @param mappings file mappings (source, destination)
    * @return WIX XML fragments to use in WIX packaging
    */
-  def wix(mappings: Seq[(Path, Path)], log: TaskStreams) = {
+  def wix(mappings: Seq[(Path, Path)], log: TaskStreams): WixCompInfo = {
     val trees = treeify(mappings)
     add(trees.map(t => wixifyTree(t, log)))
   }

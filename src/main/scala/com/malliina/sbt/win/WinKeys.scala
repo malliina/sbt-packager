@@ -3,8 +3,6 @@ package com.malliina.sbt.win
 import java.nio.file.Path
 
 import com.malliina.sbt.PackagingUtil
-import com.malliina.sbt.file.PathOps
-import com.malliina.sbt.win.WindowsServiceWrapper.WinswConf
 import sbt.{Logger, settingKey, taskKey}
 
 import scala.xml.Elem
@@ -50,30 +48,28 @@ object WinKeys {
   val minJavaVersion = settingKey[Option[Int]]("The minimum required preinstalled Java version, if any. Examples: 6, 7, 8.")
   val postInstallUrl = settingKey[Option[String]]("URL to open after installation.")
   val interactiveInstallation = settingKey[Boolean]("True if the MSI-installer should be interactive, false otherwise. If true, the installer will prompt for reboots when upgrading, if the service is running. I don't know why.")
+  val useTerminateProcess = settingKey[Boolean]("True to use the TerminateProcess API to stop a service, false for custom stop implementations.")
+  val preparePackaging = taskKey[Seq[Path]]("Generate any necessary files for packaging.")
 
   sealed trait ServiceImplementation {
-    def prepare(log: Logger, targetFilePath: Path, swConfName: String, confDest: Path, conf: WinswConf): Unit = ()
+    def prepare(winswConf: WinswConf, confDest: Path, runtimeDest: Path, log: Logger): Seq[Path]
   }
 
   case object Winsw extends ServiceImplementation {
-    override def prepare(log: Logger, targetFilePath: Path, swConfName: String, confDest: Path, winswConf: WinswConf): Unit = {
-      log.info("Creating service wrapper")
-
-      // builds winsw XML configuration file
-      def toFile(xml: Elem, file: Path): Unit = {
+    def prepare(winswConf: WinswConf, confDest: Path, runtimeDest: Path, log: Logger): Seq[Path] = {
+      def writeXml(xml: Elem, file: Path): Unit = {
         PackagingUtil.writerTo(file)(_.println(xml.toString()))
         log.info(s"Created: ${file.toAbsolutePath}")
       }
 
-      val conf = WindowsServiceWrapper.conf(winswConf)
-      val confFile = targetFilePath / swConfName
-      toFile(conf, confFile)
-
-      val runtimeConf = WindowsServiceWrapper.netRuntimeConf
-      toFile(runtimeConf, confDest)
+      writeXml(WindowsServiceWrapper.conf(winswConf), confDest)
+      writeXml(WindowsServiceWrapper.netRuntimeConf, runtimeDest)
+      Seq(confDest, runtimeDest)
     }
   }
 
-  case object KingMichaelImplementation extends ServiceImplementation
+  case object KingMichaelImplementation extends ServiceImplementation {
+    override def prepare(winswConf: WinswConf, confDest: Path, runtimeDest: Path, log: Logger): Seq[Path] = Nil
+  }
 
 }

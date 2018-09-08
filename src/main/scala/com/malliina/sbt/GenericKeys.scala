@@ -12,8 +12,9 @@ object GenericKeys {
   val logDir = "logs"
   val displayName = settingKey[String]("Display name of application")
   val appIcon = settingKey[Option[Path]]("App icon.")
-  val configSrcDir = settingKey[Path]("Config file source dir")
-  val configDestDir = settingKey[Path]("Config file destination dir")
+  val configSrcDir = settingKey[Path]("Config files source dir")
+  val binDestDir = settingKey[Path]("Binary files destination dir")
+  val configDestDir = settingKey[Path]("Config files destination dir")
   val libDestDir = settingKey[Path]("Destination dir for libraries, typically app_home/lib")
   val configFiles = taskKey[Seq[Path]]("Config files to package with the app")
   val basePath = settingKey[Path]("Same as base-directory")
