@@ -48,7 +48,8 @@ object WinKeys {
   val minJavaVersion = settingKey[Option[Int]]("The minimum required preinstalled Java version, if any. Examples: 6, 7, 8.")
   val postInstallUrl = settingKey[Option[String]]("URL to open after installation.")
   val interactiveInstallation = settingKey[Boolean]("True if the MSI-installer should be interactive, false otherwise. If true, the installer will prompt for reboots when upgrading, if the service is running. I don't know why.")
-  val useTerminateProcess = settingKey[Boolean]("True to use the TerminateProcess API to stop a service, false for custom stop implementations.")
+  val useTerminateProcess = settingKey[Boolean]("True to use the TerminateProcess API to stop a service, false for custom stop implementations")
+  val stopParentProcessFirst = settingKey[Boolean]("WinSW configuration parameter")
   val preparePackaging = taskKey[Seq[Path]]("Generate any necessary files for packaging.")
 
   sealed trait ServiceImplementation {

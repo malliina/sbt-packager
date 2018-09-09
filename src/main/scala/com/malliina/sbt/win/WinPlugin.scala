@@ -7,7 +7,7 @@ import com.malliina.appbundler.StorageFile
 import com.malliina.sbt.GenericKeys._
 import com.malliina.sbt.win.WinKeys._
 import com.malliina.sbt.{GenericPlugin, PackagingUtil}
-import com.typesafe.sbt.SbtNativePackager.{Windows, Universal}
+import com.typesafe.sbt.SbtNativePackager.{Universal, Windows}
 import sbt.Keys._
 import sbt._
 
@@ -99,12 +99,12 @@ object WinPlugin {
     launch4jcExe := Paths get """C:\Program Files (x86)\Launch4j\launch4jc.exe""",
     launch4jcConf := targetPath.value / "launch4jconf.xml",
     verifySettings := {
-      if (mainClass.value.isEmpty)
-        throw new Exception("No mainClass specified; cannot create .exe")
-      PackagingUtil.verifyPathSetting(
-        winSwExe -> winSwExe.value,
-        batPath -> batPath.value,
-        licenseRtf -> licenseRtf.value)
+//      if (mainClass.value.isEmpty)
+//        throw new Exception("No mainClass specified; cannot create .exe")
+//      PackagingUtil.verifyPathSetting(
+//        winSwExe -> winSwExe.value,
+//        batPath -> batPath.value,
+//        licenseRtf -> licenseRtf.value)
     },
     printPaths := {
       val keys = Seq(launch4jcExe, winSwExe, batPath, licenseRtf)
@@ -113,15 +113,17 @@ object WinPlugin {
       PackagingUtil.logPairs(pairs, streams.value)
       values
     },
+    stopParentProcessFirst := true,
     preparePackaging := {
       val log = streams.value.log
       val conf =
         if (useTerminateProcess.value) {
-          ShortWinswConf(name.value, displayName.value, winSwStartExecutable.value, winSwLogPath.value)
+          ShortWinswConf(name.value, displayName.value, winSwStartExecutable.value,
+            winSwLogPath.value, stopParentProcessFirst.value)
         } else {
           FullWinswConf(name.value, displayName.value, winSwStartExecutable.value,
             winSwStartArgument.value, winSwStopExecutable.value, winSwStopArgument.value,
-            winSwLogPath.value)
+            winSwLogPath.value, stopParentProcessFirst.value)
         }
       serviceImplementation.value.map { impl =>
         impl.prepare(conf,

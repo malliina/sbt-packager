@@ -10,7 +10,11 @@ import scala.xml.NodeSeq
 object WixUtils {
 
   def wixify(srcPath: String, destFileName: String): WixCompInfo = {
-    val fileId = destFileName.replace('-', '_')
+    val fileId = destFileName
+      .replace('-', '_')
+      .replace('[', '_')
+      .replace(']', '_')
+      .replace(',', '_')
     val compId = "comp_" + fileId
     val comp = (<Component Id={compId} Guid='*'>
       <File Id={fileId} Name={destFileName} DiskId='1' Source={srcPath}/>
