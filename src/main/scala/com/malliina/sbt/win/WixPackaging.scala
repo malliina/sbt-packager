@@ -118,7 +118,7 @@ object WixPackaging {
 
             <Directory Id='TARGETDIR' Name='SourceDir'>
               <Directory Id="DesktopFolder" Name="Desktop"/>
-              <Directory Id='ProgramFilesFolder' Name='PFiles'>
+              <Directory Id='ProgramFiles64Folder' Name='PFiles'>
                 <Directory Id='INSTALLDIR' Name={displayName.value}>
                   {msiFiles.comp}
                   {exeComp}
@@ -153,6 +153,7 @@ object WixPackaging {
           </Product>
         </Wix>)
       },
+    windowsKeys.candleOptions ++= Seq("-arch", "x64"),
     windowsKeys.lightOptions ++= Seq("-cultures:en-us") //  "-ext", "WixUtilExtension","-ext", "WixUIExtension",
   ))
 }
