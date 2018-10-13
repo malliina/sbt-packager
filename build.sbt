@@ -2,7 +2,7 @@ import com.malliina.sbtutils.SbtProjects
 
 lazy val p = SbtProjects.sbtPlugin("sbt-packager")
 
-scalaVersion := "2.12.6"
+scalaVersion := "2.12.7"
 scalacOptions := Seq("-unchecked", "-deprecation")
 organization := "com.malliina"
 exportJars := false
