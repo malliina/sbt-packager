@@ -11,7 +11,7 @@ resolvers ++= Seq(
   "Sonatype releases" at "https://oss.sonatype.org/content/repositories/releases/"
 )
 libraryDependencies ++= Seq(
-  "com.malliina" %% "util" % "2.10.2",
+  "com.malliina" %% "util-base" % "1.6.0",
   "com.malliina" %% "appbundler" % "1.2.0"
 )
-addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.3.4")
+addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.3.7")

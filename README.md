@@ -19,7 +19,6 @@ Add the following settings to your project:
     WinPlugin.windowsSettings ++
     LinuxPlugin.linuxNativeSettings ++
     GenericPlugin.confSettings ++
-    AzurePlugin.azureSettings ++
     LinuxPlugin.playSettings
 
 Three OS configurations are available: windows, mac, debian, and rpm.

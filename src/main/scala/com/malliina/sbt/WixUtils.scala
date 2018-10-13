@@ -3,13 +3,18 @@ package com.malliina.sbt
 import java.io.File
 import java.nio.file.Path
 
-import com.malliina.util.Log
+import sbt.Keys.TaskStreams
 
 import scala.xml.NodeSeq
 
-object WixUtils extends Log {
+object WixUtils {
+
   def wixify(srcPath: String, destFileName: String): WixCompInfo = {
-    val fileId = destFileName.replace('-', '_')
+    val fileId = destFileName
+      .replace('-', '_')
+      .replace('[', '_')
+      .replace(']', '_')
+      .replace(',', '_')
     val compId = "comp_" + fileId
     val comp = (<Component Id={compId} Guid='*'>
       <File Id={fileId} Name={destFileName} DiskId='1' Source={srcPath}/>
@@ -39,14 +44,14 @@ object WixUtils extends Log {
    * @param mappings file mappings (source, destination)
    * @return WIX XML fragments to use in WIX packaging
    */
-  def wix(mappings: Seq[(Path, Path)]) = {
+  def wix(mappings: Seq[(Path, Path)], log: TaskStreams): WixCompInfo = {
     val trees = treeify(mappings)
-    add(trees.map(wixifyTree))
+    add(trees.map(t => wixifyTree(t, log)))
   }
 
-  def wixifyTree[T](tree: Tree): WixCompInfo = tree match {
+  def wixifyTree[T](tree: Tree, log: TaskStreams): WixCompInfo = tree match {
     case DirNode(d, children) =>
-      val childWixInfo = children.map(wixifyTree)
+      val childWixInfo = children.map(c => wixifyTree(c, log))
       // sum of xml
       val childCompRefs = childWixInfo.map(_.ref).foldLeft(NodeSeq.Empty)(_ ++ _)
       val childComponents = childWixInfo.map(_.comp).foldLeft(NodeSeq.Empty)(_ ++ _)
@@ -61,7 +66,7 @@ object WixUtils extends Log {
       val (source, dest) = mapping
       wixify(source, dest)
     case anythingElse =>
-      log warn "Unknown tree component: " + anythingElse
+      log.log.warn(s"Unknown tree component: $anythingElse")
       WixCompInfo(NodeSeq.Empty, NodeSeq.Empty)
   }
 

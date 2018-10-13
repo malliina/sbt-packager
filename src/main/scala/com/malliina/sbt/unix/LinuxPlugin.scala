@@ -28,11 +28,10 @@ object LinuxPlugin extends AutoPlugin {
     Seq(
       httpPort := Option("8456"),
       httpsPort := None,
-      pidFile := Option(s"${(runDir in Linux).value}/${(name in Linux).value}.pid"),
+//      pidFile := Option(s"${(runDir in Linux).value}/${(name in Linux).value}.pid"),
+      pidFile := None,
       javaOptions in Universal ++= {
-        val logs = (logsDir in Linux).value
         val always = Seq(
-          s"-Dlog.dir=$logs",
           "-Dfile.encoding=UTF-8",
           "-Dsun.jnu.encoding=UTF-8"
         )
@@ -42,6 +41,12 @@ object LinuxPlugin extends AutoPlugin {
           pidFile.value.map(path => s"-Dpidfile.path=$path")
         ).flatten
         always ++ optional
+      },
+      javaOptions in Linux ++= {
+        val logs = (logsDir in Linux).value
+        Seq(
+          s"-Dlog.dir=$logs",
+        )
       }
     )
   }
@@ -56,7 +61,7 @@ object LinuxPlugin extends AutoPlugin {
       appHome in Linux := s"/var/lib/${(name in Linux).value}",
       runDir in Linux := s"/var/run/${(name in Linux).value}",
       logsDir in Linux := s"/var/log/${(name in Linux).value}",
-      javaOptions in Universal ++= {
+      javaOptions in Linux ++= {
         val linuxName = (name in Linux).value
         val home = (appHome in Linux).value
         Seq(s"-D$linuxName.home=$home")
