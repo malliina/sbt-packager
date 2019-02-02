@@ -10,7 +10,7 @@ This plugin may prove useful if you wish to run Scala services on Windows or OSX
 
 ## Installation ##
 
-    addSbtPlugin("com.malliina" % "sbt-packager" % "2.4.1")
+    addSbtPlugin("com.malliina" % "sbt-packager" % "2.6.0")
 
 ## Usage ##
 
