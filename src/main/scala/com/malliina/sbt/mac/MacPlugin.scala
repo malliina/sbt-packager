@@ -2,7 +2,7 @@ package com.malliina.sbt.mac
 
 import java.nio.file.{Files, StandardCopyOption}
 
-import com.malliina.appbundler._
+import com.malliina.appbundler.{StorageFile => _, _}
 import com.malliina.sbt.GenericKeys._
 import com.malliina.sbt.GenericPlugin
 import com.malliina.sbt.mac.MacKeys._
@@ -29,7 +29,8 @@ object MacPlugin {
     extraDmgFiles := Nil,
     defaultLaunchd := LaunchdConf(
       appIdentifier.value,
-      Seq(LaunchdConf.executable((displayName in Mac).value))),
+      Seq(LaunchdConf.executable((displayName in Mac).value))
+    ),
     infoPlistConf := {
       val libraryJars = libs.value
       val appJar = (packageBin in Compile).value
@@ -59,7 +60,8 @@ object MacPlugin {
         launchdConf.value,
         additionalDmgFiles = extraDmgFiles.value,
         iconFile = pkgIcon.value,
-        deleteOutOnComplete = deleteOutOnComplete.value)
+        deleteOutOnComplete = deleteOutOnComplete.value
+      )
     },
     app := {
       val logger = streams.value.log
@@ -79,35 +81,37 @@ object MacPlugin {
     }
   )
 
-  protected def macConfigSettings: Seq[Setting[_]] = inConfig(Mac)(Seq(
-    plistFile := pkgHome.value / "launchd.plist",
-    pathMappings := confMappings.value ++ scriptMappings.value ++ libMappings.value,
-    deployFiles := pathMappings.value.map(_._2),
-    prepareFiles := pathMappings.value.map(p => {
-      val (src, dest) = p
-      Option(dest.getParent).foreach(dir => Files.createDirectories(dir))
-      Files.copy(src, dest, StandardCopyOption.REPLACE_EXISTING)
-    }),
-    helpMe := {
-      val taskList = GenericPlugin.describe(
-        plistFile,
-        appIdentifier,
-        embeddedJavaHome,
-        jvmOptions,
-        jvmArguments,
-        hideDock,
-        infoPlistConf,
-        launchdConf,
-        defaultLaunchd,
-        installer,
-        pkgIcon,
-        extraDmgFiles,
-        deleteOutOnComplete,
-        macAppTarget,
-        app,
-        pkg
-      )
-      logger.value info taskList
-    }
-  ) ++ GenericPlugin.confSpecificSettings)
+  protected def macConfigSettings: Seq[Setting[_]] = inConfig(Mac)(
+    Seq(
+      plistFile := pkgHome.value / "launchd.plist",
+      pathMappings := confMappings.value ++ scriptMappings.value ++ libMappings.value,
+      deployFiles := pathMappings.value.map(_._2),
+      prepareFiles := pathMappings.value.map(p => {
+        val (src, dest) = p
+        Option(dest.getParent).foreach(dir => Files.createDirectories(dir))
+        Files.copy(src, dest, StandardCopyOption.REPLACE_EXISTING)
+      }),
+      helpMe := {
+        val taskList = GenericPlugin.describe(
+          plistFile,
+          appIdentifier,
+          embeddedJavaHome,
+          jvmOptions,
+          jvmArguments,
+          hideDock,
+          infoPlistConf,
+          launchdConf,
+          defaultLaunchd,
+          installer,
+          pkgIcon,
+          extraDmgFiles,
+          deleteOutOnComplete,
+          macAppTarget,
+          app,
+          pkg
+        )
+        logger.value info taskList
+      }
+    ) ++ GenericPlugin.confSpecificSettings
+  )
 }

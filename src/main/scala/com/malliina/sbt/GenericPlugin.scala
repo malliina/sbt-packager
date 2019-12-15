@@ -1,6 +1,5 @@
 package com.malliina.sbt
 
-import com.malliina.appbundler.StorageFile
 import com.malliina.sbt.GenericKeys._
 import sbt.Keys._
 import sbt._
@@ -33,7 +32,8 @@ object GenericPlugin {
       val rpmHelp = suggestTask(Rpm)
       val taskList = Seq(winHelp, debHelp, rpmHelp).mkString(lineSep, lineSep, lineSep)
       val helpMsg = describe(pkgHome, appJar, libs, confFile)
-      val confMsg = s"Three OS configurations are available: ${Windows.name}, ${Debian.name}, and ${Rpm.name}."
+      val confMsg =
+        s"Three OS configurations are available: ${Windows.name}, ${Debian.name}, and ${Rpm.name}."
       val suggest = "Try the following: " + taskList
       val msg = Seq(helpMsg, confMsg, suggest).mkString(lineSep + lineSep)
       logger.value.info(msg)
@@ -50,15 +50,18 @@ object GenericPlugin {
     confFile := Some(pkgHome.value / (name.value + ".conf"))
   )
 
-  def describe(tasks: ScopedTaskable[_]*) = tasks.map(_.key).map(t => {
-    val tabCount = t.label.length match {
-      case i if i > 16 => 1
-      case i if i > 8 => 2
-      case _ => 3
-    }
-    val sep = (1 to tabCount).map(_ => "\t").mkString
-    t.label + sep + t.description.getOrElse("No description")
-  }).mkString(lineSep)
+  def describe(tasks: ScopedTaskable[_]*) = tasks
+    .map(_.key)
+    .map(t => {
+      val tabCount = t.label.length match {
+        case i if i > 16 => 1
+        case i if i > 8  => 2
+        case _           => 3
+      }
+      val sep = (1 to tabCount).map(_ => "\t").mkString
+      t.label + sep + t.description.getOrElse("No description")
+    })
+    .mkString(lineSep)
 
   def describeWithAzure(tasks: ScopedTaskable[_]*) = describe(tasks: _*)
 }

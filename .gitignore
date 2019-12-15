@@ -5,3 +5,9 @@ lib_managed/
 target/
 .idea_modules/
 logs/
+
+.hydra
+hydra.sbt
+
+.bloop
+out

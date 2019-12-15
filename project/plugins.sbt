@@ -1,9 +1,15 @@
-scalaVersion := "2.12.8"
+scalaVersion := "2.12.10"
 resolvers ++= Seq(
-  "Sonatype snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/",
-  Resolver.url("scalasbt", url("http://scalasbt.artifactoryonline.com/scalasbt/sbt-plugin-releases"))(Resolver.ivyStylePatterns),
-  Resolver.url("malliina bintray sbt", url("https://dl.bintray.com/malliina/sbt-plugins/"))(Resolver.ivyStylePatterns)
+  Resolver.url(
+    "scalasbt",
+    url("https://scalasbt.artifactoryonline.com/scalasbt/sbt-plugin-releases")
+  )(Resolver.ivyStylePatterns),
+  Resolver.url("malliina bintray sbt", url("https://dl.bintray.com/malliina/sbt-plugins/"))(
+    Resolver.ivyStylePatterns
+  )
 )
 Seq(
-  "com.malliina" %% "sbt-utils-bintray" % "0.10.1"
+  "com.malliina" %% "sbt-utils-bintray" % "0.15.0",
+  "ch.epfl.scala" % "sbt-bloop" % "1.3.4",
+  "org.scalameta" % "sbt-scalafmt" % "2.3.0"
 ) map addSbtPlugin
