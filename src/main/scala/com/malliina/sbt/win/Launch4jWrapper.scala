@@ -9,25 +9,27 @@ import sys.process.Process
 import xml.NodeSeq
 
 object Launch4jWrapper {
-  /**
-   * Creates a .exe file that wraps the given jar and starts the main class when opened.
-   *
-   * Launch4j is used to wrap the jar.
-   *
-   * @param launch4jcExe path to launch4jc.exe executable
-   * @param jarFile the .jar to wrap
-   * @param mainClass the main class to start when the .exe is started
-   * @param appJarName the name of the app jar when deployed
-   * @param exe the destination exe to create
-   * @return the created exe
-   */
-  def exeWrapper(launch4jcExe: Path,
-                 jarFile: Path,
-                 mainClass: String,
-                 appJarName: String,
-                 outputConf: Path,
-                 exe: Path,
-                 icon: Path) = {
+
+  /** Creates a .exe file that wraps the given jar and starts the main class when opened.
+    *
+    * Launch4j is used to wrap the jar.
+    *
+    * @param launch4jcExe path to launch4jc.exe executable
+    * @param jarFile the .jar to wrap
+    * @param mainClass the main class to start when the .exe is started
+    * @param appJarName the name of the app jar when deployed
+    * @param exe the destination exe to create
+    * @return the created exe
+    */
+  def exeWrapper(
+    launch4jcExe: Path,
+    jarFile: Path,
+    mainClass: String,
+    appJarName: String,
+    outputConf: Path,
+    exe: Path,
+    icon: Path
+  ) = {
     val config = launcherConfig(jarFile, mainClass, appJarName, exe, icon)
     buildLauncher(launch4jcExe, config, outputConf, exe)
   }
@@ -37,8 +39,11 @@ object Launch4jWrapper {
 //    println("Executing: " + launch4jcExe.toAbsolutePath + " " + outputConf.toAbsolutePath.toString)
     Process(launch4jcExe.toAbsolutePath.toString, Seq(outputConf.toAbsolutePath.toString)).! match {
       case 0 => () // success
-      case errorValue => throw new Exception("Unable to create .exe wrapper: "
-        + outputExe.toAbsolutePath + ". Launch4j exit value: " + errorValue)
+      case errorValue =>
+        throw new Exception(
+          "Unable to create .exe wrapper: "
+            + outputExe.toAbsolutePath + ". Launch4j exit value: " + errorValue
+        )
     }
     outputExe
   }
@@ -47,11 +52,17 @@ object Launch4jWrapper {
     Utils.using(new PrintWriter(new BufferedWriter(new FileWriter(filename.toFile))))(op)
 
   /**
-   *
-   * @param exe the destination exe, created when this config is supplied to launch4jc.exe
-   * @return the launch4j XML config
-   */
-  def launcherConfig(jarFile: Path, mainClass: String, appJarName: String, exe: Path, icon: Path) = {
+    *
+    * @param exe the destination exe, created when this config is supplied to launch4jc.exe
+    * @return the launch4j XML config
+    */
+  def launcherConfig(
+    jarFile: Path,
+    mainClass: String,
+    appJarName: String,
+    exe: Path,
+    icon: Path
+  ) = {
     //    require(Files.exists(jarFile), "Not found: " + jarFile.toAbsolutePath)
     //    val jarFileName = jarFile.getFileName.toString
     (<launch4jConfig>

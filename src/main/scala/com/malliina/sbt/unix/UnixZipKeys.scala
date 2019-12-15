@@ -6,8 +6,8 @@ import java.nio.file.Path
 import GenericKeys._
 
 object UnixZipKeys {
-  /**
-    * Destination
+
+  /** Destination
     */
   val outDir = "distrib"
   val libOutDir = outDir + "/" + libDir
@@ -19,7 +19,9 @@ object UnixZipKeys {
   val copyScripts = taskKey[Seq[Path]]("Copies all configuration files to " + scriptOutDir)
   val createJar = taskKey[Seq[Path]]("Copies application .jar to " + outDir)
   val packageApp = taskKey[Seq[Path]]("Copies the app (jars, libs, confs) to " + outDir)
-  val bat = taskKey[Seq[Path]]("Copies the app (jars, libs, confs) along with a .bat file to " + outDir)
-  val sh = taskKey[Seq[Path]]("Copies the app (jars, libs, confs) along with a .sh file to " + outDir)
+  val bat =
+    taskKey[Seq[Path]]("Copies the app (jars, libs, confs) along with a .bat file to " + outDir)
+  val sh =
+    taskKey[Seq[Path]]("Copies the app (jars, libs, confs) along with a .sh file to " + outDir)
   val zip = taskKey[File]("Creates a zip of the app to " + outDir)
 }

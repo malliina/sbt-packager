@@ -8,15 +8,16 @@ import sbt.{Logger, settingKey, taskKey}
 import scala.xml.Elem
 
 object WinKeys {
-  /**
-    * Source paths
+
+  /** Source paths
     */
   val launch4jcExe = settingKey[Path]("Path to launch4jc.exe")
   val winSwExe = settingKey[Path]("Windows Service Wrapper .exe path")
-  val licenseRtf = settingKey[Path]("Path to license RTF for Windows. Shown to the user during installation.")
+  val licenseRtf =
+    settingKey[Path]("Path to license RTF for Windows. Shown to the user during installation.")
   val batPath = settingKey[Path]("Application .bat")
-  /**
-    * Other
+
+  /** Other
     */
   val msiName = settingKey[String]("Name of MSI package built with task win")
   val win = taskKey[Path]("Verifies settings followed by package-msi")
@@ -37,18 +38,31 @@ object WinKeys {
   val runtimeConfTargetPath = settingKey[Path]("Path to winsw.exe.config after build")
   val winSwXmlTargetPath = settingKey[Path]("Path to winsw.xml after build")
   val serviceConf = settingKey[Option[ServiceConf]]("Winsw confs")
-  val forceStopOnUninstall = settingKey[Boolean]("If true, stops the service before uninstallation using an ugly custom action. Defaults to true.")
-  val productGuid = settingKey[String]("Product GUID required for MSI packaging. Generate with UUID.randomUUID().")
-  val upgradeGuid = settingKey[String]("Upgrade GUID required for MSI packaging. Generate with UUID.randomUUID().")
-  val shortcut = settingKey[Boolean]("Whether or not to install a desktop shortcut to the main application executable")
-  val serviceImplementation = settingKey[Option[ServiceImplementation]]("Service impl (winsw or mle)")
+  val forceStopOnUninstall = settingKey[Boolean](
+    "If true, stops the service before uninstallation using an ugly custom action. Defaults to true."
+  )
+  val productGuid =
+    settingKey[String]("Product GUID required for MSI packaging. Generate with UUID.randomUUID().")
+  val upgradeGuid =
+    settingKey[String]("Upgrade GUID required for MSI packaging. Generate with UUID.randomUUID().")
+  val shortcut = settingKey[Boolean](
+    "Whether or not to install a desktop shortcut to the main application executable"
+  )
+  val serviceImplementation =
+    settingKey[Option[ServiceImplementation]]("Service impl (winsw or mle)")
   val msiMappings = taskKey[Seq[(Path, Path)]]("File mappings for MSI packaging")
   val uuid = taskKey[String]("Generates a new GUID using UUID.randomUUID().")
   val minUpgradeVersion = settingKey[String]("The minimum version from which to upgrade.")
-  val minJavaVersion = settingKey[Option[Int]]("The minimum required preinstalled Java version, if any. Examples: 6, 7, 8.")
+  val minJavaVersion = settingKey[Option[Int]](
+    "The minimum required preinstalled Java version, if any. Examples: 6, 7, 8."
+  )
   val postInstallUrl = settingKey[Option[String]]("URL to open after installation.")
-  val interactiveInstallation = settingKey[Boolean]("True if the MSI-installer should be interactive, false otherwise. If true, the installer will prompt for reboots when upgrading, if the service is running. I don't know why.")
-  val useTerminateProcess = settingKey[Boolean]("True to use the TerminateProcess API to stop a service, false for custom stop implementations")
+  val interactiveInstallation = settingKey[Boolean](
+    "True if the MSI-installer should be interactive, false otherwise. If true, the installer will prompt for reboots when upgrading, if the service is running. I don't know why."
+  )
+  val useTerminateProcess = settingKey[Boolean](
+    "True to use the TerminateProcess API to stop a service, false for custom stop implementations"
+  )
   val stopParentProcessFirst = settingKey[Boolean]("WinSW configuration parameter")
   val preparePackaging = taskKey[Seq[Path]]("Generate any necessary files for packaging.")
 
@@ -70,7 +84,12 @@ object WinKeys {
   }
 
   case object KingMichaelImplementation extends ServiceImplementation {
-    override def prepare(winswConf: WinswConf, confDest: Path, runtimeDest: Path, log: Logger): Seq[Path] = Nil
+    override def prepare(
+      winswConf: WinswConf,
+      confDest: Path,
+      runtimeDest: Path,
+      log: Logger
+    ): Seq[Path] = Nil
   }
 
 }

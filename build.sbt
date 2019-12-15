@@ -2,7 +2,7 @@ val p = Project("sbt-packager", file("."))
   .enablePlugins(BintrayReleasePlugin)
   .settings(
     scalaVersion := "2.12.10",
-    scalacOptions := Seq("-unchecked", "5-deprecation"),
+    scalacOptions := Seq("-unchecked", "-deprecation"),
     organization := "com.malliina",
     exportJars := false,
     resolvers ++= Seq(

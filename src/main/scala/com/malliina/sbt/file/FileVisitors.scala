@@ -4,16 +4,21 @@ import java.nio.file._
 import java.nio.file.attribute.BasicFileAttributes
 
 /** Directory listing classes using Java 7 APIs.
- */
+  */
 object FileVisitors {
-  def build(srcDir: Path, recursive: Boolean = true, ageLimitHours: Option[Long] = None, sortByAge: Boolean = true) = {
+  def build(
+    srcDir: Path,
+    recursive: Boolean = true,
+    ageLimitHours: Option[Long] = None,
+    sortByAge: Boolean = true
+  ) = {
     if (recursive) {
       if (sortByAge) {
         ageLimitHours.fold(new FilteringFileVisitor with FileSorting)(age =>
-          new AgeLimitFilteringFileVisitor(age) with FileSorting)
+          new AgeLimitFilteringFileVisitor(age) with FileSorting
+        )
       } else {
-        ageLimitHours.fold(new FilteringFileVisitor)(age =>
-          new AgeLimitFilteringFileVisitor(age))
+        ageLimitHours.fold(new FilteringFileVisitor)(age => new AgeLimitFilteringFileVisitor(age))
       }
 
     } else {
@@ -23,28 +28,29 @@ object FileVisitors {
         })(age =>
           new AgeLimitFilteringFileVisitor(age) with FileSorting with NonRecursiveSearch {
             val startDir = srcDir
-          })
+          }
+        )
       } else {
         ageLimitHours.fold(new FilteringFileVisitor with NonRecursiveSearch {
           val startDir = srcDir
         })(age =>
           new AgeLimitFilteringFileVisitor(age) with NonRecursiveSearch {
             val startDir = srcDir
-          })
+          }
+        )
       }
 
     }
   }
 
-  /**
-   * Visitor for directory traversals with a file buffer.
-   */
+  /** Visitor for directory traversals with a file buffer.
+    */
   abstract class FileCollectingVisitor extends SimpleFileVisitor[Path] {
     private[this] var fileBuffer: List[Path] = Nil
 
     /**
-     * @return the files that have been visited and passed any filters
-     */
+      * @return the files that have been visited and passed any filters
+      */
     def files = fileBuffer
 
     def add(path: Path) {
@@ -52,11 +58,10 @@ object FileVisitors {
     }
   }
 
-  /**
-   * File visitor that adds visited regular files to a buffer;
-   * comes with an optional filter that subclasses can implement;
-   * by default all files are included.
-   */
+  /** File visitor that adds visited regular files to a buffer;
+    * comes with an optional filter that subclasses can implement;
+    * by default all files are included.
+    */
   class FilteringFileVisitor extends FileCollectingVisitor {
     override def visitFile(file: Path, attrs: BasicFileAttributes) = {
       if (attrs.isRegularFile && qualifies(file, attrs)) {
@@ -66,19 +71,21 @@ object FileVisitors {
     }
 
     /**
-     * Override to filter files as you wish. Qualified files can be queried using the <code>files</code> member.
-     * @param file the file
-     * @param attrs the file's attributes
-     * @return true if the file qualifies, false otherwise
-     */
+      * Override to filter files as you wish. Qualified files can be queried using the <code>files</code> member.
+      * @param file the file
+      * @param attrs the file's attributes
+      * @return true if the file qualifies, false otherwise
+      */
     def qualifies(file: Path, attrs: BasicFileAttributes) = true
   }
 
-  /**
-   * Filtering file visitor for old files.
-   * @param ageLimitHours the threshold age in hours: files with an older timestamp, as defined by <code>comparisonTimestamp</code>, will qualify for inclusion
-   */
-  class AgeLimitFilteringFileVisitor(ageLimitHours: Long) extends FilteringFileVisitor with TimestampComparison {
+  /** Filtering file visitor for old files.
+    *
+    * @param ageLimitHours the threshold age in hours: files with an older timestamp, as defined by <code>comparisonTimestamp</code>, will qualify for inclusion
+    */
+  class AgeLimitFilteringFileVisitor(ageLimitHours: Long)
+    extends FilteringFileVisitor
+    with TimestampComparison {
     val ageLimitMillis = ageLimitHours * 60 * 60 * 1000
 
     override def qualifies(file: Path, attrs: BasicFileAttributes) = {
@@ -90,9 +97,8 @@ object FileVisitors {
     }
   }
 
-  /**
-   * Visitor for directory traversals. Visited files and directories are available in the <code>paths</code> member.
-   */
+  /** Visitor for directory traversals. Visited files and directories are available in the <code>paths</code> member.
+    */
   class FileAndDirCollector extends FileCollectingVisitor {
 
     override def visitFile(file: Path, attrs: BasicFileAttributes) = handlePath(file)
@@ -105,23 +111,20 @@ object FileVisitors {
     }
   }
 
-  //	class RegexVisitor(pattern: Pattern) extends FilteringFileVisitor with Log {
-  //		def this(regex: String) = this(Pattern compile regex)
-  //
-  //		override def qualifies(file: Path, attrs: BasicFileAttributes) = RegexUtils.matches(pattern, file.getFileName.toString)
-  //	}
-
   trait TimestampComparison {
-    /**
-     * A file timestamp used for comparisons in the file filter.
-     * @param attrs file attrs
-     * @return a timestamp in milliseconds since the epoch, usually the create or last modified timestamp
-     */
-    def comparisonTimestamp(attrs: BasicFileAttributes) = math.max(attrs.lastModifiedTime().toMillis, attrs.creationTime().toMillis)
+
+    /** A file timestamp used for comparisons in the file filter.
+      * @param attrs file attrs
+      * @return a timestamp in milliseconds since the epoch, usually the create or last modified timestamp
+      */
+    def comparisonTimestamp(attrs: BasicFileAttributes) =
+      math.max(attrs.lastModifiedTime().toMillis, attrs.creationTime().toMillis)
   }
 
   trait FileSorting extends FileCollectingVisitor with TimestampComparison {
-    override def files = super.files.sortBy(file => comparisonTimestamp(Files.readAttributes(file, classOf[BasicFileAttributes])))
+    override def files = super.files.sortBy(file =>
+      comparisonTimestamp(Files.readAttributes(file, classOf[BasicFileAttributes]))
+    )
   }
 
   trait NonRecursiveSearch extends SimpleFileVisitor[Path] {

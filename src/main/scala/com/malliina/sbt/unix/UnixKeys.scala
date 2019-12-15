@@ -11,9 +11,8 @@ object UnixKeys {
   val confMappings = taskKey[Seq[(Path, Path)]]("Confs mapped to paths")
   val scriptMappings = taskKey[Seq[(Path, Path)]]("Scripts mapped to paths")
 
-  /**
-   * Destination keys
-   */
+  /** Destination keys
+    */
   val unixHome = settingKey[Path]("Home dir on unix")
   val unixLibDest = settingKey[Path]("Lib dir on unix")
   val unixScriptDest = settingKey[Path]("Script dir on unix")

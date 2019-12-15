@@ -13,16 +13,29 @@ import sbt._
 object UnixZipPackaging {
   val outDir = "distrib"
   val unixZipSettings = UnixPlugin.unixSettings ++ Seq(
-    /**
-      * Destination settings
+    /** Destination settings
       */
     distribDir := basePath.value / outDir,
     copyConfs := copyTask(configFiles).value,
     copyScripts := copyTask(scriptFiles).value,
     packageApp := copyLibs.value ++ createJar.value ++ copyConfs.value ++ copyScripts.value,
     // TODO: bat is not for unix, Michael
-    bat := launcher(distribDir.value, copyScripts.value, name.value, ".bat", packageApp.value, streams.value),
-    sh := launcher(distribDir.value, copyScripts.value, name.value, ".sh", packageApp.value, streams.value),
+    bat := launcher(
+      distribDir.value,
+      copyScripts.value,
+      name.value,
+      ".bat",
+      packageApp.value,
+      streams.value
+    ),
+    sh := launcher(
+      distribDir.value,
+      copyScripts.value,
+      name.value,
+      ".sh",
+      packageApp.value,
+      streams.value
+    ),
     zip := {
       Files.createDirectories(distribDir.value)
       val zipFile = baseDirectory.value / outDir / (name.value + ".zip")
@@ -35,14 +48,24 @@ object UnixZipPackaging {
     copyLibs := {
       val libDestination = distribDir.value resolve libDir
       Files.createDirectories(libDestination)
-      libs.value.map(libJar => Files.copy(libJar, libDestination resolve libJar.getFileName, StandardCopyOption.REPLACE_EXISTING))
+      libs.value.map(libJar =>
+        Files.copy(
+          libJar,
+          libDestination resolve libJar.getFileName,
+          StandardCopyOption.REPLACE_EXISTING
+        )
+      )
     },
     createJar := {
       Files.createDirectories(distribDir.value)
       val versionSuffix = "_" + scalaVersion.value + "-" + version.value
       val jarPaths = (exportedProducts in Compile).value.files.map(_.toPath)
       jarPaths.map(jarPath => {
-        Files.copy(jarPath, distribDir.value / stripSection(jarPath.getFileName.toString, versionSuffix), StandardCopyOption.REPLACE_EXISTING)
+        Files.copy(
+          jarPath,
+          distribDir.value / stripSection(jarPath.getFileName.toString, versionSuffix),
+          StandardCopyOption.REPLACE_EXISTING
+        )
       })
     }
   )

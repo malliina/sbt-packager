@@ -5,6 +5,7 @@ import sbt.Keys._
 import scala.sys.process.Process
 
 object ExeUtils {
+
   /** Executes the supplied command with the given parameters,
     * logging the command and any subsequent output using the logger's INFO level.
     *
@@ -18,8 +19,6 @@ object ExeUtils {
 
   /** Executes the supplied command, logging only the command executed.
     *
-    * @param cmd
-    * @param logger
     * @return all output lines up to termination
     */
   def execute2(cmd: Seq[String], logger: TaskStreams): Stream[String] = {
