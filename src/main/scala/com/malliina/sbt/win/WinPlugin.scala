@@ -3,6 +3,7 @@ package com.malliina.sbt.win
 import java.nio.file.{Files, Path, Paths, StandardCopyOption}
 import java.util.UUID
 
+import com.malliina.appbundler.StorageFile
 import com.malliina.sbt.GenericKeys._
 import com.malliina.sbt.win.WinKeys._
 import com.malliina.sbt.{GenericPlugin, PackagingUtil}

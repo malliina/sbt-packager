@@ -2,7 +2,7 @@ package com.malliina.sbt.unix
 
 import java.nio.file.{Files, StandardCopyOption}
 
-import com.malliina.sbt.file.PathOps
+import com.malliina.appbundler.StorageFile
 import com.malliina.sbt.GenericKeys._
 import com.malliina.sbt.PackagingUtil._
 import com.malliina.sbt.unix.UnixKeys._

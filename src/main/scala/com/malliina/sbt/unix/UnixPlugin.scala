@@ -2,10 +2,10 @@ package com.malliina.sbt.unix
 
 import java.nio.file.Paths
 
+import com.malliina.appbundler.StorageFile
 import com.malliina.sbt.GenericKeys._
 import com.malliina.sbt.GenericPlugin
 import com.malliina.sbt.PackagingUtil._
-import com.malliina.sbt.file.PathOps
 import com.malliina.sbt.unix.UnixKeys._
 import com.typesafe.sbt.SbtNativePackager.Linux
 import sbt.Keys._

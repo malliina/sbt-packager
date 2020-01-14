@@ -2,7 +2,7 @@ package com.malliina.sbt.mac
 
 import java.nio.file.{Files, StandardCopyOption}
 
-import com.malliina.appbundler.{StorageFile => _, _}
+import com.malliina.appbundler._
 import com.malliina.sbt.GenericKeys._
 import com.malliina.sbt.GenericPlugin
 import com.malliina.sbt.mac.MacKeys._

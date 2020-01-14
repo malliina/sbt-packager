@@ -1,5 +1,6 @@
 package com.malliina.sbt
 
+import com.malliina.appbundler.StorageFile
 import com.malliina.sbt.GenericKeys._
 import sbt.Keys._
 import sbt._
