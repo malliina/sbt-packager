@@ -1,4 +1,4 @@
-# SBT Packager #
+# SBT Packager
 
 This is an SBT plugin for software packaging. It depends on [sbt-native-packager](https://github.com/sbt/sbt-native-packager).
 
@@ -8,11 +8,11 @@ that your app should install itself as a service so that it starts automatically
 This plugin may prove useful if you wish to run Scala services on Windows or OSX. If you only use linux,
 [sbt-native-packager](https://github.com/sbt/sbt-native-packager) probably works well enough.
 
-## Installation ##
+## Installation
 
-    addSbtPlugin("com.malliina" % "sbt-packager" % "2.6.0")
+    addSbtPlugin("com.malliina" % "sbt-packager" % "2.8.2")
 
-## Usage ##
+## Usage
 
 Add the following settings to your project:
 
@@ -23,7 +23,7 @@ Add the following settings to your project:
 
 Three OS configurations are available: windows, mac, debian, and rpm.
 
-### Windows ###
+### Windows
 
     [myproject] $ windows:helpMe
     [info] package-msi              creates a new windows CAB file containing everything for the installation.
@@ -60,15 +60,15 @@ To create an installation log, run the following command instead of double-click
 
 (For more info, see http://www.advancedinstaller.com/user-guide/qa-log.html)
 
-### Debian ###
+### Debian
 
 Package with `debian:lintian`, thanks sbt-native-packager.
 
-### Rpm ###
+### Rpm
 
 Package with `rpm:packageBin`, courtesy of sbt-native-packager.
 
-### OSX ###
+### OSX
 
 Add `com.malliina.sbt.mac.MacPlugin.macSettings` to your project and customize as necessary. Example:
 

@@ -1,3 +1,5 @@
+ThisBuild / pluginCrossBuild / sbtVersion := "1.2.8"
+
 val p = Project("sbt-packager", file("."))
   .enablePlugins(BintrayReleasePlugin)
   .settings(
