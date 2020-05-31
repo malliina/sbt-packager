@@ -4,7 +4,7 @@ val p = Project("sbt-packager", file("."))
   .enablePlugins(MavenCentralPlugin)
   .settings(
     sbtPlugin := true,
-    scalaVersion := "2.12.10",
+    scalaVersion := "2.12.11",
     scalacOptions := Seq("-unchecked", "-deprecation"),
     organization := "com.malliina",
     gitUserName := "malliina",
@@ -14,8 +14,8 @@ val p = Project("sbt-packager", file("."))
       Resolver.bintrayRepo("malliina", "maven")
     ),
     libraryDependencies ++= Seq(
-      "com.malliina" %% "util-base" % "1.13.0",
-      "com.malliina" %% "appbundler" % "1.5.0"
+      "com.malliina" %% "util-base" % "1.17.0",
+      "com.malliina" %% "appbundler" % "1.6.0"
     ),
-    addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.5.2")
+    addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.7.2")
   )

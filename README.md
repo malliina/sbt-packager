@@ -10,7 +10,7 @@ This plugin may prove useful if you wish to run Scala services on Windows or OSX
 
 ## Installation
 
-    addSbtPlugin("com.malliina" % "sbt-packager" % "2.8.2")
+    addSbtPlugin("com.malliina" % "sbt-packager" % "2.8.4")
 
 ## Usage
 
@@ -91,23 +91,3 @@ To create a .pkg OSX installer of your project, run the following SBT task:
 To create a .dmg installer of your project, run:
 
     dmg
-
-Available settings:
-
-    [myproject] $ mac:helpMe
-    [info] plistFile                Path to .plist file
-    [info] appIdentifier            Globally unique app ID
-    [info] embeddedJavaHome         Path to java home which will be embedded in the OSX .app package
-    [info] jvmOptions               JVM options for OSX
-    [info] jvmArguments             JVM arguments for OSX
-    [info] hideDock                 If true, the app is hidden from the dock when running
-    [info] infoPlistConf            The info plist conf: define to override defaults
-    [info] launchdConf              The launchd configuration, if any
-    [info] defaultLaunchd           The default launchd configuration, if enabled
-    [info] installer                Installer conf
-    [info] deleteOutOnComplete      Delete temp dir after packaging
-    [info] macAppTarget             Target path to the .app package
-    [info] app                      Creates a .app package
-    [info] pkg                      Creates a .pkg installer
-    [success] Total time: 0 s, completed 7.12.2014 15:35:59
-    [myproject] $
